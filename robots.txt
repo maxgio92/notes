@@ -1,0 +1,3 @@
+User-agent: *
+
+https://notes.maxgio.me/sitemap.xml
