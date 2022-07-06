@@ -1,0 +1,12 @@
+baseURL = "https://notes.maxgio.me/"
+languageCode = "en-us"
+title = "maxgio's notes"
+theme = "accessible-minimalism"
+disableHugoGeneratorInject = true
+enableRobotsTXT = true
+
+[menu]
+  [[menu.main]]
+    name = "Notes"
+    url = "/notes/"
+    weight = 1
