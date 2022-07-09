@@ -1,11 +1,8 @@
 ---
-date: 2022-07-09T18:04:27+02:00
-modified: 2022-07-09T18:18:04+02:00
 title: eBPF links
+date: 2022-07-09T18:04:27+02:00
+modified: 2022-07-09T18:31:56+02:00
 ---
-
-
-# eBPF links
 
 - http://vger.kernel.org/lpc_bpf2018_talks/Using_eBPF_as_a_heterogeneous_processing_ABI_LPC_2018.pdf
 
