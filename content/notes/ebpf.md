@@ -12,3 +12,4 @@
 - https://www.kernel.org/doc/html/v5.11/bpf/btf.html
 - https://nakryiko.com/posts/bpf-core-reference-guide
 - https://github.com/torvalds/linux/tree/master/tools/bpf/runqslower
+- http://www.brendangregg.com/blog/2020-11-04/bpf-co-re-btf-libbpf.html
