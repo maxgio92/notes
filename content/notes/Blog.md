@@ -1,4 +1,6 @@
-
+---
+title: Blogging
+---
 
 ## CO-RE
 
