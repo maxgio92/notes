@@ -1,3 +1,6 @@
+---
+title: OS scheduling
+---
 
 - https://news.ycombinator.com/submitted?id=synergy20&next=30081204&n=31
 - https://docs.sel4.systems/projects/sel4/documentation.html
