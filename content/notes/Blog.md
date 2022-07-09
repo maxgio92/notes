@@ -1,9 +1,9 @@
 ---
 date: 2022-07-09T18:04:27+02:00
-modified: 2022-07-09T18:17:11+02:00
+modified: 2022-07-09T18:45:14+02:00
 ---
 
-# Blogging
+title: Blogging
 
 ## CO-RE
 
