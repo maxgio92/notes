@@ -1,9 +1,5 @@
----
-date: 2022-07-09T18:04:27+02:00
-modified: 2022-07-09T18:46:23+02:00
----
-
 ## General
+
 - http://vger.kernel.org/lpc_bpf2018_talks/Using_eBPF_as_a_heterogeneous_processing_ABI_LPC_2018.pdf
 
 ## BTF
