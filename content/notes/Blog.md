@@ -8,7 +8,7 @@ title: Blogging
 
 #### Dev time
 
-> see recap paragraph of https://nakryiko.com/posts/bpf-portability-and-co-re/#bpf-state-of-the-art
+From “recap” paragraph of https://nakryiko.com/posts/bpf-portability-and-co-re/#bpf-state-of-the-art
 
 - vmlinux.h eliminates dependency on kernel headers;
 
