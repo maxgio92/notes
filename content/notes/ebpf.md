@@ -17,3 +17,4 @@ title: eBPF links
 - https://nakryiko.com/posts/bpf-core-reference-guide
 - https://github.com/torvalds/linux/tree/master/tools/bpf/runqslower
 - http://www.brendangregg.com/blog/2020-11-04/bpf-co-re-btf-libbpf.html
+- https://www.solo.io/blog/porting-ebpf-applications-to-bumblebee/
