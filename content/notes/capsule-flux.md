@@ -24,3 +24,6 @@ title: GitOps namespace-as-a-service
 - https://www.martin-helmich.de/en/blog/kubernetes-crd-client.html
 - https://github.com/lucasepe/using-client-go
 - https://sdk.operatorframework.io/docs/building-operators/golang
+
+### More
+- https://dev.to/ashokan/tenants-with-capsule-3428
