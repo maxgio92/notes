@@ -1,4 +1,6 @@
-# Capsule + Flux v2: GitOps namespace-as-a-service
+---
+title: ‘GitOps namespace-as-a-service'
+---
 
 ## Links
 
