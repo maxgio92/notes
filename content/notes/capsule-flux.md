@@ -15,6 +15,9 @@ title: GitOps namespace-as-a-service
 - https://github.com/maxgio92/flux2-capsule-multi-tenancy
 
 ### Flux
+- https://fluxcd.io/blog/2022/05/may-2022-security-announcement/
+- https://fluxcd.io/docs/installation/#multi-tenancy-lockdown
+- https://github.com/fluxcd/flux2-multi-tenancy
 - https://github.com/fluxcd/flux2/issues/1704
 - https://github.com/fluxcd/flux2/pull/2092
 - https://github.com/fluxcd/flux2/pull/582
