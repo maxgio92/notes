@@ -14,5 +14,5 @@
 
 ### Flux
 - https://github.com/fluxcd/flux2/issues/1704
-- https://github.com/fluxcd/flux2/pull/2092/files#diff-56d9cc364ab8e4fddfb869da4508a2804b157b098d30df8d0c4984888882ec6b
+- https://github.com/fluxcd/flux2/pull/2092
 - https://github.com/fluxcd/flux2/pull/582/files#diff-e377d0286cdc254b5541414d2db6f291be9d92a669ccb2d4e7fb14a8645dfa57
