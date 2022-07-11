@@ -18,3 +18,9 @@ title: GitOps namespace-as-a-service
 - https://github.com/fluxcd/flux2/issues/1704
 - https://github.com/fluxcd/flux2/pull/2092
 - https://github.com/fluxcd/flux2/pull/582
+
+### Development
+
+- https://www.martin-helmich.de/en/blog/kubernetes-crd-client.html
+- https://github.com/lucasepe/using-client-go
+- https://sdk.operatorframework.io/docs/building-operators/golang
