@@ -19,3 +19,7 @@ title: eBPF links
 - https://github.com/torvalds/linux/tree/master/tools/bpf/runqslower
 - http://www.brendangregg.com/blog/2020-11-04/bpf-co-re-btf-libbpf.html
 - https://www.solo.io/blog/porting-ebpf-applications-to-bumblebee/
+
+### Relocations
+
+- https://www.kernel.org/doc/html/latest/bpf/llvm_reloc.html
