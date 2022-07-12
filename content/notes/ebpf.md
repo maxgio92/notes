@@ -23,3 +23,7 @@ title: eBPF links
 ### Relocations
 
 - https://www.kernel.org/doc/html/latest/bpf/llvm_reloc.html
+
+## Related
+
+- https://www.linkedin.com/pulse/elf-linux-executable-plt-got-tables-mohammad-alhyari/
