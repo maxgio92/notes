@@ -11,6 +11,7 @@ title: eBPF links
 - https://kinvolk.io/blog/2022/03/btfgen-one-step-closer-to-truly-portable-ebpf-programs/
 - https://blog.aquasec.com/vmlinux.h-ebpf-programs
 - https://nakryiko.com/posts/bpf-portability-and-co-re/
+- https://nakryiko.com/posts/btf-dedup/
 - https://github.com/aquasecurity/tracee/tree/main/cmd/tracee-ebpf
 - https://github.com/aquasecurity/tracee/blob/1244d3fb53044c7472b4d23ce9f870f3f0115962/cmd/tracee-ebpf/main.go#L604
 - https://www.kernel.org/doc/html/v5.11/bpf/btf.html
