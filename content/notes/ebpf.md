@@ -6,6 +6,11 @@ title: eBPF links
 
 - http://vger.kernel.org/lpc_bpf2018_talks/Using_eBPF_as_a_heterogeneous_processing_ABI_LPC_2018.pdf
 
+## libbpf
+
+- https://github.com/libbpf/libbpf-bootstrap
+- https://nakryiko.com/posts/libbpf-bootstrap/
+
 ## BTF
 
 - https://kinvolk.io/blog/2022/03/btfgen-one-step-closer-to-truly-portable-ebpf-programs/
@@ -23,6 +28,10 @@ title: eBPF links
 ### Relocations
 
 - https://www.kernel.org/doc/html/latest/bpf/llvm_reloc.html
+
+### Tracee
+
+- https://aquasecurity.github.io/tracee/v0.6.5/building/nocore-ebpf/
 
 ## Related
 
