@@ -1,6 +1,6 @@
 ---
 date: 2022-07-19T21:04:15+02:00
-modified: 2022-07-19T21:08:23+02:00
+modified: 2022-07-19T21:08:56+02:00
 title: GitOps multi tenancy notes
 ---
 
@@ -10,7 +10,7 @@ Then, what if a tenant tries to escalate by using one of the Flux controllers pr
 
 As spec.ServiceAccountName for Reconciliation resource cannot cross-namespace reference Service Accounts, tenants are able to let Flux apply his own resources only with ServiceAccounts that reside in his own Namespaces. Which is, Namespace of the ServiceAccount and Namespace of the Reconciliation resource must match.
 
-He could neither create the Reconciliation resource where a privileged ServiceAccount is present, as the Namespace would be owned by the Tenant, otherwise Capsule would block the requests of Reconciliation resource creation.
+He could neither create the Reconciliation resource where a privileged ServiceAccount is present (like flux-system), as the Namespace has to be owned by the Tenant, otherwise Capsule would block the requests of Reconciliation resource creation.
 
 ### Escalation temptative: create and impersonate privileged SA
 
