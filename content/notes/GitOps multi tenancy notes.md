@@ -1,6 +1,6 @@
 ---
 date: 2022-07-19T21:04:15+02:00
-modified: 2022-07-19T21:20:38+02:00
+modified: 2022-07-19T21:28:21+02:00
 title: GitOps multi tenancy notes
 ---
 
@@ -19,3 +19,11 @@ Then, what if a tenant tries to escalate by creating a privileged ServiceAccount
 A tenant could create a ServiceAccount in an owned Namespace, but he can't neither bind at cluster-level nor at a non-owned Namespace-level a ClusterRole, as that wouldn't be permitted by Capsule admission controllers.
 
 Now let's go on with the practical part.
+
+### Tenant tries to chown other Tenant Namespaces
+
+This is not permitted for the same reason, he can’t operate on Namespaced resources where those Namespaces are part of another Tenant. Capsule request validation would not pass.
+
+### EXPAND
+
+…
