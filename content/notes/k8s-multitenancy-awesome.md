@@ -24,6 +24,7 @@ Cluster as a Service.
 
 * [VCluster](https://github.com/loft-sh/vcluster)
 * [Virtual Cluster](https://github.com/kubernetes-sigs/cluster-api-provider-nested/tree/main/virtualcluster)
+* [kcp](https://github.com/kcp-dev/kcp)
 * [KubeSlice](https://github.com/kubeslice)
 
 ---
