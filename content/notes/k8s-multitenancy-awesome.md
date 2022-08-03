@@ -26,6 +26,8 @@ Cluster as a Service.
 * [Virtual Cluster](https://github.com/kubernetes-sigs/cluster-api-provider-nested/tree/main/virtualcluster)
 * [KubeSlice](https://github.com/kubeslice)
 
+---
+
 ## Other:
 * [Kubernetes Multi-Tenancy WG](https://github.com/kubernetes-sigs/multi-tenancy)
 * [Kubernetes benchmarks for multi-tenancy](https://github.com/kubernetes-sigs/multi-tenancy/tree/master/benchmarks)
