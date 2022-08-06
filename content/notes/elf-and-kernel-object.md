@@ -14,3 +14,50 @@ Title: ELF and the Linux kernel binary
 ### The Linux binary
 * Special sections in Linux binary: https://lwn.net/Articles/531148/
 * Kernel packages: https://dl.managed-protection.com/u/baas/help/20.10/user/en-US/linux-packages.html?TocPath=Installing%20the%20software%7C_____2
+
+# Get GCC version per Linux release
+
+## Prereqs
+
+### `extract-vmlinux`
+
+Download `vmlinux`-extractor script, which extracts the ELF binary from the `zlib`-compressed `vmlinuz` file.
+
+```shell
+curl -sLO https://raw.githubusercontent.com/torvalds/linux/master/scripts/extract-vmlinux
+```
+
+---
+
+## Dissect a release binary
+
+### Download the image package
+
+For example, a CentOS-released one:
+
+```shell
+curl -sLO http://archive.kernel.org/centos-vault/7.2.1511/os/x86_64/Packages/kernel-3.10.0-327.el7.x86_64.rpm
+```
+
+Extract to CPIO, and uncompress it:
+
+```shell
+rpm2cpio kernel-3.10.0-327.el7.x86_64.rpm | cpio -idmv
+```
+
+### 2. Extract the ELF binary:
+
+Extract the Linux ELF binary:
+
+```shell
+./extract-vmlinux ./kernel-3.10.0-327.el7.x86_64/boot/vmlinuz-3.10.0-327.el7.x86_64 > ./kernel-3.10.0-327.el7.x86_64/vmlinux-3.10.0-327.el7.x86_64
+```
+
+### 3. Dissect the binary:
+
+```shell
+objdump \
+ --full-contents \
+ --section .comment \
+ ./kernel-3.10.0-327.el7.x86_64/vmlinux-3.10.0-327.el7.x86_64
+```
