@@ -13,6 +13,7 @@ Title: ELF and the Linux kernel binary
   * https://stackoverflow.com/questions/16033385/how-to-know-the-gcc-version-used-to-build-the-linux
   * https://stackoverflow.com/questions/2387040/how-to-retrieve-the-gcc-version-used-to-compile-a-given-elf-executable
 * Kernel packages: https://dl.managed-protection.com/u/baas/help/20.10/user/en-US/linux-packages.html?TocPath=Installing%20the%20software%7C_____2
+* https://www.geeksforgeeks.org/difference-between-linker-and-loader/
 
 ## Get GCC from a Linux release
 
