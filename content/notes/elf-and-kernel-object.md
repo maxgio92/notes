@@ -2,6 +2,8 @@
 Title: ELF and the Linux kernel binary
 ---
 
+## Readings
+
 ### ELF
 * Sections and segments: https://stackoverflow.com/questions/21279618/when-is-an-elf-text-segment-not-an-elf-text-segment
 * 101: https://linux-audit.com/elf-binaries-on-linux-understanding-and-analysis/
@@ -15,11 +17,11 @@ Title: ELF and the Linux kernel binary
 * Special sections in Linux binary: https://lwn.net/Articles/531148/
 * Kernel packages: https://dl.managed-protection.com/u/baas/help/20.10/user/en-US/linux-packages.html?TocPath=Installing%20the%20software%7C_____2
 
-# Get GCC version per Linux release
+---
 
-## Prereqs
+## Get GCC from a Linux release
 
-### `extract-vmlinux`
+### 0. `extract-vmlinux`
 
 Download `vmlinux`-extractor script, which extracts the ELF binary from the `zlib`-compressed `vmlinuz` file.
 
@@ -27,11 +29,7 @@ Download `vmlinux`-extractor script, which extracts the ELF binary from the `zli
 curl -sLO https://raw.githubusercontent.com/torvalds/linux/master/scripts/extract-vmlinux
 ```
 
----
-
-## Dissect a release binary
-
-### Download the image package
+### 1. Download the image package
 
 For example, a CentOS-released one:
 
