@@ -1,7 +1,0 @@
----
-Title: Programming Go in vim
----
-
-- CoC: https://github.com/neoclide/coc.nvim
-- coc-go extension:
-  - https://github.com/rstacruz/vim-coc-settings
