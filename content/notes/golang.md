@@ -14,3 +14,8 @@ title: Golang
   - Functional options for friendly APIs: https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis
 
 - https://gogoapps.io/blog/passing-loggers-in-go-golang-logging-best-practices/
+
+- Concurrency and parallelism:
+  - https://spiralscout.com/blog/understanding-concurrency-and-parallelism-in-golang
+    - https://github.com/guntenbein/goconcurrency
+  - https://www.digitalocean.com/community/tutorials/how-to-run-multiple-functions-concurrently-in-go
