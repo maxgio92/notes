@@ -19,3 +19,6 @@ title: Golang
   - https://spiralscout.com/blog/understanding-concurrency-and-parallelism-in-golang
     - https://github.com/guntenbein/goconcurrency
   - https://www.digitalocean.com/community/tutorials/how-to-run-multiple-functions-concurrently-in-go
+
+- Profiling
+  - Using pprof: https://github.com/ArjunDhar/scribbles/blob/master/go-pprof-working/main.go
