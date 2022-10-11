@@ -21,4 +21,5 @@ title: Golang
   - https://www.digitalocean.com/community/tutorials/how-to-run-multiple-functions-concurrently-in-go
 
 - Profiling
+  - Using pprof for memory profiling: https://www.freecodecamp.org/news/how-i-investigated-memory-leaks-in-go-using-pprof-on-a-large-codebase-4bec4325e192
   - Using pprof: https://github.com/ArjunDhar/scribbles/blob/master/go-pprof-working/main.go
