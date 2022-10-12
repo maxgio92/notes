@@ -25,3 +25,5 @@ title: Golang
   - Using pprof: https://github.com/ArjunDhar/scribbles/blob/master/go-pprof-working/main.go
 
 - GC: https://go.dev/blog/go15gc
+
+- XML parsing: https://www.reddit.com/r/golang/comments/7a4dxw/comment/dp77fd8/?utm_source=reddit&utm_medium=web2x&context=3
