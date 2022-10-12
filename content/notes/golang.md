@@ -23,3 +23,5 @@ title: Golang
 - Profiling
   - Using pprof for memory profiling: https://www.freecodecamp.org/news/how-i-investigated-memory-leaks-in-go-using-pprof-on-a-large-codebase-4bec4325e192
   - Using pprof: https://github.com/ArjunDhar/scribbles/blob/master/go-pprof-working/main.go
+
+- GC: https://go.dev/blog/go15gc
