@@ -26,6 +26,6 @@ title: Golang
 
 - GC: https://go.dev/blog/go15gc
 
-- XML parsing:
+- XML parsing the streaming way:
   - https://www.reddit.com/r/golang/comments/7a4dxw/comment/dp77fd8
   - https://github.com/antchfx/xmlquery/blob/master/parse.go#L269
