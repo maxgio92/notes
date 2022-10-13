@@ -29,3 +29,5 @@ title: Golang
 - XML parsing the streaming way:
   - https://www.reddit.com/r/golang/comments/7a4dxw/comment/dp77fd8
   - https://github.com/antchfx/xmlquery/blob/master/parse.go#L269
+
+- Library bindings: http://go-lang.cat-v.org/library-bindings
