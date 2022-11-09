@@ -173,4 +173,6 @@ Sources:
 - https://github.com/oras-project/oras-go/issues/271
 - https://github.com/notaryproject/notation-go/issues/136
 
+Also:
+- https://github.com/sigstore/cosign/issues/1397
 See you soon with updates on the OCI artifact spec!
