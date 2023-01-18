@@ -76,7 +76,7 @@ Assign an IP with CIDR subnet in the VXLAN network subnet, to the local VTEP VXL
 ip address add vxlan0 172.16.0.2/24
 ```
 
-Test the connection, by pinging the remote VTEP XVLAN IP:
+Assuming that the remote VTEP has configured a VXLAN IP 172.16.0.1, you can test the connection, by pinging the remote VTEP XVLAN IP:
 
 ```shell
 ping 172.16.0.1
