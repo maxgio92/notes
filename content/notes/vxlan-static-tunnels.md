@@ -56,6 +56,32 @@ To configure static VXLAN tunnels, do the following on each leaf:
 - Enable bridge learning on the VNI.
 - Create the tunnels by configuring the remote IP address to each other leaf switch’s loopback address.
 
+With `iproute2` tools you can add a link with of type VXLAN (iproute supports VXLAN):
+
+```shell
+# ip link add <NAME> type vxlan id <VXLAN Network Identifier (VNI)> dev <PHYSICAL DEVICE FOR TUNNEL COMMUNICATION TO THE OTHER VTEP> dstport 0
+ip link add vxlan0 type vxlan id 42 dev eth0 dstport 0
+```
+
+Configure the forward (fdb) entry:
+
+```shell
+# ridge fdb append to 00:00:00:00:00:00 dev <VXLAN DEVICE NAME> dst <VTEP UNDERLYING NETWORK'S IP>
+bridge fdb append to 00:00:00:00:00:00 dev xvlan0 dst 192.168.94.83 
+```
+
+Assign an IP with CIDR subnet in the VXLAN network subnet, to the local VTEP VXLAN device:
+
+```shell
+ip address add vxlan0 172.16.0.2/24
+```
+
+Test the connection, by pinging the remote VTEP XVLAN IP:
+
+```shell
+ping 172.16.0.1
+```
+
 ---
 
 Source:
