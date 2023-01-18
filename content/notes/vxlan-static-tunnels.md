@@ -82,6 +82,12 @@ Test the connection, by pinging the remote VTEP XVLAN IP:
 ping 172.16.0.1
 ```
 
+And you can now see that the fdb has been populated to the remote VTEP MAC address too:
+
+```shell
+f6:df:a6:e6:96:a7 dev vxlan0 dst 192.168.94.83 self
+```
+
 ---
 
 Source:
