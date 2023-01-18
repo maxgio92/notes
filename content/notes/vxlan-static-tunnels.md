@@ -20,7 +20,7 @@ Static VXLAN provides the benefits of VXLAN and is relatively easy to design and
 
 ## How Static VXLAN Works
 
-To enable static VXLAN on a Juniper Networks device that functions as a VTEP, you must configure:
+To enable static VXLAN on a device that functions as a VTEP, you must configure:
 
 - A list that includes one or more remote VTEPs with which the local VTEP can form a VXLAN tunnel.
 - Ingress node replication.
