@@ -7,7 +7,7 @@ In VXLAN-based networks, there are a range of complexities and challenges in det
 Static VXLAN tunnels serve to connect two VTEPs in a given environment.
 Static VXLAN tunnels are the simplest deployment mechanism for small scale environments and are interoperable with other vendors that adhere to VXLAN standards. Because you simply map which VTEPs are in a particular VNI, you can avoid the tedious process of defining connections to every VLAN on every other VTEP on every other rack.
 
-Static Virtual Extensible LAN (VXLAN), also known as unicast VXLAN, enables you to statically configure source and destination virtual tunnel endpoints (VTEPs) for a particular traffic flow.
+Static Virtual Extensible LAN (VXLAN), also known as unicast VXLAN, enables you to statically configure source and destination virtual tunnel endpoints (VTEPs) for a particular traffic flow (VNI).
 
 A source VTEP encapsulates and a destination VTEP de-encapsulates Layer 2 packets with a VXLAN header, thereby tunneling the packets through an underlying Layer 3 IP network.
 
