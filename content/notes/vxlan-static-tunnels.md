@@ -90,8 +90,9 @@ f6:df:a6:e6:96:a7 dev vxlan0 dst 192.168.94.83 self
 
 ---
 
-Source:
+References:
 - https://docs.nvidia.com/networking-ethernet-software/cumulus-linux-44/Layer-2/Ethernet-Bridging-VLANs
 - https://docs.nvidia.com/networking-ethernet-software/cumulus-linux-43/Network-Virtualization/Static-VXLAN-Tunnels/
 - https://www.juniper.net/documentation/us/en/software/junos/evpn-vxlan/topics/topic-map/vxlan-static.html
 - https://www.redhat.com/sysadmin/kubernetes-pods-communicate-nodes
+- https://github.com/angelnu/gateway-admision-controller/issues/102
