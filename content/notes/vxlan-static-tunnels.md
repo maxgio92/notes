@@ -96,3 +96,4 @@ References:
 - https://www.juniper.net/documentation/us/en/software/junos/evpn-vxlan/topics/topic-map/vxlan-static.html
 - https://www.redhat.com/sysadmin/kubernetes-pods-communicate-nodes
 - https://github.com/angelnu/gateway-admision-controller/issues/102
+- https://man7.org/linux/man-pages/man8/bridge.8.html
