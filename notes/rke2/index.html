@@ -10,7 +10,7 @@ RKE2 and K3s RKE2 is based on K3s."><meta property="og:type" content="article"><
  hardened to pass CIS K8s benchmark enabled FIPS 140-2 regularly scans componets images with trivy  Flavours of k8s:
  RKE (Docker as container engine, traditional) RKE 2 (hardened, next generation) K3S (focused on IoT, lightweight)  K3S + RKE + security = RKE 2
 RKE 2 does not rely on Docker RKE 2 launches CP compoents as static pods (managed by Kubelet)
-RKE2 and K3s RKE2 is based on K3s."><meta itemprop=wordCount content="842"><meta itemprop=keywords content><meta name=twitter:card content="summary"><meta name=twitter:title content><meta name=twitter:description content="RKE2 Secuirty and compliance:
+RKE2 and K3s RKE2 is based on K3s."><meta itemprop=wordCount content="836"><meta itemprop=keywords content><meta name=twitter:card content="summary"><meta name=twitter:title content><meta name=twitter:description content="RKE2 Secuirty and compliance:
  hardened to pass CIS K8s benchmark enabled FIPS 140-2 regularly scans componets images with trivy  Flavours of k8s:
  RKE (Docker as container engine, traditional) RKE 2 (hardened, next generation) K3S (focused on IoT, lightweight)  K3S + RKE + security = RKE 2
 RKE 2 does not rely on Docker RKE 2 launches CP compoents as static pods (managed by Kubelet)
@@ -95,47 +95,27 @@ tls-san:
 node-label
 - &quot;node=notaint&quot;
 EOF
-</code></pre><p>Configurations in <code>cluster.yaml</code> (<code>config.yaml</code>?) must exist before the below:</p><p>``
-systemctl enable &ndash;noe rke2-server.service
-journalctl -fu rke2-server</p><h1 id=heading>&mldr;</h1><p>exit
+</code></pre><p>Configurations in <code>cluster.yaml</code> (<code>config.yaml</code>?) must exist before the below:</p><pre><code>systemctl enable --noe rke2-server.service
+journalctl -fu rke2-server
+# ...
+
+exit
 mkdir ~/.kube
 sudo cp /etc/rancher/rke2/rke2.yaml ~/.kube/
 chown $(id -u):$(id -g) ~/.kube/rke2.yaml
 kubectl get nodes -w
-kubectl get pods -A -w</p><h1 id=heading-1>&mldr;</h1><pre><code>
-## Deploying additional Server nodes
+kubectl get pods -A -w
+# ...
 
-A LB is a good choice for HA, whne adding Server nodes (L4 LB, round-robin DNS, etc.).
-
-Edit kubeconfig changing the `cluster.server` field to the LB endpoint.
-
-## Deploying Agent nodes
-
-Get the node-token from first the Server node.
-
-</code></pre><p>sudo cat /var/lkib/rancher/rke2/server/node-token</p><pre><code>
-and put it in the `config.yaml` file for the Agent:
-
-</code></pre><p>sudo -i
+</code></pre><h2 id=deploying-additional-server-nodes>Deploying additional Server nodes</h2><p>A LB is a good choice for HA, whne adding Server nodes (L4 LB, round-robin DNS, etc.).</p><p>Edit kubeconfig changing the <code>cluster.server</code> field to the LB endpoint.</p><h2 id=deploying-agent-nodes>Deploying Agent nodes</h2><p>Get the node-token from first the Server node.</p><pre><code>sudo cat /var/lkib/rancher/rke2/server/node-token
+</code></pre><p>and put it in the <code>config.yaml</code> file for the Agent:</p><pre><code>sudo -i
 mkdir -p /etc/rancher/rke2
-cat &#171;EOF > /etc/rancher/rke2/config.yaml
-server: <a href=https://cplane01.example.com>https://cplane01.example.com</a>:9345
-token: &lt;NODE_TOKEN>
+cat &lt;&lt;EOF &gt; /etc/rancher/rke2/config.yaml
+server: https://cplane01.example.com:9345
+token: &lt;NODE_TOKEN&gt;
 EOF
-curl -sL <a href=https://get-rke2.io>https://get-rke2.io</a> | INSTALL_RKE2_TYPE=&ldquo;agent&rdquo; sh -</p><pre><code>
-Configurations in `cluster.yaml` / (`config.yaml`?) must exist before starting the systemd service:
-
-</code></pre><p>systemctl enable &ndash;now rke2-agent.service</p><pre><code>
-## Troubleshooting
-
-- `config.yaml` syntax
-- Starting nodes before ready: if the systemd service on a node is started before `config.yaml` is ready, then the node will need to have RKE2 reinstalled before progressing.
-
-### Uninstalling RKE2 on a Node
-
-</code></pre><p>/usr/local/bin/rke2-uninstall.sh</p><pre><code>
-&gt; Installed when downloading RKE2.
-
-When a single node cluster, the whole cluster is deleted, otherwise only the current node.
-This is *irreversible*.
-</code></pre></section><nav class=post-nav><a class=next href=https://notes.maxgio.me/notes/blog/><span>Blogging</span><span>→</span></a></nav></article></main><footer class=footer><p>&copy; 2023 <a href=https://notes.maxgio.me/>maxgio's notes</a></p><p>Powered by <a href=https://gohugo.io/ rel=noopener target=_blank>Hugo️️</a>️</p><p><a href=https://github.com/nanxiaobei/hugo-paper rel=noopener target=_blank>Paper 5.1</a></p></footer></body></html>
+curl -sL https://get-rke2.io | INSTALL_RKE2_TYPE=&quot;agent&quot; sh -
+</code></pre><p>Configurations in <code>cluster.yaml</code> / (<code>config.yaml</code>?) must exist before starting the systemd service:</p><pre><code>systemctl enable --now rke2-agent.service
+</code></pre><h2 id=troubleshooting>Troubleshooting</h2><ul><li><code>config.yaml</code> syntax</li><li>Starting nodes before ready: if the systemd service on a node is started before <code>config.yaml</code> is ready, then the node will need to have RKE2 reinstalled before progressing.</li></ul><h3 id=uninstalling-rke2-on-a-node>Uninstalling RKE2 on a Node</h3><pre><code>/usr/local/bin/rke2-uninstall.sh
+</code></pre><blockquote><p>Installed when downloading RKE2.</p></blockquote><p>When a single node cluster, the whole cluster is deleted, otherwise only the current node.
+This is <em>irreversible</em>.</p></section><nav class=post-nav><a class=next href=https://notes.maxgio.me/notes/blog/><span>Blogging</span><span>→</span></a></nav></article></main><footer class=footer><p>&copy; 2023 <a href=https://notes.maxgio.me/>maxgio's notes</a></p><p>Powered by <a href=https://gohugo.io/ rel=noopener target=_blank>Hugo️️</a>️</p><p><a href=https://github.com/nanxiaobei/hugo-paper rel=noopener target=_blank>Paper 5.1</a></p></footer></body></html>
