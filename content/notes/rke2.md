@@ -55,7 +55,7 @@ ENable and start systemd svc
 
 
 ```
-curl -sL https://get-rke2.io | sudo sh -
+curl -sL https://get.rke2.io | sudo sh -
 # stable Rke version is downloaded with related systemd services
 # scripts installed under /usr/local/bin
 
