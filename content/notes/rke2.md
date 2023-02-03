@@ -227,7 +227,7 @@ chown $(id -u):$(id -g) ~/.kube/rke2.kubeconfig
 
 ```
 sudo -i
-curl -sL https://get-rke2.io | sh -
+curl -sL https://get.rke2.io | sh -
 cat <<EOF > /etc/rancher/rke2/config.yaml
 node-name:
 - cplane01
@@ -278,7 +278,7 @@ cat <<EOF > /etc/rancher/rke2/config.yaml
 server: https://cplane01.example.com:9345
 token: <NODE_TOKEN>
 EOF
-curl -sL https://get-rke2.io | INSTALL_RKE2_TYPE="agent" sh -
+curl -sL https://get.rke2.io | INSTALL_RKE2_TYPE="agent" sh -
 ```
 
 Configurations in `cluster.yaml` / (`config.yaml`?) must exist before starting the systemd service:
