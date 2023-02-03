@@ -86,7 +86,7 @@ sudo journalctl -u rke2-server -f
 sudo cp /etc/rancher/rke2/rke2.yaml ~/.kube/rke2.kubeconfig`
 chown $(id -u):$(id -g) ~/.kube/rke2.kubeconfig
 </code></pre><h2 id=additional-options>Additional options</h2><ul><li>RPM files for deploying the inistial scripts are available for some Linux distribution</li><li><code>/usr/local/bin/rke2</code> can be run outside of systemd (e.g. to create clusters, not recommeded)</li></ul><h2 id=deploy-a-server-node>Deploy a Server node</h2><pre><code>sudo -i
-curl -sL https://get-rke2.io | sh -
+curl -sL https://get.rke2.io | sh -
 cat &lt;&lt;EOF &gt; /etc/rancher/rke2/config.yaml
 node-name:
 - cplane01
@@ -114,7 +114,7 @@ cat &lt;&lt;EOF &gt; /etc/rancher/rke2/config.yaml
 server: https://cplane01.example.com:9345
 token: &lt;NODE_TOKEN&gt;
 EOF
-curl -sL https://get-rke2.io | INSTALL_RKE2_TYPE=&quot;agent&quot; sh -
+curl -sL https://get.rke2.io | INSTALL_RKE2_TYPE=&quot;agent&quot; sh -
 </code></pre><p>Configurations in <code>cluster.yaml</code> / (<code>config.yaml</code>?) must exist before starting the systemd service:</p><pre><code>systemctl enable --now rke2-agent.service
 </code></pre><h2 id=troubleshooting>Troubleshooting</h2><ul><li><code>config.yaml</code> syntax</li><li>Starting nodes before ready: if the systemd service on a node is started before <code>config.yaml</code> is ready, then the node will need to have RKE2 reinstalled before progressing.</li></ul><h3 id=uninstalling-rke2-on-a-node>Uninstalling RKE2 on a Node</h3><pre><code>/usr/local/bin/rke2-uninstall.sh
 </code></pre><blockquote><p>Installed when downloading RKE2.</p></blockquote><p>When a single node cluster, the whole cluster is deleted, otherwise only the current node.
