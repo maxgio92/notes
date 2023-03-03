@@ -2,14 +2,25 @@
 title: Golang
 ---
 
-- https://www.digitalocean.com/community/tutorials/how-to-use-contexts-in-go
-- https://www.digitalocean.com/community/tutorial_series/how-to-code-in-go
-- https://go101.org/article/channel-closing.html
-- dissect Go ELF binary: https://qzaidi.github.io/2017/03/05/elf-go-ident/
-- https://stackoverflow.com/questions/40823315/x-does-not-implement-y-method-has-a-pointer-receiver
-- FS: https://bitfieldconsulting.com/golang/filesystems
+- Context:
+  - https://www.digitalocean.com/community/tutorials/how-to-use-contexts-in-go
 
-- Practices:
+- General:
+  - https://www.digitalocean.com/community/tutorial_series/how-to-code-in-go
+
+- Channels:
+  - https://go101.org/article/channel-closing.html
+
+- ELF dissection:
+  - https://qzaidi.github.io/2017/03/05/elf-go-ident/
+
+- FAQs:
+  - https://stackoverflow.com/questions/40823315/x-does-not-implement-y-method-has-a-pointer-receiver
+
+- Filesystem:
+  - https://bitfieldconsulting.com/golang/filesystems
+
+- Pattterns:
   - Functional options:
     - Self-referential functions and the design of options: https://commandcenter.blogspot.com/2014/01/self-referential-functions-and-design.html
     - Functional options for friendly APIs: https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis
@@ -24,12 +35,15 @@ title: Golang
   - Using pprof for memory profiling: https://www.freecodecamp.org/news/how-i-investigated-memory-leaks-in-go-using-pprof-on-a-large-codebase-4bec4325e192
   - Using pprof: https://github.com/ArjunDhar/scribbles/blob/master/go-pprof-working/main.go
 
-- GC: https://go.dev/blog/go15gc
+- Garbage collector:
+  - https://go.dev/blog/go15gc
 
 - XML parsing the streaming way:
   - https://www.reddit.com/r/golang/comments/7a4dxw/comment/dp77fd8
   - https://github.com/antchfx/xmlquery/blob/master/parse.go#L269
 
-- Library bindings: http://go-lang.cat-v.org/library-bindings
+- Library bindings:
+  - http://go-lang.cat-v.org/library-bindings
 
-- Servemux and Handlers: https://www.alexedwards.net/blog/an-introduction-to-handlers-and-servemuxes-in-go
+- Servemux and Handlers:
+  - https://www.alexedwards.net/blog/an-introduction-to-handlers-and-servemuxes-in-go
