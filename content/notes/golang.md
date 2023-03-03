@@ -31,3 +31,5 @@ title: Golang
   - https://github.com/antchfx/xmlquery/blob/master/parse.go#L269
 
 - Library bindings: http://go-lang.cat-v.org/library-bindings
+
+- Servemux and Handlers: https://www.alexedwards.net/blog/an-introduction-to-handlers-and-servemuxes-in-go
