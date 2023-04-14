@@ -10,6 +10,7 @@
   - https://www.youtube.com/watch?v=HSFGKxvxsWs
 - KubeVela: https://platformengineering.org/platform-tooling/kubevela
 - Cloudfoundry/korify: https://github.com/cloudfoundry/korif
+  - https://github.com/pivotal/kpack 
 - Shipwright: https://github.com/shipwright-io/build#try-i
 - Shipa: https://platformengineering.org/platform-tooling/shipa-io
 - others: https://platformengineering.org/platform-tooling
