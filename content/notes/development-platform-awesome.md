@@ -7,6 +7,7 @@
 - https://kpt.dev/
 - https://tilt.dev
   - https://www.docker.com/blog/welcome-tilt-fixing-the-pains-of-microservice-development-for-kubernetes/
+  - https://www.youtube.com/watch?v=HSFGKxvxsWs
 - KubeVela: https://platformengineering.org/platform-tooling/kubevela
 - Cloudfoundry/korify: https://github.com/cloudfoundry/korif
 - Shipwright: https://github.com/shipwright-io/build#try-i
