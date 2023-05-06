@@ -11,3 +11,5 @@ Examples:
 
 Other material:
 - https://github.com/iovisor/gobpf
+- BCC with [`perf`](https://perf.wiki.kernel.org/index.php/Main_Page).
+- [Perf ring buffer and lost events](http://blog.itaysk.com/2020/04/20/ebpf-lost-events)
