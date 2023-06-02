@@ -6,4 +6,4 @@ Links:
 - https://docs.suricata.io/en/latest/capture-hardware/ebpf-xdp.html#setup-ebpf-filter
 - https://stackoverflow.com/questions/62866943/how-does-the-af-packet-socket-work-in-linux
 - https://github.com/jasonish/docker-suricata/pull/27
-- 
+- https://upload.wikimedia.org/wikipedia/commons/3/37/Netfilter-packet-flow.svg
