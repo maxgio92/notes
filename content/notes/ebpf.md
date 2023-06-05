@@ -45,6 +45,16 @@ title: eBPF links
 
 - https://aquasecurity.github.io/tracee/v0.6.5/building/nocore-ebpf/
 
+## BCC
+
+- https://programs.team/kprobes-injection-for-the-usage-and-principle-of-bcc.html
+
+### Perf: from `sys_perf_event_open` to `AttachPerfEvent`
+
+- https://github.com/iovisor/gobpf/pull/327
+- https://github.com/iovisor/bcc/issues/1756
+- https://github.com/cilium/ebpf/discussions/548
+
 ## Related
 
 - https://www.linkedin.com/pulse/elf-linux-executable-plt-got-tables-mohammad-alhyari/
