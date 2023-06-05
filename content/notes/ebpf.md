@@ -54,6 +54,7 @@ title: eBPF links
 - https://github.com/iovisor/gobpf/pull/327
 - https://github.com/iovisor/bcc/issues/1756
 - https://github.com/cilium/ebpf/discussions/548
+- libbpf: `sample frequency` vs `sample_period`: https://github.com/iovisor/bcc/blob/949a4e59175da289c2ed3dff1979da20b7aee953/src/cc/libbpf.c#L1459-L1464
 
 ## Related
 
