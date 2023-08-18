@@ -1,0 +1,445 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><title>How I improved consistency in web crawling with Go - maxgio's notes</title><meta name=description content="Introduction wfind is a simple web crawler for files and folders in web HTML pages. The goal is basically the same of GNU find for file systems. At the same time it&rsquo;s inspired by GNU wget, and it merges the find features applied to the web world.
+ TODO
+ ..And issues arose As wfind leverages go-colly for the scraping of web HTML pages, it also enables the user to run it asynchronously."><meta name=author content><link rel="preload stylesheet" as=style href=https://notes.maxgio.me/app.min.css><link rel="preload stylesheet" as=style href=https://notes.maxgio.me/an-old-hope.min.css><script defer src=https://notes.maxgio.me/highlight.min.js onload=hljs.initHighlightingOnLoad();></script><link rel=preload as=image href=https://notes.maxgio.me/theme.png><link rel=icon href=https://notes.maxgio.me/favicon.ico><link rel=apple-touch-icon href=https://notes.maxgio.me/apple-touch-icon.png><meta name=generator content="Hugo 0.79.1"><meta property="og:title" content="How I improved consistency in web crawling with Go"><meta property="og:description" content="Introduction wfind is a simple web crawler for files and folders in web HTML pages. The goal is basically the same of GNU find for file systems. At the same time it&rsquo;s inspired by GNU wget, and it merges the find features applied to the web world.
+ TODO
+ ..And issues arose As wfind leverages go-colly for the scraping of web HTML pages, it also enables the user to run it asynchronously."><meta property="og:type" content="article"><meta property="og:url" content="https://notes.maxgio.me/notes/wfind-retry/"><meta itemprop=name content="How I improved consistency in web crawling with Go"><meta itemprop=description content="Introduction wfind is a simple web crawler for files and folders in web HTML pages. The goal is basically the same of GNU find for file systems. At the same time it&rsquo;s inspired by GNU wget, and it merges the find features applied to the web world.
+ TODO
+ ..And issues arose As wfind leverages go-colly for the scraping of web HTML pages, it also enables the user to run it asynchronously."><meta itemprop=wordCount content="2389"><meta itemprop=keywords content><meta name=twitter:card content="summary"><meta name=twitter:title content="How I improved consistency in web crawling with Go"><meta name=twitter:description content="Introduction wfind is a simple web crawler for files and folders in web HTML pages. The goal is basically the same of GNU find for file systems. At the same time it&rsquo;s inspired by GNU wget, and it merges the find features applied to the web world.
+ TODO
+ ..And issues arose As wfind leverages go-colly for the scraping of web HTML pages, it also enables the user to run it asynchronously."></head><body class=not-ready data-menu=false><header class=header><p class=logo><a class=site-name href=https://notes.maxgio.me/>maxgio's notes</a><a class=btn-dark></a></p><script>let bodyClx=document.body.classList;let btnDark=document.querySelector('.btn-dark');let sysDark=window.matchMedia('(prefers-color-scheme: dark)');let darkVal=localStorage.getItem('dark');let setDark=(isDark)=>{bodyClx[isDark?'add':'remove']('dark');localStorage.setItem('dark',isDark?'yes':'no');};setDark(darkVal?darkVal==='yes':sysDark.matches);requestAnimationFrame(()=>bodyClx.remove('not-ready'));btnDark.addEventListener('click',()=>setDark(!bodyClx.contains('dark')));sysDark.addEventListener('change',(event)=>setDark(event.matches));</script></header><main class=main><article class=post-single><header class=post-title><p></p><h1>How I improved consistency in web crawling with Go</h1></header><section class=post-content><h1 id=introduction>Introduction</h1><p><a href=https://github.com/maxgio92/wfind>wfind</a> is a simple web crawler for files and folders in web HTML pages. The goal is basically the same of <a href=https://www.gnu.org/software/findutils/manual/html_mono/find.html>GNU find</a> for file systems.
+At the same time it&rsquo;s inspired by <a href=https://www.gnu.org/software/wget/manual/html_node/index.html>GNU wget</a>, and it merges the <code>find</code> features applied to the web world.</p><blockquote><p><code>TODO</code></p></blockquote><h2 id=and-issues-arose>..And issues arose</h2><p>As wfind leverages <a href=https://go-colly.org/>go-colly</a> for the scraping of web HTML pages, it also enables the user to run it <a href=https://go-colly.org/docs/examples/parallel/>asynchronously</a>.
+What that means is that it provides a way to execute the <a href=https://github.com/gocolly/colly/blob/v2.1.0/colly.go#L440><code>fetching</code></a> of HTTP objects as <a href=https://github.com/gocolly/colly/blob/v2.1.0/colly.go#L573>parallel work</a>.</p><p>In the <code>wfind</code> implementation, the synchronization is as simple as invoking the <a href=https://github.com/gocolly/colly/blob/v2.1.0/colly.go#L812><code>Wait</code></a> function, provided by the Colly collector, that wraps around the standard <a href=https://pkg.go.dev/sync#WaitGroup><code>WaitGroup</code></a>&rsquo;s <code>Wait()</code>, from the Go standard library&rsquo;s sync package.</p><p>As the go-colly implementation does not provide cap on the parallelism, the implementation can lead to the usual concurrency problems.
+Client-side, the maxmimum allowed open connections could prevent the client to open and then establish new ones during the scraping.
+The server could introduce problems and we cannot predict al lthe logics that could lead to them.
+Also, the connection mean is another point of failure; for example latency might cause the HTTP client to time out during go-colly&rsquo;s <a href=https://github.com/gocolly/colly/blob/v2.1.0/colly.go#L440C20-L440C27><code>Visit</code></a> waiting for a response.</p><p>At the end of the day a retry logics was fundamental in order to improve the consistency in the crawling.</p><p>Supporting the expected behaviour and result as a consumer, providing the tool as a black-box, end-to-end tests have been vital.</p><h2 id=the-end-to-end-tests>The end-to-end tests</h2><p>As end-to-end functional tests treat the program as a black-box and ensures that provide the value as expected, interacting with the real actors in the expected scenarios, I wrote tests again real CentOS kernel.org mirrors, looking for repository metadata files, as an example use case of <code>wfind</code>.</p><p>Knowing in advance the expected result the test would simply consider two main run mode: sync and async.
+I used GinkGo as I like how it enables to provide readable tests and expected behaviour, for black-box tests in general - the same applies to integration and black-box unit tests to declare clearly the feature or unit specifications.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#f92672>package</span> <span style=color:#a6e22e>find_test</span>
+
+<span style=color:#f92672>import</span> (
+	. <span style=color:#e6db74>&#34;github.com/onsi/ginkgo/v2&#34;</span>
+	. <span style=color:#e6db74>&#34;github.com/onsi/gomega&#34;</span>
+
+	<span style=color:#e6db74>&#34;github.com/maxgio92/wfind/internal/network&#34;</span>
+	<span style=color:#e6db74>&#34;github.com/maxgio92/wfind/pkg/find&#34;</span>
+)
+
+<span style=color:#66d9ef>const</span> (
+	<span style=color:#a6e22e>seedURL</span>         = <span style=color:#e6db74>&#34;https://mirrors.edge.kernel.org/centos/8-stream&#34;</span>
+	<span style=color:#a6e22e>fileRegexp</span>      = <span style=color:#e6db74>&#34;repomd.xml$&#34;</span>
+	<span style=color:#a6e22e>expectedResults</span> = <span style=color:#ae81ff>155</span>
+)
+
+<span style=color:#66d9ef>var</span> <span style=color:#a6e22e>_</span> = <span style=color:#a6e22e>Describe</span>(<span style=color:#e6db74>&#34;File crawling&#34;</span>, <span style=color:#66d9ef>func</span>() {
+	<span style=color:#a6e22e>Context</span>(<span style=color:#e6db74>&#34;Async&#34;</span>, <span style=color:#66d9ef>func</span>() {
+		<span style=color:#66d9ef>var</span> (
+			<span style=color:#a6e22e>search</span> = <span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>NewFind</span>(
+				<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithAsync</span>(<span style=color:#66d9ef>true</span>),
+				<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithSeedURLs</span>([]<span style=color:#66d9ef>string</span>{<span style=color:#a6e22e>seedURL</span>}),
+				<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithFilenameRegexp</span>(<span style=color:#a6e22e>fileRegexp</span>),
+				<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithFileType</span>(<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>FileTypeReg</span>),
+				<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithRecursive</span>(<span style=color:#66d9ef>true</span>),
+			)
+			<span style=color:#a6e22e>actual</span>        <span style=color:#f92672>*</span><span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>Result</span>
+			<span style=color:#a6e22e>err</span>           <span style=color:#66d9ef>error</span>
+			<span style=color:#a6e22e>expectedCount</span> = <span style=color:#a6e22e>expectedResults</span>
+		)
+		<span style=color:#a6e22e>BeforeEach</span>(<span style=color:#66d9ef>func</span>() {
+			<span style=color:#a6e22e>actual</span>, <span style=color:#a6e22e>err</span> = <span style=color:#a6e22e>search</span>.<span style=color:#a6e22e>Find</span>()
+		})
+		<span style=color:#a6e22e>It</span>(<span style=color:#e6db74>&#34;Should not fail&#34;</span>, <span style=color:#66d9ef>func</span>() {
+			<span style=color:#a6e22e>Expect</span>(<span style=color:#a6e22e>err</span>).<span style=color:#a6e22e>To</span>(<span style=color:#a6e22e>BeNil</span>())
+		})
+		<span style=color:#a6e22e>It</span>(<span style=color:#e6db74>&#34;Should stage results&#34;</span>, <span style=color:#66d9ef>func</span>() {
+			<span style=color:#a6e22e>Expect</span>(<span style=color:#a6e22e>actual</span>.<span style=color:#a6e22e>URLs</span>).<span style=color:#a6e22e>ToNot</span>(<span style=color:#a6e22e>BeEmpty</span>())
+			<span style=color:#a6e22e>Expect</span>(<span style=color:#a6e22e>actual</span>.<span style=color:#a6e22e>URLs</span>).<span style=color:#a6e22e>ToNot</span>(<span style=color:#a6e22e>BeNil</span>())
+		})
+		<span style=color:#a6e22e>It</span>(<span style=color:#e6db74>&#34;Should stage exact result count&#34;</span>, <span style=color:#66d9ef>func</span>() {
+			<span style=color:#a6e22e>Expect</span>(len(<span style=color:#a6e22e>actual</span>.<span style=color:#a6e22e>URLs</span>)).<span style=color:#a6e22e>To</span>(<span style=color:#a6e22e>Equal</span>(<span style=color:#a6e22e>expectedCount</span>))
+		})
+	})
+	<span style=color:#a6e22e>Context</span>(<span style=color:#e6db74>&#34;Sync&#34;</span>, <span style=color:#66d9ef>func</span>() {
+		[<span style=color:#f92672>...</span>]
+  })
+})
+</code></pre></div><p>As you can note, the order in which results are returned is not important and thus not tested.</p><h2 id=retry-logics>Retry logics</h2><p>The first concrete goal of the retry logics was to start to see green flags from the GinkGo output:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>$ ginkgo --focus <span style=color:#e6db74>&#34;File crawling&#34;</span> pkg/find
+<span style=color:#f92672>[</span>...<span style=color:#f92672>]</span>
+FAIL! <span style=color:#f92672>[</span>...<span style=color:#f92672>]</span>
+</code></pre></div><p>A mean to ensure, that requests failed would have been retried was essential.
+Fortunately go-colly provide way to register a callback, that as per the documentation it registers a function that will be executed if an error occurs during the HTTP request, with <a href=https://github.com/gocolly/colly/blob/v2.1.0/colly.go#L917><code>OnError</code></a>.</p><p>That way it&rsquo;s possible to run a custom handler as the response (and the request) object and the error are available in context of the helper, as for the <a href=https://github.com/gocolly/colly/blob/v2.1.0/colly.go#L146>signature</a>.</p><h3 id=dumb-retrier>Dumb retrier</h3><p>The first implementation of the retry could have been as simple as retry for a fixed amount of times, after a fixed amount of period.</p><p>For example:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#a6e22e>collector</span>.<span style=color:#a6e22e>OnError</span>(<span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>resp</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>colly</span>.<span style=color:#a6e22e>Response</span>, <span style=color:#a6e22e>err</span> <span style=color:#66d9ef>error</span>) {
+  <span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Sleep</span>(<span style=color:#ae81ff>2</span> <span style=color:#f92672>*</span> <span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Second</span>)
+  <span style=color:#a6e22e>resp</span>.<span style=color:#a6e22e>Request</span>.<span style=color:#a6e22e>Retry</span>()
+})
+</code></pre></div><p>For sure this wasn&rsquo;t enough.</p><h3 id=retry-with-exponential-backoff>Retry with exponential backoff</h3><p>At first, a single retry might not be enough, and also, a fixed backoff could be too big or too small period depending on the type of failure and the context.</p><p>So I decided to leverage the community projects and digging around backoff implementations. After that, I picked and imported <a href=https://github.com/cenkalti/backoff><code>github.com/cenkalti/backoff</code></a> package.
+I liked the design as it respects all the SOLID principles. As that, it allows me to mix and match with further custom backoff implementations, still leveraging its tickers.</p><p>Furthermore, I wanted to provide knobs to control retry for specific errors encountered during the HTTP request. So I ended up with something like this:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#75715e>// handleError handles an error received making a colly.Request.
+</span><span style=color:#75715e>// It accepts a colly.Response and the error.
+</span><span style=color:#75715e></span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>o</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Options</span>) <span style=color:#a6e22e>handleError</span>(<span style=color:#a6e22e>response</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>colly</span>.<span style=color:#a6e22e>Response</span>, <span style=color:#a6e22e>err</span> <span style=color:#66d9ef>error</span>) {
+	<span style=color:#66d9ef>switch</span> {
+	<span style=color:#75715e>// Context timed out.
+</span><span style=color:#75715e></span>	<span style=color:#66d9ef>case</span> <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>Is</span>(<span style=color:#a6e22e>err</span>, <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>DeadlineExceeded</span>):
+		<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>ContextDeadlineExceededRetryBackOff</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+			<span style=color:#a6e22e>retryWithExponentialBackoff</span>(<span style=color:#a6e22e>response</span>.<span style=color:#a6e22e>Request</span>.<span style=color:#a6e22e>Retry</span>, <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>TimeoutRetryBackOff</span>)
+		}
+	<span style=color:#75715e>// Request has timed out.
+</span><span style=color:#75715e></span>	<span style=color:#66d9ef>case</span> <span style=color:#a6e22e>os</span>.<span style=color:#a6e22e>IsTimeout</span>(<span style=color:#a6e22e>err</span>):
+		<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>TimeoutRetryBackOff</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+			<span style=color:#a6e22e>retryWithExponentialBackoff</span>(<span style=color:#a6e22e>response</span>.<span style=color:#a6e22e>Request</span>.<span style=color:#a6e22e>Retry</span>, <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>TimeoutRetryBackOff</span>)
+		}
+	<span style=color:#75715e>// Connection has been reset (RST) by the peer.
+</span><span style=color:#75715e></span>	<span style=color:#66d9ef>case</span> <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>Is</span>(<span style=color:#a6e22e>err</span>, <span style=color:#a6e22e>unix</span>.<span style=color:#a6e22e>ECONNRESET</span>):
+		<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>ConnResetRetryBackOff</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+			<span style=color:#a6e22e>retryWithExponentialBackoff</span>(<span style=color:#a6e22e>response</span>.<span style=color:#a6e22e>Request</span>.<span style=color:#a6e22e>Retry</span>, <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>ConnResetRetryBackOff</span>)
+		}
+	<span style=color:#75715e>// Other failures.
+</span><span style=color:#75715e></span>	<span style=color:#66d9ef>default</span>:
+	}
+}
+</code></pre></div><p>With the implementation of the retry leveraging the cenkalti&rsquo;s <code>backoff</code> package as for its official <a href=https://github.com/cenkalti/backoff/blob/v4/example_test.go#L42C1-L71C2>example</a>:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#75715e>// retryWithExtponentialBackoff retries with an exponential backoff a function.
+</span><span style=color:#75715e>// Exponential backoff can be tuned with options accepted as arguments to the function.
+</span><span style=color:#75715e></span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>retryWithExponentialBackoff</span>(<span style=color:#a6e22e>retryF</span> <span style=color:#66d9ef>func</span>() <span style=color:#66d9ef>error</span>, <span style=color:#a6e22e>opts</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>ExponentialBackOffOptions</span>) {
+	<span style=color:#a6e22e>ticker</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>backoff</span>.<span style=color:#a6e22e>NewTicker</span>(
+		<span style=color:#a6e22e>utils</span>.<span style=color:#a6e22e>NewExponentialBackOff</span>(
+			<span style=color:#a6e22e>utils</span>.<span style=color:#a6e22e>WithClock</span>(<span style=color:#a6e22e>opts</span>.<span style=color:#a6e22e>Clock</span>),
+			<span style=color:#a6e22e>utils</span>.<span style=color:#a6e22e>WithInitialInterval</span>(<span style=color:#a6e22e>opts</span>.<span style=color:#a6e22e>InitialInterval</span>),
+			<span style=color:#a6e22e>utils</span>.<span style=color:#a6e22e>WithMaxInterval</span>(<span style=color:#a6e22e>opts</span>.<span style=color:#a6e22e>MaxInterval</span>),
+			<span style=color:#a6e22e>utils</span>.<span style=color:#a6e22e>WithMaxElapsedTime</span>(<span style=color:#a6e22e>opts</span>.<span style=color:#a6e22e>MaxElapsedTime</span>),
+		),
+	)
+
+	<span style=color:#66d9ef>var</span> <span style=color:#a6e22e>err</span> <span style=color:#66d9ef>error</span>
+
+	<span style=color:#75715e>// Ticks will continue to arrive when the previous retryF is still running,
+</span><span style=color:#75715e></span>	<span style=color:#75715e>// so operations that take a while to fail could run in quick succession.
+</span><span style=color:#75715e></span>	<span style=color:#66d9ef>for</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>ticker</span>.<span style=color:#a6e22e>C</span> {
+		<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> = <span style=color:#a6e22e>retryF</span>(); <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+			<span style=color:#75715e>// Retry.
+</span><span style=color:#75715e></span>			<span style=color:#66d9ef>continue</span>
+		}
+
+		<span style=color:#a6e22e>ticker</span>.<span style=color:#a6e22e>Stop</span>()
+		<span style=color:#66d9ef>break</span>
+	}
+
+	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+		<span style=color:#75715e>// Retry has failed.
+</span><span style=color:#75715e></span>		<span style=color:#66d9ef>return</span>
+	}
+
+	<span style=color:#75715e>// Retry is successful.
+</span><span style=color:#75715e></span>}
+</code></pre></div><p>The end-to-end test could have been then updated with something like:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>var</span> <span style=color:#a6e22e>_</span> = <span style=color:#a6e22e>Describe</span>(<span style=color:#e6db74>&#34;File crawling&#34;</span>, <span style=color:#66d9ef>func</span>() {
+	<span style=color:#a6e22e>Context</span>(<span style=color:#e6db74>&#34;Async&#34;</span>, <span style=color:#66d9ef>func</span>() {
+		<span style=color:#66d9ef>var</span> (
+			<span style=color:#a6e22e>search</span> = <span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>NewFind</span>(
+				<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithAsync</span>(<span style=color:#66d9ef>true</span>),
+				<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithSeedURLs</span>([]<span style=color:#66d9ef>string</span>{<span style=color:#a6e22e>seedURL</span>}),
+				<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithClientTransport</span>(<span style=color:#a6e22e>network</span>.<span style=color:#a6e22e>DefaultClientTransport</span>),
+				<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithFilenameRegexp</span>(<span style=color:#a6e22e>fileRegexp</span>),
+				<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithFileType</span>(<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>FileTypeReg</span>),
+				<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithRecursive</span>(<span style=color:#66d9ef>true</span>),
+
+				<span style=color:#75715e>// Enable retry backoff with default parameters.
+</span><span style=color:#75715e></span>				<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithContextDeadlineExceededRetryBackOff</span>(<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>DefaultExponentialBackOffOptions</span>),
+				<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithConnTimeoutRetryBackOff</span>(<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>DefaultExponentialBackOffOptions</span>),
+				<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithConnResetRetryBackOff</span>(<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>DefaultExponentialBackOffOptions</span>),
+			)
+			<span style=color:#a6e22e>actual</span>        <span style=color:#f92672>*</span><span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>Result</span>
+			<span style=color:#a6e22e>err</span>           <span style=color:#66d9ef>error</span>
+			<span style=color:#a6e22e>expectedCount</span> = <span style=color:#a6e22e>expectedResults</span>
+		)
+		<span style=color:#a6e22e>BeforeEach</span>(<span style=color:#66d9ef>func</span>() {
+			<span style=color:#a6e22e>actual</span>, <span style=color:#a6e22e>err</span> = <span style=color:#a6e22e>search</span>.<span style=color:#a6e22e>Find</span>()
+		})
+		<span style=color:#a6e22e>It</span>(<span style=color:#e6db74>&#34;Should not fail&#34;</span>, <span style=color:#66d9ef>func</span>() {
+			<span style=color:#a6e22e>Expect</span>(<span style=color:#a6e22e>err</span>).<span style=color:#a6e22e>To</span>(<span style=color:#a6e22e>BeNil</span>())
+		})
+		<span style=color:#a6e22e>It</span>(<span style=color:#e6db74>&#34;Should stage results&#34;</span>, <span style=color:#66d9ef>func</span>() {
+			<span style=color:#a6e22e>Expect</span>(<span style=color:#a6e22e>actual</span>.<span style=color:#a6e22e>URLs</span>).<span style=color:#a6e22e>ToNot</span>(<span style=color:#a6e22e>BeEmpty</span>())
+			<span style=color:#a6e22e>Expect</span>(<span style=color:#a6e22e>actual</span>.<span style=color:#a6e22e>URLs</span>).<span style=color:#a6e22e>ToNot</span>(<span style=color:#a6e22e>BeNil</span>())
+		})
+		<span style=color:#a6e22e>It</span>(<span style=color:#e6db74>&#34;Should stage exact result count&#34;</span>, <span style=color:#66d9ef>func</span>() {
+			<span style=color:#a6e22e>Expect</span>(len(<span style=color:#a6e22e>actual</span>.<span style=color:#a6e22e>URLs</span>)).<span style=color:#a6e22e>To</span>(<span style=color:#a6e22e>Equal</span>(<span style=color:#a6e22e>expectedCount</span>))
+		})
+	})
+})
+</code></pre></div><p>being the retry options inherited by the previous <code>retryWithExponentialBackoff</code> function.</p><p>You can read here all the <code>find</code> options, including the new retry ones:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#75715e>// Options represents the options for the Find job.
+</span><span style=color:#75715e></span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Options</span> <span style=color:#66d9ef>struct</span> {
+	<span style=color:#75715e>// SeedURLs are the URLs used as root URLs from which for the find&#39;s web scraping.
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>SeedURLs</span> []<span style=color:#66d9ef>string</span>
+
+	<span style=color:#75715e>// FilenameRegexp is a regular expression for which a pattern should match the file names in the Result.
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>FilenameRegexp</span> <span style=color:#66d9ef>string</span>
+
+	<span style=color:#75715e>// FileType is the file type for which the Find job examines the web hierarchy.
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>FileType</span> <span style=color:#66d9ef>string</span>
+
+	<span style=color:#75715e>// Recursive enables the Find job to examine files referenced to by the seeds files recursively.
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>Recursive</span> <span style=color:#66d9ef>bool</span>
+
+	<span style=color:#75715e>// Verbose enables the Find job verbosity printing every visited URL.
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>Verbose</span> <span style=color:#66d9ef>bool</span>
+
+	<span style=color:#75715e>// Async represetns the option to scrape with multiple asynchronous coroutines.
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>Async</span> <span style=color:#66d9ef>bool</span>
+
+	<span style=color:#75715e>// ConnResetRetryBackOff controls the error handling on responses.
+</span><span style=color:#75715e></span>	<span style=color:#75715e>// If not nil, when the connection is reset by the peer (TCP RST), the request
+</span><span style=color:#75715e></span>	<span style=color:#75715e>// is retried with an exponential backoff interval.
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>ConnResetRetryBackOff</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>ExponentialBackOffOptions</span>
+
+	<span style=color:#75715e>// TimeoutRetryBackOff controls the error handling on responses.
+</span><span style=color:#75715e></span>	<span style=color:#75715e>// If not nil, when the connection times out (based on client timeout), the request
+</span><span style=color:#75715e></span>	<span style=color:#75715e>// is retried with an exponential backoff interval.
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>TimeoutRetryBackOff</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>ExponentialBackOffOptions</span>
+
+	<span style=color:#75715e>// ContextDeadlineExceededRetryBackOff controls the error handling on responses.
+</span><span style=color:#75715e></span>	<span style=color:#75715e>// If not nil, when the request context deadline exceeds, the request
+</span><span style=color:#75715e></span>	<span style=color:#75715e>// is retried with an exponential backoff interval.
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>ContextDeadlineExceededRetryBackOff</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>ExponentialBackOffOptions</span>
+}
+</code></pre></div><p>And now let&rsquo;s run the e2e test again:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>$ ginkgo --focus <span style=color:#e6db74>&#34;File crawling&#34;</span> pkg/find
+OOM killed
+</code></pre></div><p>It was likely that a memory leak or high consumption was already present, but without neither performance tests nor retry logics, no problems arose.</p><p>So, a heap memory profile was then needed.</p><h3 id=entering-pprof>Entering pprof</h3><p>Long story short, pprof is a standard library&rsquo;s package that serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.</p><blockquote><p>I recommend the official documentation of the package, and this great <a href=https://jvns.ca/blog/2017/09/24/profiling-go-with-pprof/>Julia Evans' blog</a>.</p></blockquote><p>So, I simply linked pprof package:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#f92672>package</span> <span style=color:#a6e22e>find</span>
+
+<span style=color:#f92672>import</span> (
+  [<span style=color:#f92672>...</span>]
+  <span style=color:#a6e22e>_</span> <span style=color:#e6db74>&#34;net/http/pprof&#34;</span>
+
+  [<span style=color:#f92672>...</span>]
+)
+</code></pre></div><p>and modified the tested function <code>Find()</code> to run its webserver in parallel:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>o</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Options</span>) <span style=color:#a6e22e>Find</span>() (<span style=color:#f92672>*</span><span style=color:#a6e22e>Result</span>, <span style=color:#66d9ef>error</span>) {
+	<span style=color:#66d9ef>go</span> <span style=color:#66d9ef>func</span>() {
+		<span style=color:#a6e22e>log</span>.<span style=color:#a6e22e>Println</span>(<span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>ListenAndServe</span>(<span style=color:#e6db74>&#34;localhost:6060&#34;</span>, <span style=color:#66d9ef>nil</span>))
+	}()
+
+	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>Validate</span>(); <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+		<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>nil</span>, <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>Wrap</span>(<span style=color:#a6e22e>err</span>, <span style=color:#e6db74>&#34;error validating find options&#34;</span>)
+	}
+
+	<span style=color:#66d9ef>switch</span> <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>FileType</span> {
+	<span style=color:#66d9ef>case</span> <span style=color:#a6e22e>FileTypeReg</span>:
+		<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>crawlFiles</span>()
+	<span style=color:#66d9ef>case</span> <span style=color:#a6e22e>FileTypeDir</span>:
+		<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>crawlFolders</span>()
+	<span style=color:#66d9ef>default</span>:
+		<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>crawlFiles</span>()
+	}
+}
+</code></pre></div><p>run the tests:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>$ ginkgo --focus <span style=color:#e6db74>&#34;File crawling&#34;</span> pkg/find
+</code></pre></div><p>and immediately invoke the pprof go tool to download the heap memory profile as a PNG image:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>$ go tool pprof http://localhost:6060/debug/pprof/heap
+<span style=color:#f92672>(</span>pprof<span style=color:#f92672>)</span> png
+Generating report in profile001.png
+</code></pre></div><p>Looking at the graph it was evident that the great amount of memory mapping was request by a buffer reading:<code>io.ReadAll()</code>, called from <code>colly(*httpBackend).Do()</code>.</p><p>So digging into the go-colly HTTP backend <code>Do</code> implementation, the <a href=https://github.com/gocolly/colly/blob/v2.1.0/http_backend.go#L209>offending line</a> was:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>h</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>httpBackend</span>) <span style=color:#a6e22e>Do</span>(<span style=color:#a6e22e>request</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>Request</span>, <span style=color:#a6e22e>bodySize</span> <span style=color:#66d9ef>int</span>, <span style=color:#a6e22e>checkHeadersFunc</span> <span style=color:#a6e22e>checkHeadersFunc</span>) (<span style=color:#f92672>*</span><span style=color:#a6e22e>Response</span>, <span style=color:#66d9ef>error</span>) {
+	<span style=color:#f92672>...</span>
+
+	<span style=color:#a6e22e>res</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>h</span>.<span style=color:#a6e22e>Client</span>.<span style=color:#a6e22e>Do</span>(<span style=color:#a6e22e>request</span>)
+	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+		<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>nil</span>, <span style=color:#a6e22e>err</span>
+	}
+	<span style=color:#66d9ef>defer</span> <span style=color:#a6e22e>res</span>.<span style=color:#a6e22e>Body</span>.<span style=color:#a6e22e>Close</span>()
+	<span style=color:#f92672>...</span>
+
+	<span style=color:#66d9ef>var</span> <span style=color:#a6e22e>bodyReader</span> <span style=color:#a6e22e>io</span>.<span style=color:#a6e22e>Reader</span> = <span style=color:#a6e22e>res</span>.<span style=color:#a6e22e>Body</span>
+	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>bodySize</span> &gt; <span style=color:#ae81ff>0</span> {
+		<span style=color:#a6e22e>bodyReader</span> = <span style=color:#a6e22e>io</span>.<span style=color:#a6e22e>LimitReader</span>(<span style=color:#a6e22e>bodyReader</span>, int64(<span style=color:#a6e22e>bodySize</span>))
+	}
+	<span style=color:#f92672>...</span>
+	<span style=color:#a6e22e>body</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>ioutil</span>.<span style=color:#a6e22e>ReadAll</span>(<span style=color:#a6e22e>bodyReader</span>)
+	<span style=color:#f92672>...</span>
+}
+</code></pre></div><p>So, a mean to limit response body was mandatory.</p><h3 id=max-http-body-size>Max HTTP body size</h3><p>Fortunately, go-colly provides a way to set the requests' max body size, so I ended up exposing a knob in the <code>find</code> functional options:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#f92672>package</span> <span style=color:#a6e22e>find</span>
+
+<span style=color:#f92672>...</span>
+
+<span style=color:#75715e>// NewFind returns a new Find object to find files over HTTP and HTTPS.
+</span><span style=color:#75715e></span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>NewFind</span>(<span style=color:#a6e22e>opts</span> <span style=color:#f92672>...</span><span style=color:#a6e22e>Option</span>) <span style=color:#f92672>*</span><span style=color:#a6e22e>Options</span> {
+	<span style=color:#a6e22e>o</span> <span style=color:#f92672>:=</span> <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>Options</span>{}
+
+	<span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>f</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>opts</span> {
+		<span style=color:#a6e22e>f</span>(<span style=color:#a6e22e>o</span>)
+	}
+
+	<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>init</span>()
+
+	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>o</span>
+}
+
+<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>WithMaxBodySize</span>(<span style=color:#a6e22e>maxBodySize</span> <span style=color:#66d9ef>int</span>) <span style=color:#a6e22e>Option</span> {
+	<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>opts</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Options</span>) {
+		<span style=color:#a6e22e>opts</span>.<span style=color:#a6e22e>MaxBodySize</span> = <span style=color:#a6e22e>maxBodySize</span>
+	}
+}
+</code></pre></div><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#75715e>// Options represents the options for the Find job.
+</span><span style=color:#75715e></span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Options</span> <span style=color:#66d9ef>struct</span> {
+	<span style=color:#f92672>...</span>
+
+	<span style=color:#75715e>// ClientTransport represents the Transport used for the HTTP client.
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>ClientTransport</span> <span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>RoundTripper</span>
+
+	<span style=color:#75715e>// MaxBodySize is the limit in bytes of each of the retrieved response body.
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>MaxBodySize</span> <span style=color:#66d9ef>int</span>
+
+	<span style=color:#f92672>...</span>
+}
+</code></pre></div><p>which then would have fill the go-colly setting:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#f92672>package</span> <span style=color:#a6e22e>find</span>
+
+<span style=color:#f92672>...</span>
+
+<span style=color:#75715e>// crawlFiles returns a list of file names found from the seed URL, filtered by file name regex.
+</span><span style=color:#75715e></span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>o</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Options</span>) <span style=color:#a6e22e>crawlFiles</span>() (<span style=color:#f92672>*</span><span style=color:#a6e22e>Result</span>, <span style=color:#66d9ef>error</span>) {
+	<span style=color:#f92672>...</span>
+
+	<span style=color:#75715e>// Create the collector settings
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>coOptions</span> <span style=color:#f92672>:=</span> []<span style=color:#66d9ef>func</span>(<span style=color:#f92672>*</span><span style=color:#a6e22e>colly</span>.<span style=color:#a6e22e>Collector</span>){
+		<span style=color:#f92672>...</span>
+		<span style=color:#a6e22e>colly</span>.<span style=color:#a6e22e>MaxBodySize</span>(<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>MaxBodySize</span>),
+	}
+</code></pre></div><p>and updated the end-to-end test, tuning the parameter with an expected maximum value:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>var</span> <span style=color:#a6e22e>_</span> = <span style=color:#a6e22e>Describe</span>(<span style=color:#e6db74>&#34;File crawling&#34;</span>, <span style=color:#66d9ef>func</span>() {
+	<span style=color:#a6e22e>Context</span>(<span style=color:#e6db74>&#34;Async&#34;</span>, <span style=color:#66d9ef>func</span>() {
+		<span style=color:#66d9ef>var</span> (
+			<span style=color:#a6e22e>search</span> = <span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>NewFind</span>(
+				<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithAsync</span>(<span style=color:#66d9ef>true</span>),
+				<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithSeedURLs</span>([]<span style=color:#66d9ef>string</span>{<span style=color:#a6e22e>seedURL</span>}),
+				<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithFilenameRegexp</span>(<span style=color:#a6e22e>fileRegexp</span>),
+				<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithFileType</span>(<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>FileTypeReg</span>),
+				<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithRecursive</span>(<span style=color:#66d9ef>true</span>),
+				<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithMaxBodySize</span>(<span style=color:#ae81ff>1024</span><span style=color:#f92672>*</span><span style=color:#ae81ff>512</span>),
+				<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithConnTimeoutRetryBackOff</span>(<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>DefaultExponentialBackOffOptions</span>),
+				<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithConnResetRetryBackOff</span>(<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>DefaultExponentialBackOffOptions</span>),
+			)
+			<span style=color:#a6e22e>actual</span>        <span style=color:#f92672>*</span><span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>Result</span>
+			<span style=color:#a6e22e>err</span>           <span style=color:#66d9ef>error</span>
+			<span style=color:#a6e22e>expectedCount</span> = <span style=color:#a6e22e>expectedResults</span>
+		)
+		<span style=color:#a6e22e>BeforeEach</span>(<span style=color:#66d9ef>func</span>() {
+			<span style=color:#a6e22e>actual</span>, <span style=color:#a6e22e>err</span> = <span style=color:#a6e22e>search</span>.<span style=color:#a6e22e>Find</span>()
+		})
+		<span style=color:#a6e22e>It</span>(<span style=color:#e6db74>&#34;Should not fail&#34;</span>, <span style=color:#66d9ef>func</span>() {
+			<span style=color:#a6e22e>Expect</span>(<span style=color:#a6e22e>err</span>).<span style=color:#a6e22e>To</span>(<span style=color:#a6e22e>BeNil</span>())
+		})
+		<span style=color:#a6e22e>It</span>(<span style=color:#e6db74>&#34;Should stage results&#34;</span>, <span style=color:#66d9ef>func</span>() {
+			<span style=color:#a6e22e>Expect</span>(<span style=color:#a6e22e>actual</span>.<span style=color:#a6e22e>URLs</span>).<span style=color:#a6e22e>ToNot</span>(<span style=color:#a6e22e>BeEmpty</span>())
+			<span style=color:#a6e22e>Expect</span>(<span style=color:#a6e22e>actual</span>.<span style=color:#a6e22e>URLs</span>).<span style=color:#a6e22e>ToNot</span>(<span style=color:#a6e22e>BeNil</span>())
+		})
+		<span style=color:#a6e22e>It</span>(<span style=color:#e6db74>&#34;Should stage exact result count&#34;</span>, <span style=color:#66d9ef>func</span>() {
+			<span style=color:#a6e22e>Expect</span>(len(<span style=color:#a6e22e>actual</span>.<span style=color:#a6e22e>URLs</span>)).<span style=color:#a6e22e>To</span>(<span style=color:#a6e22e>Equal</span>(<span style=color:#a6e22e>expectedCount</span>))
+		})
+	})
+	<span style=color:#a6e22e>Context</span>(<span style=color:#e6db74>&#34;Sync&#34;</span>, <span style=color:#66d9ef>func</span>() {
+		<span style=color:#f92672>...</span>
+	})
+}
+</code></pre></div><p>run again the tests:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>$ ginkgo --focus <span style=color:#e6db74>&#34;File crawling&#34;</span> pkg/find
+...
+Ran <span style=color:#ae81ff>3</span> of <span style=color:#ae81ff>3</span> Specs in 7.552 seconds
+SUCCESS! -- <span style=color:#ae81ff>3</span> Passed | <span style=color:#ae81ff>0</span> Failed | <span style=color:#ae81ff>0</span> Pending | <span style=color:#ae81ff>0</span> Skipped
+</code></pre></div><p>and tests passed.</p><h3 id=more-tuning-http-clients-transport>More tuning: HTTP client&rsquo;s Transport</h3><p>Another important network and connection parameters are provided with the go <code>Transport</code>.
+Connection timeout, TCP keep alive interval, TLS handshake timeout, Go net/http idle connnection pool maximum size, idle connections timeout are just some of them.</p><p>The <a href=https://github.com/golang/go/blob/go1.21.0/src/net/http/transport.go#L925>connection pool</a> size here is fundamental to be tuned in order to satisfy the level of concurrency enabled by the asynchronous mode of go-colly, hence of wfind.</p><p>In detail, Go net/http <code>Get</code> keeps the connection pool as a cache of TCP connections, but when all are in use it opens another one.
+If the parallelism is greater than the limit of idle connections, the program is going to be regularly discarding connections and opening new ones, the latters ending up in <code>TIME_WAIT</code> TCP state for two minutes, tying up that connection.</p><blockquote><p>About <code>TIME_WAIT</code> TCP state I recommend <a href=https://vincent.bernat.ch/en/blog/2014-tcp-time-wait-state-linux>this blog</a> by Vincent Bernat.</p></blockquote><p>From the Go standard library net/http package:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#f92672>package</span> <span style=color:#a6e22e>http</span>
+
+<span style=color:#f92672>...</span>
+<span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Transport</span> <span style=color:#66d9ef>struct</span> {
+	<span style=color:#f92672>...</span>
+
+	<span style=color:#75715e>// MaxIdleConns controls the maximum number of idle (keep-alive)
+</span><span style=color:#75715e></span>	<span style=color:#75715e>// connections across all hosts. Zero means no limit.
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>MaxIdleConns</span> <span style=color:#66d9ef>int</span>
+
+	<span style=color:#75715e>// MaxIdleConnsPerHost, if non-zero, controls the maximum idle
+</span><span style=color:#75715e></span>	<span style=color:#75715e>// (keep-alive) connections to keep per-host. If zero,
+</span><span style=color:#75715e></span>	<span style=color:#75715e>// DefaultMaxIdleConnsPerHost is used.
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>MaxIdleConnsPerHost</span> <span style=color:#66d9ef>int</span>
+</code></pre></div><p>As so, it was very useful to provide way to inject a Transport configured for specific use cases.</p><p>Long story short:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#f92672>package</span> <span style=color:#a6e22e>find</span>
+
+<span style=color:#75715e>// Options represents the options for the Find job.
+</span><span style=color:#75715e></span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Options</span> <span style=color:#66d9ef>struct</span> {
+	<span style=color:#f92672>...</span>
+
+	<span style=color:#75715e>// ClientTransport represents the Transport used for the HTTP client.
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>ClientTransport</span> <span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>RoundTripper</span>
+
+	<span style=color:#f92672>...</span>
+}
+</code></pre></div><p>and in the go-colly collector set-up:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#f92672>package</span> <span style=color:#a6e22e>find</span>
+
+<span style=color:#75715e>// crawlFiles returns a list of file names found from the seed URL, filtered by file name regex.
+</span><span style=color:#75715e></span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>o</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Options</span>) <span style=color:#a6e22e>crawlFiles</span>() (<span style=color:#f92672>*</span><span style=color:#a6e22e>Result</span>, <span style=color:#66d9ef>error</span>) {
+	<span style=color:#f92672>...</span>
+
+	<span style=color:#75715e>// Create the collector settings
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>coOptions</span> <span style=color:#f92672>:=</span> []<span style=color:#66d9ef>func</span>(<span style=color:#f92672>*</span><span style=color:#a6e22e>colly</span>.<span style=color:#a6e22e>Collector</span>){
+		<span style=color:#a6e22e>colly</span>.<span style=color:#a6e22e>AllowedDomains</span>(<span style=color:#a6e22e>allowedDomains</span><span style=color:#f92672>...</span>),
+		<span style=color:#a6e22e>colly</span>.<span style=color:#a6e22e>Async</span>(<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>Async</span>),
+		<span style=color:#a6e22e>colly</span>.<span style=color:#a6e22e>MaxBodySize</span>(<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>MaxBodySize</span>),
+	}
+
+	<span style=color:#f92672>...</span>
+
+	<span style=color:#75715e>// Create the collector.
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>co</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>colly</span>.<span style=color:#a6e22e>NewCollector</span>(<span style=color:#a6e22e>coOptions</span><span style=color:#f92672>...</span>)
+	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>ClientTransport</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+		<span style=color:#a6e22e>co</span>.<span style=color:#a6e22e>WithTransport</span>(<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>ClientTransport</span>)
+	}
+</code></pre></div><p>Furthermore, from the <code>wfind</code> main command user perspective, the command <code>Run</code> would consume it as so:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>o</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Command</span>) <span style=color:#a6e22e>Run</span>(<span style=color:#a6e22e>_</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>cobra</span>.<span style=color:#a6e22e>Command</span>, <span style=color:#a6e22e>args</span> []<span style=color:#66d9ef>string</span>) <span style=color:#66d9ef>error</span> {
+	<span style=color:#f92672>...</span>
+
+	<span style=color:#75715e>// Network client dialer.
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>dialer</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>network</span>.<span style=color:#a6e22e>NewDialer</span>(
+		<span style=color:#a6e22e>network</span>.<span style=color:#a6e22e>WithTimeout</span>(<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>ConnectionTimeout</span>),
+		<span style=color:#a6e22e>network</span>.<span style=color:#a6e22e>WithKeepAlive</span>(<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>KeepAliveInterval</span>),
+	)
+
+	<span style=color:#75715e>// HTTP client transport.
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>transport</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>network</span>.<span style=color:#a6e22e>NewTransport</span>(
+		<span style=color:#a6e22e>network</span>.<span style=color:#a6e22e>WithDialer</span>(<span style=color:#a6e22e>dialer</span>),
+		<span style=color:#a6e22e>network</span>.<span style=color:#a6e22e>WithIdleConnsTimeout</span>(<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>IdleConnTimeout</span>),
+		<span style=color:#a6e22e>network</span>.<span style=color:#a6e22e>WithTLSHandshakeTimeout</span>(<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>TLSHandshakeTimeout</span>),
+		<span style=color:#a6e22e>network</span>.<span style=color:#a6e22e>WithMaxIdleConns</span>(<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>ConnPoolSize</span>),
+		<span style=color:#a6e22e>network</span>.<span style=color:#a6e22e>WithMaxIdleConnsPerHost</span>(<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>ConnPoolPerHostSize</span>),
+	)
+
+	<span style=color:#75715e>// Wfind finder.
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>finder</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>NewFind</span>(
+		<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithSeedURLs</span>(<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>SeedURLs</span>),
+		<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithFilenameRegexp</span>(<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>FilenameRegexp</span>),
+		<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithFileType</span>(<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>FileType</span>),
+		<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithRecursive</span>(<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>Recursive</span>),
+		<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithVerbosity</span>(<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>Verbose</span>),
+		<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithAsync</span>(<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>Async</span>),
+		<span style=color:#a6e22e>find</span>.<span style=color:#a6e22e>WithClientTransport</span>(<span style=color:#a6e22e>transport</span>),
+	)
+</code></pre></div><p>for which default command&rsquo;s flag default values are provided by wfind for its specific use case:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#f92672>package</span> <span style=color:#a6e22e>network</span>
+
+<span style=color:#f92672>...</span>
+
+<span style=color:#66d9ef>const</span> (
+	<span style=color:#75715e>// DefaultTimeout is the default HTTP client transport&#39;s timeout in
+</span><span style=color:#75715e></span>	<span style=color:#75715e>// milliseconds.
+</span><span style=color:#75715e></span>	<span style=color:#75715e>// By default, is set to 180 seconds.
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>DefaultTimeout</span> = <span style=color:#ae81ff>180000</span>
+
+	<span style=color:#75715e>// DefaultKeepAlive is the default interval in milliseconds between
+</span><span style=color:#75715e></span>	<span style=color:#75715e>// keep-alive probes for an active network connection.
+</span><span style=color:#75715e></span>	<span style=color:#75715e>// By defdault, is set to 30 seconds.
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>DefaultKeepAlive</span> = <span style=color:#ae81ff>30000</span>
+
+	<span style=color:#75715e>// DefaultMaxIdleConns is the default maximum number of idle
+</span><span style=color:#75715e></span>	<span style=color:#75715e>// (keep-alive) connections across all hosts.
+</span><span style=color:#75715e></span>	<span style=color:#75715e>// By default, is set to 1000.
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>DefaultMaxIdleConns</span> = <span style=color:#ae81ff>1000</span>
+
+	<span style=color:#75715e>// DefaultMaxIdleConnsPerHost is the default maximum number of idle
+</span><span style=color:#75715e></span>	<span style=color:#75715e>// (keep-alive) connections to keep per-host.
+</span><span style=color:#75715e></span>	<span style=color:#75715e>// By default, is set to 1000.
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>DefaultMaxIdleConnsPerHost</span> = <span style=color:#ae81ff>1000</span>
+
+	<span style=color:#75715e>// DefaultIdleConnTimeout is the default maximum amount of time in milliseconds an
+</span><span style=color:#75715e></span>	<span style=color:#75715e>// idle (keep-alive) connection will remain idle before closing itself.
+</span><span style=color:#75715e></span>	<span style=color:#75715e>// By default, is set to 120 seconds.
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>DefaultIdleConnTimeout</span> = <span style=color:#ae81ff>120000</span>
+
+	<span style=color:#75715e>// DefaultTLSHandshakeTimeout is the default maximum amount of time waiting to
+</span><span style=color:#75715e></span>	<span style=color:#75715e>// wait for a TLS handshake.
+</span><span style=color:#75715e></span>	<span style=color:#75715e>// By default, is set to 30 seconds.
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>DefaultTLSHandshakeTimeout</span> = <span style=color:#ae81ff>30000</span>
+)
+</code></pre></div><h2 id=conclusion>Conclusion</h2><p><code>TODO</code></p></section><nav class=post-nav><a class=prev href=https://notes.maxgio.me/notes/golang/><span>←</span><span>Golang</span></a>
+<a class=next href=https://notes.maxgio.me/notes/go-idle-connections-and-tcp-timewait-state/><span>Idle connections in Go and TIME-WAIT TCP state</span><span>→</span></a></nav></article></main><footer class=footer><p>&copy; 2023 <a href=https://notes.maxgio.me/>maxgio's notes</a></p><p>Powered by <a href=https://gohugo.io/ rel=noopener target=_blank>Hugo️️</a>️</p><p><a href=https://github.com/nanxiaobei/hugo-paper rel=noopener target=_blank>Paper 5.1</a></p></footer></body></html>
