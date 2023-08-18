@@ -335,7 +335,9 @@ $ go tool pprof http://localhost:6060/debug/pprof/heap
 Generating report in profile001.png
 ```
 
-Looking at the graph it was evident that the great amount of memory mapping was request by a buffer reading:`io.ReadAll()`, called from `colly(*httpBackend).Do()`.
+Looking at the graph it was evident that the great amount of memory mapping was request by a buffer reading:`io.ReadAll()`, called from `colly(*httpBackend).Do()`:
+
+![image](https://github.com/maxgio92/notes/assets/7593929/0e6da0f0-929d-456c-bc6f-ce5300750265)
 
 So digging into the go-colly HTTP backend `Do` implementation, the [offending line](https://github.com/gocolly/colly/blob/v2.1.0/http_backend.go#L209) was:
 
