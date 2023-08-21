@@ -398,9 +398,6 @@ func WithMaxBodySize(maxBodySize int) Option {
 type Options struct {
 	...
 
-	// ClientTransport represents the Transport used for the HTTP client.
-	ClientTransport http.RoundTripper
-
 	// MaxBodySize is the limit in bytes of each of the retrieved response body.
 	MaxBodySize int
 
