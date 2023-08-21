@@ -366,7 +366,7 @@ So, a mean to limit response body was mandatory.
 
 ### Max HTTP body size
 
-Fortunately, go-colly provides a way to set the requests' max body size, so I ended up exposing a knob in the `find` functional options:
+Fortunately, go-colly provides a way to set the requests' maximum body size that will be read, so I ended up exposing a knob in the `find` functional options:
 
 ```go
 package find
