@@ -1,5 +1,5 @@
 ---
-Title: How I improved consistency in web crawling with Go
+Title: How I improved consistency in a Go web crawler with retry logics and tuning the HTTP client
 ---
 
 # Introduction
@@ -7,30 +7,36 @@ Title: How I improved consistency in web crawling with Go
 [wfind](https://github.com/maxgio92/wfind) is a simple web crawler for files and folders in web HTML pages. The goal is basically the same of [GNU find](https://www.gnu.org/software/findutils/manual/html_mono/find.html) for file systems.
 At the same time it's inspired by [GNU wget](https://www.gnu.org/software/wget/manual/html_node/index.html), and it merges the `find` features applied to the web world.
 
-> `TODO`
+> `TO EXPAND`
 
-## ..And issues arose
+## Parallelism and concurrency
 
-As wfind leverages [go-colly](https://go-colly.org/) for the scraping of web HTML pages, it also enables the user to run it [asynchronously](https://go-colly.org/docs/examples/parallel/).
-What that means is that it provides a way to execute the [`fetching`](https://github.com/gocolly/colly/blob/v2.1.0/colly.go#L440) of HTTP objects as [parallel work](https://github.com/gocolly/colly/blob/v2.1.0/colly.go#L573).
+As a crawler, `wfind` is vital to efficiently do its work scraping web pages in parallel routines.
 
-In the `wfind` implementation, the synchronization is as simple as invoking the [`Wait`](https://github.com/gocolly/colly/blob/v2.1.0/colly.go#L812) function, provided by the Colly collector, that wraps around the standard [`WaitGroup`](https://pkg.go.dev/sync#WaitGroup)'s `Wait()`, from the Go standard library's sync package.
+For scraping web pages wfind leverages [go-colly](https://go-colly.org/), that allows run its [collector](https://go-colly.org/docs/introduction/start/#collector) in [asynchronous mode](https://go-colly.org/docs/examples/parallel/).
+That mode simply [`fetches`](https://github.com/gocolly/colly/blob/v2.1.0/colly.go#L440) HTTP objects inside [dedicated goroutines](https://github.com/gocolly/colly/blob/v2.1.0/colly.go#L573).
 
-As the go-colly implementation does not provide cap on the parallelism, the implementation can lead to the usual concurrency problems.
+From the user perspective (i.e. `wfind`), the synchronization is as simple as invoking the [`Wait`](https://github.com/gocolly/colly/blob/v2.1.0/colly.go#L812) function before completing. 
+The API is provided by the Colly collector and it wraps around the standard [`WaitGroup`](https://pkg.go.dev/sync#WaitGroup)'s `Wait()`, from the Go standard library's [`sync`](https://pkg.go.dev/sync) package, waiting for all the fetch goroutines to complete.
+
+As the go-colly implementation does not provide cap on the parallelism, the implementation can lead to the common concurrency problems, racing for OS and runtime resources client-side, server-side, and physical medium-side.
+
 Client-side, the maxmimum allowed open connections could prevent the client to open and then establish new ones during the scraping.
-The server could introduce problems and we cannot predict al lthe logics that could lead to them.
-Also, the connection mean is another point of failure; for example latency might cause the HTTP client to time out during go-colly's [`Visit`](https://github.com/gocolly/colly/blob/v2.1.0/colly.go#L440C20-L440C27) waiting for a response.
+The server could limit resource usage and we cannot predict the strategies and logics followed server-side.
+Also, the connection mean in the physical layer is another point of failure; for example latency might cause the HTTP client to time out during go-colly's [`Visit`](https://github.com/gocolly/colly/blob/v2.1.0/colly.go#L440C20-L440C27) waiting for a response.
 
 At the end of the day a retry logics was fundamental in order to improve the consistency in the crawling.
+Furthermore, verifying the consistency through end-to-end functional tests is required to guarantee the expected behaviour of the program.
 
-Supporting the expected behaviour and result as a consumer, providing the tool as a black-box, end-to-end tests have been vital.
-
-## The end-to-end tests
+## End-to-end tests
 
 As end-to-end functional tests treat the program as a black-box and ensures that provide the value as expected, interacting with the real actors in the expected scenarios, I wrote tests again real CentOS kernel.org mirrors, looking for repository metadata files, as an example use case of `wfind`.
 
-Knowing in advance the expected result the test would simply consider two main run mode: sync and async.
-I used GinkGo as I like how it enables to provide readable tests and expected behaviour, for black-box tests in general - the same applies to integration and black-box unit tests to declare clearly the feature or unit specifications.
+I used [GinkGo](https://onsi.github.io/ginkgo/) as I like how it easily enables to design and implement the specifications of the program as you write tests. 
+
+Moreover, regardless of whether or not you follow BDD, tests tend to appear self-explanatory.
+
+Indeed, Ginkgo with Gomega matchers provide a DSL for writing tests in general like integration tests but also white-box and black-box unit tests.
 
 ```go
 package find_test
@@ -77,25 +83,25 @@ var _ = Describe("File crawling", func() {
 			Expect(len(actual.URLs)).To(Equal(expectedCount))
 		})
 	})
-	Context("Sync", func() {
-		[...]
-  })
 })
 ```
 
-As you can note, the order in which results are returned is not important and thus not tested.
+As you can see, the order in which results are returned is not important and thus not tested.
 
 ## Retry logics
 
-The first concrete goal of the retry logics was to start to see green flags from the GinkGo output:
+The first concrete goal of the retry logics was to start to see green flags from the GinkGo output.
+
+So I expected to start by seeing tests to fail:
 
 ```shell
 $ ginkgo --focus "File crawling" pkg/find
-[...]
-FAIL! [...]
+...
+FAIL! ...
 ```
 
-A mean to ensure, that requests failed would have been retried was essential.
+Then, in order to make tests to pass, it was needed a way to ensure that requests failed would have been retried.
+
 Fortunately go-colly provide way to register a callback, that as per the documentation it registers a function that will be executed if an error occurs during the HTTP request, with [`OnError`](https://github.com/gocolly/colly/blob/v2.1.0/colly.go#L917).
 
 That way it's possible to run a custom handler as the response (and the request) object and the error are available in context of the helper, as for the [signature](https://github.com/gocolly/colly/blob/v2.1.0/colly.go#L146).
@@ -113,18 +119,67 @@ collector.OnError(func(resp *colly.Response, err error) {
 })
 ```
 
-For sure this wasn't enough.
+For sure this wasn't enough to improve the probability to make failing requests to succeed.
 
 ### Retry with exponential backoff
 
-At first, a single retry might not be enough, and also, a fixed backoff could be too big or too small period depending on the type of failure and the context.
+At first, a single retry might not be enough, and also, the optimal backoff size should vary depending on the failure cause and the context. Furthermore, it would be good to be increased as time passes in order to avoid overload on the actors.
 
 So I decided to leverage the community projects and digging around backoff implementations. After that, I picked and imported [`github.com/cenkalti/backoff`](https://github.com/cenkalti/backoff) package.
-I liked the design as it respects all the SOLID principles. As that, it allows me to mix and match with further custom backoff implementations, still leveraging its tickers.
+I liked the design as it respects all the SOLID principles and because it provides API to a tunable exponential backoff algorithm. Also, it allows to mix and match with different custom backoff algorithms, without needing to implement a ticker.
 
-Furthermore, I wanted to provide knobs to control retry for specific errors encountered during the HTTP request. So I ended up with something like this:
+Furthermore, I wanted to provide knobs to enable the retry behaviour for specific errors encountered doing HTTP requests. So I ended up including new dedicated options to the `wfind/pkg/find`'s ones:
 
 ```go
+package find
+
+// ...
+
+// Options represents the options for the Find job.
+type Options struct {
+	// ...
+
+	// ConnResetRetryBackOff controls the error handling on responses.
+	// If not nil, when the connection is reset by the peer (TCP RST), the request
+	// is retried with an exponential backoff interval.
+	ConnResetRetryBackOff *ExponentialBackOffOptions
+
+	// TimeoutRetryBackOff controls the error handling on responses.
+	// If not nil, when the connection times out (based on client timeout), the request
+	// is retried with an exponential backoff interval.
+	TimeoutRetryBackOff *ExponentialBackOffOptions
+
+	// ContextDeadlineExceededRetryBackOff controls the error handling on responses.
+	// If not nil, when the request context deadline exceeds, the request
+	// is retried with an exponential backoff interval.
+	ContextDeadlineExceededRetryBackOff *ExponentialBackOffOptions
+}
+
+// ...
+
+// crawlFiles returns a list of file names found from the seed URL,
+// filtered by file name regex.
+func (o *Options) crawlFiles() (*Result, error) {
+
+	// Create the collector.
+	co := colly.NewCollector(coOptions...)
+
+	// Add the callback to Visit the linked resource, for each HTML element found
+	co.OnHTML(HTMLTagLink, func(e *colly.HTMLElement) {
+		// ...
+	})
+
+	// Manage errors.
+	co.OnError(o.handleError)
+
+	// ...
+
+	// Wait until colly goroutines are finished.
+	co.Wait()
+
+	return &Result{BaseNames: files, URLs: urls}, nil
+}
+
 // handleError handles an error received making a colly.Request.
 // It accepts a colly.Response and the error.
 func (o *Options) handleError(response *colly.Response, err error) {
@@ -146,11 +201,12 @@ func (o *Options) handleError(response *colly.Response, err error) {
 		}
 	// Other failures.
 	default:
+		// ...
 	}
 }
 ```
 
-With the implementation of the retry leveraging the cenkalti's `backoff` package as for its official [example](https://github.com/cenkalti/backoff/blob/v4/example_test.go#L42C1-L71C2):
+With the implementation of the retry leveraging the `cenkalti/backoff` package, following the [example](https://github.com/cenkalti/backoff/blob/v4/example_test.go#L42C1-L71C2) provided:
 
 ```go
 // retryWithExtponentialBackoff retries with an exponential backoff a function.
@@ -188,7 +244,7 @@ func retryWithExponentialBackoff(retryF func() error, opts *ExponentialBackOffOp
 }
 ```
 
-The end-to-end test could have been then updated with something like:
+And the end-to-end test could have been updated by enabling the retry behaviour for the context deadline exceeded, HTTP client transport's timeout, connection reset by peer cases:
 
 ```go
 var _ = Describe("File crawling", func() {
@@ -228,57 +284,16 @@ var _ = Describe("File crawling", func() {
 })
 ```
 
-being the retry options inherited by the previous `retryWithExponentialBackoff` function.
-
-You can read here all the `find` options, including the new retry ones:
-```go
-// Options represents the options for the Find job.
-type Options struct {
-	// SeedURLs are the URLs used as root URLs from which for the find's web scraping.
-	SeedURLs []string
-
-	// FilenameRegexp is a regular expression for which a pattern should match the file names in the Result.
-	FilenameRegexp string
-
-	// FileType is the file type for which the Find job examines the web hierarchy.
-	FileType string
-
-	// Recursive enables the Find job to examine files referenced to by the seeds files recursively.
-	Recursive bool
-
-	// Verbose enables the Find job verbosity printing every visited URL.
-	Verbose bool
-
-	// Async represetns the option to scrape with multiple asynchronous coroutines.
-	Async bool
-
-	// ConnResetRetryBackOff controls the error handling on responses.
-	// If not nil, when the connection is reset by the peer (TCP RST), the request
-	// is retried with an exponential backoff interval.
-	ConnResetRetryBackOff *ExponentialBackOffOptions
-
-	// TimeoutRetryBackOff controls the error handling on responses.
-	// If not nil, when the connection times out (based on client timeout), the request
-	// is retried with an exponential backoff interval.
-	TimeoutRetryBackOff *ExponentialBackOffOptions
-
-	// ContextDeadlineExceededRetryBackOff controls the error handling on responses.
-	// If not nil, when the request context deadline exceeds, the request
-	// is retried with an exponential backoff interval.
-	ContextDeadlineExceededRetryBackOff *ExponentialBackOffOptions
-}
-```
-
-And now let's run the e2e test again:
+And I re-run the e2e test again:
 
 ```shell
 $ ginkgo --focus "File crawling" pkg/find
-OOM killed
 ```
 
-It was likely that a memory leak or high consumption was already present, but without neither performance tests nor retry logics, no problems arose.
+But the tests took too much time consuming a lot of memory until it was out-of-memory killed.
+Likely a memory leak or simply not efficient memory management was already present, but without retry logics nor performance tests it hadn't shown up.
 
-So, a heap memory profile was then needed. 
+So, a heap memory profile for the find run was then needed. The run specifics of the end-to-end test in example was enough.
 
 ### Entering pprof
 
@@ -292,16 +307,20 @@ So, I simply linked pprof package:
 package find
 
 import (
-  [...]
+  /// ...
   _ "net/http/pprof"
 
-  [...]
+  // ...
 )
 ```
 
-and modified the tested function `Find()` to run its webserver in parallel:
+modified the tested function to run in parallel its webserver:
 
 ```go
+package find
+
+// ...
+
 func (o *Options) Find() (*Result, error) {
 	go func() {
 		log.Println(http.ListenAndServe("localhost:6060", nil))
@@ -322,7 +341,8 @@ func (o *Options) Find() (*Result, error) {
 }
 ```
 
-run the tests:
+and finally run the tests again:
+
 ```shell
 $ ginkgo --focus "File crawling" pkg/find
 ```
@@ -335,95 +355,72 @@ $ go tool pprof http://localhost:6060/debug/pprof/heap
 Generating report in profile001.png
 ```
 
-Looking at the graph it was evident that the great amount of memory mapping was request by a buffer reading:`io.ReadAll()`, called from `colly(*httpBackend).Do()`:
+Looking at the profile function call graph it was evident that a great amount of memory mapping was request by a reading: `io.ReadAll()`, called from `colly.Do()`:
 
 ![image](https://github.com/maxgio92/notes/assets/7593929/0e6da0f0-929d-456c-bc6f-ce5300750265)
 
 So digging into the go-colly HTTP backend `Do` implementation, the [offending line](https://github.com/gocolly/colly/blob/v2.1.0/http_backend.go#L209) was:
 
 ```go
-func (h *httpBackend) Do(request *http.Request, bodySize int, checkHeadersFunc checkHeadersFunc) (*Response, error) {
-	...
+package colly
 
+//...
+
+func (h *httpBackend) Do(request *http.Request, bodySize int, checkHeadersFunc checkHeadersFunc) (*Response, error) {
+	// ...
 	res, err := h.Client.Do(request)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-	...
-
+	// ...
 	var bodyReader io.Reader = res.Body
 	if bodySize > 0 {
 		bodyReader = io.LimitReader(bodyReader, int64(bodySize))
 	}
-	...
+	// ...
 	body, err := ioutil.ReadAll(bodyReader)
-	...
+	// ...
 }
 ```
 
-So, a mean to limit response body was mandatory.
+So, a first solution was to limit the size of the response body which was being read.
 
 ### Max HTTP body size
 
-Fortunately, go-colly provides a way to set the requests' maximum body size that will be read, so I ended up exposing a knob in the `find` functional options:
+Fortunately, go-colly provides a way to set the requests' maximum body size that will be read, so I ended up exposing an option:
 
 ```go
 package find
 
-...
-
-// NewFind returns a new Find object to find files over HTTP and HTTPS.
-func NewFind(opts ...Option) *Options {
-	o := &Options{}
-
-	for _, f := range opts {
-		f(o)
-	}
-
-	o.init()
-
-	return o
-}
-
-func WithMaxBodySize(maxBodySize int) Option {
-	return func(opts *Options) {
-		opts.MaxBodySize = maxBodySize
-	}
-}
-```
-
-```go
 // Options represents the options for the Find job.
 type Options struct {
-	...
-
+	// ...
 	// MaxBodySize is the limit in bytes of each of the retrieved response body.
 	MaxBodySize int
-
-	...
+	// ...
 }
 ```
 
-which then would have fill the go-colly setting:
+which then would have fill the colly collector setting:
 
 ```go
 package find
 
-...
+// ...
 
 // crawlFiles returns a list of file names found from the seed URL, filtered by file name regex.
 func (o *Options) crawlFiles() (*Result, error) {
-	...
+	// ...
 
 	// Create the collector settings
 	coOptions := []func(*colly.Collector){
-		...
+		// ...
 		colly.MaxBodySize(o.MaxBodySize),
 	}
 ```
 
-and updated the end-to-end test, tuning the parameter with an expected maximum value:
+Finally I updated the end-to-end test, tuning the parameter with an expected maximum value, considering the HTML nature of expected response body:
 
 ```go
 var _ = Describe("File crawling", func() {
@@ -457,13 +454,10 @@ var _ = Describe("File crawling", func() {
 			Expect(len(actual.URLs)).To(Equal(expectedCount))
 		})
 	})
-	Context("Sync", func() {
-		...
-	})
 }
 ```
 
-run again the tests:
+and run again the tests:
 
 ```shell
 $ ginkgo --focus "File crawling" pkg/find
@@ -472,28 +466,27 @@ Ran 3 of 3 Specs in 7.552 seconds
 SUCCESS! -- 3 Passed | 0 Failed | 0 Pending | 0 Skipped
 ```
 
-and tests passed.
+Now tests passed in just less than 8 seconds!
 
 ### More tuning: HTTP client's Transport
 
-Another important network and connection parameters are provided with the go `Transport`.
+Another important network and connection parameters are provided with the go [`net/http Transport`](https://pkg.go.dev/net/http).
 Connection timeout, TCP keep alive interval, TLS handshake timeout, Go net/http idle connnection pool maximum size, idle connections timeout are just some of them.
 
 The [connection pool](https://github.com/golang/go/blob/go1.21.0/src/net/http/transport.go#L925) size here is fundamental to be tuned in order to satisfy the level of concurrency enabled by the asynchronous mode of go-colly, hence of wfind.
 
-In detail, Go net/http `Get` keeps the connection pool as a cache of TCP connections, but when all are in use it opens another one.
-If the parallelism is greater than the limit of idle connections, the program is going to be regularly discarding connections and opening new ones, the latters ending up in `TIME_WAIT` TCP state for two minutes, tying up that connection.
+In detail, Go [`net/http`](https://pkg.go.dev/net/http) `Get` keeps the connection pool as a cache of TCP connections, but when all are in use it opens another one.
+If the parallelism is greater than the limit of idle connections, the program is going to be [regularly discarding connections](https://github.com/golang/go/blob/go1.21.0/src/net/http/transport.go#L999) and opening new ones, the latters ending up in `TIME_WAIT` TCP state for two minutes, tying up that connection.
 
 > About `TIME_WAIT` TCP state I recommend [this blog](https://vincent.bernat.ch/en/blog/2014-tcp-time-wait-state-linux) by Vincent Bernat.
 
-From the Go standard library net/http package:
+From the Go standard library [`net/http`](https://pkg.go.dev/net/http) package:
 
 ```go
 package http
 
-...
 type Transport struct {
-	...
+	// ...
 
 	// MaxIdleConns controls the maximum number of idle (keep-alive)
 	// connections across all hosts. Zero means no limit.
@@ -505,25 +498,23 @@ type Transport struct {
 	MaxIdleConnsPerHost int
 ```
 
-As so, it was very useful to provide way to inject a Transport configured for specific use cases.
-
-Long story short:
+As so, it was very useful to provide way to inject a client Transport configured for specific use cases:
 
 ```go
 package find
 
 // Options represents the options for the Find job.
 type Options struct {
-	...
+	// ...
 
 	// ClientTransport represents the Transport used for the HTTP client.
 	ClientTransport http.RoundTripper
 
-	...
+	// ...
 }
 ```
 
-and in the go-colly collector set-up:
+and in the go-colly collector to set up the client with the provided Transport:
 
 ```go
 package find
@@ -548,7 +539,9 @@ func (o *Options) crawlFiles() (*Result, error) {
 	}
 ```
 
-Furthermore, from the `wfind` main command user perspective, the command `Run` would consume it as so:
+### Wrapping up
+
+As `wfind` main command is the first consumer, from its perspective, the command `Run` would consume it as so:
 
 ```go
 func (o *Command) Run(_ *cobra.Command, args []string) error {
@@ -581,46 +574,16 @@ func (o *Command) Run(_ *cobra.Command, args []string) error {
 	)
 ```
 
-for which default command's flag default values are provided by wfind for its specific use case:
-
-```go
-package network
-
-...
-
-const (
-	// DefaultTimeout is the default HTTP client transport's timeout in
-	// milliseconds.
-	// By default, is set to 180 seconds.
-	DefaultTimeout = 180000
-
-	// DefaultKeepAlive is the default interval in milliseconds between
-	// keep-alive probes for an active network connection.
-	// By defdault, is set to 30 seconds.
-	DefaultKeepAlive = 30000
-
-	// DefaultMaxIdleConns is the default maximum number of idle
-	// (keep-alive) connections across all hosts.
-	// By default, is set to 1000.
-	DefaultMaxIdleConns = 1000
-
-	// DefaultMaxIdleConnsPerHost is the default maximum number of idle
-	// (keep-alive) connections to keep per-host.
-	// By default, is set to 1000.
-	DefaultMaxIdleConnsPerHost = 1000
-
-	// DefaultIdleConnTimeout is the default maximum amount of time in milliseconds an
-	// idle (keep-alive) connection will remain idle before closing itself.
-	// By default, is set to 120 seconds.
-	DefaultIdleConnTimeout = 120000
-
-	// DefaultTLSHandshakeTimeout is the default maximum amount of time waiting to
-	// wait for a TLS handshake.
-	// By default, is set to 30 seconds.
-	DefaultTLSHandshakeTimeout = 30000
-)
-```
+for which default command's flag default values are provided by wfind for its specific use case.
 
 ## Conclusion
 
-`TODO`
+`TO REVISIT`
+
+The retry logics allowed to provide consistency, and alongside network client tuning improve the efficiency and performance.
+
+As usual, there's alwasy something to learn and it's cool how much deep we can dig. I was curious about the reason why so much connections in `TIME_WAIT` state were left during the scraping, even if they're not a problem. So learning how Go runtime manages the connections keeping a cache pool of them was the key to understand more and how to optimize the management in cases like this, where there may be high parallalism and probably high concurrency as well, on OS network stack's resources.
+
+Moreover, I like Go every day more, as already the standard library provides often all you need with primitives, and in this case for network and for synchronization.
+
+
