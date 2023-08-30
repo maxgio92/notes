@@ -4,10 +4,10 @@ Title: How I improved consistency in a Go web crawler with retry logics and tuni
 
 # Introduction
 
-[wfind](https://github.com/maxgio92/wfind) is a simple web crawler for files and folders in web HTML pages. The goal is basically the same of [GNU find](https://www.gnu.org/software/findutils/manual/html_mono/find.html) for file systems.
-At the same time it's inspired by [GNU wget](https://www.gnu.org/software/wget/manual/html_node/index.html), and it merges the `find` features applied to the web world.
+[wfind](https://github.com/maxgio92/wfind) is a simple web crawler for files and folders in web pages hyerarchies. The goal is basically the same of [GNU find](https://www.gnu.org/software/findutils/manual/html_mono/find.html) for file systems.
+At the same time it's inspired by [GNU wget](https://www.gnu.org/software/wget/manual/html_node/index.html), and it merges the `find` features applied to files and directories exposed as HTML web resources.
 
-> `TO EXPAND`
+In this blog we'll go through the way I improved consistency in this crawler, by implementing retry logics and tuning network and transport in the HTTP client.
 
 ## Parallelism and concurrency
 
@@ -578,12 +578,16 @@ for which default command's flag default values are provided by wfind for its sp
 
 ## Conclusion
 
-`TO REVISIT`
+The retry logics allowed to provide consistency, and network and transport tuning in the HTTP client improved the efficiency and performance.
 
-The retry logics allowed to provide consistency, and alongside network client tuning improve the efficiency and performance.
-
-As usual, there's alwasy something to learn and it's cool how much deep we can dig. I was curious about the reason why so much connections in `TIME_WAIT` state were left during the scraping, even if they're not a problem. So learning how Go runtime manages the connections keeping a cache pool of them was the key to understand more and how to optimize the management in cases like this, where there may be high parallalism and probably high concurrency as well, on OS network stack's resources.
+As usual, there's alwasy something to learn and it's cool how deep we can dig into things. I was curious about the reason why so much connections in `TIME_WAIT` state were left during the scraping, even if they're not a problem. So learning how Go runtime manages the connections keeping a cache pool of them was the key to understand more and how to optimize the management in cases like this, where there may be high parallalism and probably high concurrency as well, on OS network stack's resources.
 
 Moreover, I like Go every day more, as already the standard library provides often all you need with primitives, and in this case for network and for synchronization.
 
+## Thank you!
+I hope this was interesting for you as it was for me. Please, feel free to reach out!
 
+[Twitter](https://twitter.com/maxgio92)
+[Mastodon](https://hachyderm.io/@maxgio92)
+[Github](https://github.com/maxgio92)
+[Linkedin](https://linkedin.com/in/maxgio)
