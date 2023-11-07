@@ -7,7 +7,8 @@ Links:
 - https://blog.px.dev/cpu-profiling/ (a series)
 
 Examples:
-- https://github.com/pixie-io/pixie-demos/blob/main/ebpf-profiler
+- https://github.com/pixie-io/pixie-demos/blob/main/ebpf-profiler (with BCC)
+- https://www.airplane.dev/blog/building-an-ebpf-based-profiler (with libbpf)
 
 Other material:
 - https://github.com/iovisor/gobpf
