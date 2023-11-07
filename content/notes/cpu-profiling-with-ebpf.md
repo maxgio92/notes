@@ -23,4 +23,4 @@ Stack walking:
 - [x86 assembly](./X86-stack-walking.pdf)
 - https://c9x.me/x86/html/file_module_x86_id_154.html
 - https://www.polarsignals.com/blog/posts/2022/11/29/dwarf-based-stack-walking-using-ebpf
-- [Stack traces in Go stack traces](https://github.com/DataDog/go-profiler-notes/blob/main/stack-traces.md)
+- [DataDog's Stack traces in Go](https://github.com/DataDog/go-profiler-notes/blob/main/stack-traces.md)
