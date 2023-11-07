@@ -18,6 +18,9 @@ Other material:
 - [BPF ring buffer](https://www.kernel.org/doc/html/latest/bpf/ringbuf.html)
 - [`BPF_MAP_TYPE_STACK`](https://www.kernel.org/doc/html/latest/bpf/map_queue_stack.html)
 - [Brendan Gregg's stack trace hack](https://www.brendangregg.com/blog/2016-01-18/ebpf-stack-trace-hack.html)
+- [Official Linux Offwaketime:
+  - [bpf](https://elixir.bootlin.com/linux/latest/source/samples/bpf/offwaketime.bpf.c)
+  - [user](https://elixir.bootlin.com/linux/latest/source/samples/bpf/offwaketime_user.c)
 
 Stack walking:
 - [x86 assembly](./X86-stack-walking.pdf)
