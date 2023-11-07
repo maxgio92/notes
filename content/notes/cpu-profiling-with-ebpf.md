@@ -1,5 +1,5 @@
 ---
-Title: Profiling with eBPF
+Title: CPU profiling with eBPF
 ---
 
 Links:
