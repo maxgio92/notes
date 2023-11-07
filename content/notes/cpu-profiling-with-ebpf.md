@@ -15,6 +15,7 @@ Other material:
 - [Perf ring buffer and lost events](http://blog.itaysk.com/2020/04/20/ebpf-lost-events)
 - [`perf_event_open(2)`](https://man7.org/linux/man-pages/man2/perf_event_open.2.html)
 - [BPF ring buffer](https://www.kernel.org/doc/html/latest/bpf/ringbuf.html)
+- [`BPF_MAP_TYPE_STACK`](https://www.kernel.org/doc/html/latest/bpf/map_queue_stack.html)
 
 Stack walking:
 - [x86 assembly](./X86-stack-walking.pdf)
