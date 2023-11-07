@@ -15,3 +15,9 @@ Other material:
 - [Perf ring buffer and lost events](http://blog.itaysk.com/2020/04/20/ebpf-lost-events)
 - [`perf_event_open(2)`](https://man7.org/linux/man-pages/man2/perf_event_open.2.html)
 - [BPF ring buffer](https://www.kernel.org/doc/html/latest/bpf/ringbuf.html)
+
+Stack walking:
+- [x86 assembly](./X86-stack-walking.pdf)
+- https://c9x.me/x86/html/file_module_x86_id_154.html
+- https://www.polarsignals.com/blog/posts/2022/11/29/dwarf-based-stack-walking-using-ebpf
+- [Stack traces in Go stack traces](https://github.com/DataDog/go-profiler-notes/blob/main/stack-traces.md)
