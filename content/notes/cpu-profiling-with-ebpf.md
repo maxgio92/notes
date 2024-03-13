@@ -2,19 +2,31 @@
 Title: CPU profiling with eBPF
 ---
 
-Links:
+libbpf:
+- Docs: https://www.kernel.org/doc/html/latest/bpf/libbpf/
+- Example: https://github.com/libbpf/libbpf-bootstrap/blob/master/examples/c/profile.bpf.c
+
+Examples from Linux sources:
+- User space: https://github.com/torvalds/linux/blob/b0546776ad3f332e215cebc0b063ba4351971cca/samples/bpf/trace_event_user.c
+- Kernel space: https://github.com/torvalds/linux/blob/b0546776ad3f332e215cebc0b063ba4351971cca/samples/bpf/trace_event_kern.c
+
+Perf UAPI and eBPF user libraries:
+- `perf_event_attr` struct: https://github.com/torvalds/linux/blob/b0546776ad3f332e215cebc0b063ba4351971cca/include/uapi/linux/perf_event.h#L389
+- `perf_event_open` syscall: https://man7.org/linux/man-pages/man2/perf_event_open.2.html
+- perf: https://perf.wiki.kernel.org/index.php/Main_Page
+- How to attach per events with Cilium:
+  - https://gist.github.com/florianl/5d9cc9dbb3822e03f6f65a073ffbedbb
+  - https://github.com/cilium/ebpf/discussions/800
+  - https://github.com/cilium/ebpf/discussions/548
+
+Blogs:
 - https://www.brendangregg.com/blog/2016-10-21/linux-efficient-profiler.html
 - https://blog.px.dev/cpu-profiling/ (a series)
-
-Examples:
 - https://github.com/pixie-io/pixie-demos/blob/main/ebpf-profiler (with BCC)
 - https://www.airplane.dev/blog/building-an-ebpf-based-profiler (with libbpf)
 
 Other material:
-- https://github.com/iovisor/gobpf
-- with BCC and [`perf`](https://perf.wiki.kernel.org/index.php/Main_Page).
 - [Perf ring buffer and lost events](http://blog.itaysk.com/2020/04/20/ebpf-lost-events)
-- [`perf_event_open(2)`](https://man7.org/linux/man-pages/man2/perf_event_open.2.html)
 - [BPF ring buffer](https://www.kernel.org/doc/html/latest/bpf/ringbuf.html)
 - [`BPF_MAP_TYPE_STACK`](https://www.kernel.org/doc/html/latest/bpf/map_queue_stack.html)
 - [Brendan Gregg's stack trace hack](https://www.brendangregg.com/blog/2016-01-18/ebpf-stack-trace-hack.html)
@@ -27,18 +39,3 @@ Stack walking:
 - https://c9x.me/x86/html/file_module_x86_id_154.html
 - https://www.polarsignals.com/blog/posts/2022/11/29/dwarf-based-stack-walking-using-ebpf
 - [DataDog's Stack traces in Go](https://github.com/DataDog/go-profiler-notes/blob/main/stack-traces.md)
-
-libbpf:
-- Docs: https://www.kernel.org/doc/html/latest/bpf/libbpf/
-- Example: https://github.com/libbpf/libbpf-bootstrap/blob/master/examples/c/profile.bpf.c
-
-Linux example:
-- User space: https://github.com/torvalds/linux/blob/b0546776ad3f332e215cebc0b063ba4351971cca/samples/bpf/trace_event_user.c
-- Kernel space: https://github.com/torvalds/linux/blob/b0546776ad3f332e215cebc0b063ba4351971cca/samples/bpf/trace_event_kern.c
-
-Perf and eBPF UAPIs:
-- How to attach per events with Cilium:
-  - https://gist.github.com/florianl/5d9cc9dbb3822e03f6f65a073ffbedbb
-  - https://github.com/cilium/ebpf/discussions/800
-  - https://github.com/cilium/ebpf/discussions/548
-- `perf_event_attr` struct: https://github.com/torvalds/linux/blob/b0546776ad3f332e215cebc0b063ba4351971cca/include/uapi/linux/perf_event.h#L389
