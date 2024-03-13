@@ -67,7 +67,7 @@ Configure the forward (fdb) entry:
 
 ```shell
 # ridge fdb append to 00:00:00:00:00:00 dev <VXLAN DEVICE NAME> dst <VTEP UNDERLYING NETWORK'S IP>
-bridge fdb append to 00:00:00:00:00:00 dev xvlan0 dst 192.168.94.83 
+bridge fdb append to 00:00:00:00:00:00 dev vxlan0 dst 192.168.94.83 
 ```
 
 Assign an IP with CIDR subnet in the VXLAN network subnet, to the local VTEP VXLAN device:
@@ -76,13 +76,13 @@ Assign an IP with CIDR subnet in the VXLAN network subnet, to the local VTEP VXL
 ip address add vxlan0 172.16.0.2/24
 ```
 
-Assuming that the remote VTEP has configured a VXLAN IP 172.16.0.1, you can test the connection, by pinging the remote VTEP XVLAN IP:
+Assuming that the remote VTEP has configured a VXLAN IP 172.16.0.1, you can test the connection, by pinging the remote VTEP VXLAN IP:
 
 ```shell
 ping 172.16.0.1
 ```
 
-And you can now see that the fdb has been populated to the remote VTEP MAC address too:
+And you can now see that the fdb has been populated with the remote VTEP MAC address too:
 
 ```shell
 f6:df:a6:e6:96:a7 dev vxlan0 dst 192.168.94.83 self
