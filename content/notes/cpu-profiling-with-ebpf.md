@@ -27,3 +27,18 @@ Stack walking:
 - https://c9x.me/x86/html/file_module_x86_id_154.html
 - https://www.polarsignals.com/blog/posts/2022/11/29/dwarf-based-stack-walking-using-ebpf
 - [DataDog's Stack traces in Go](https://github.com/DataDog/go-profiler-notes/blob/main/stack-traces.md)
+
+libbpf:
+- Docs: https://www.kernel.org/doc/html/latest/bpf/libbpf/
+- Example: https://github.com/libbpf/libbpf-bootstrap/blob/master/examples/c/profile.bpf.c
+
+Linux example:
+- User space: https://github.com/torvalds/linux/blob/b0546776ad3f332e215cebc0b063ba4351971cca/samples/bpf/trace_event_user.c
+- Kernel space: https://github.com/torvalds/linux/blob/b0546776ad3f332e215cebc0b063ba4351971cca/samples/bpf/trace_event_kern.c
+
+Perf and eBPF UAPIs:
+- How to attach per events with Cilium:
+  - https://gist.github.com/florianl/5d9cc9dbb3822e03f6f65a073ffbedbb
+  - https://github.com/cilium/ebpf/discussions/800
+  - https://github.com/cilium/ebpf/discussions/548
+- `perf_event_attr` struct: https://github.com/torvalds/linux/blob/b0546776ad3f332e215cebc0b063ba4351971cca/include/uapi/linux/perf_event.h#L389
