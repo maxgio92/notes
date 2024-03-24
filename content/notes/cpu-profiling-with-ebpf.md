@@ -5,6 +5,9 @@ Title: CPU profiling with eBPF
 libbpf:
 - Docs: https://www.kernel.org/doc/html/latest/bpf/libbpf/
 - Example: https://github.com/libbpf/libbpf-bootstrap/blob/master/examples/c/profile.bpf.c
+- From BCC: https://nakryiko.com/posts/bcc-to-libbpf-howto-guide/
+
+Ad averlo trovato prima
 
 Examples from Linux sources:
 - User space: https://github.com/torvalds/linux/blob/b0546776ad3f332e215cebc0b063ba4351971cca/samples/bpf/trace_event_user.c
