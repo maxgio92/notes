@@ -257,6 +257,32 @@ CONTAINER           IMAGE               CREATED             STATE               
 0a98af2598be4       0500518ebaa68       36 minutes ago      Running             local-path-provisioner   0                   4796ab87414f8       local-path-provisioner-7577fdbbfb-zjdbq
 ```
 
+Trying to run a rootful standard Nginx pod, it can be noted that the root user that runs the Nginx daemon in the container, is mapped to the UID 1000 in the root namespace, looking outside of the container:
+
+```shell
+$ kubectl run --image nginx nginx
+pod/nginx created
+$ ps -C nginx -o user -o args n
+    USER COMMAND
+    1000 nginx: master process nginx -g daemon off;
+  100100 nginx: worker process
+  100100 nginx: worker process
+  100100 nginx: worker process
+  100100 nginx: worker process
+  100100 nginx: worker process
+  100100 nginx: worker process
+  100100 nginx: worker process
+  100100 nginx: worker process
+```
+
+Indeed, Podman creates a dedicated user namespace for containers:
+
+```
+$ ls --type user
+        NS TYPE  NPROCS   PID USER  COMMAND
+4026531837 user      10   260 massi /lib/systemd/systemd --user
+4026532263 user      90   532 massi /usr/bin/podman
+```
 > Reference: https://kind.sigs.k8s.io/docs/user/rootless/#creating-a-kind-cluster-with-rootless-podman
 
 Validate the control plane container:
