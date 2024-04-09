@@ -2,6 +2,10 @@
 Title: Kind with Podman rootless mode on WSL2 and deep dive
 ---
 
+# Setup
+
+## WSL
+
 **Enable systemd on the WSL machine**
 
 ```shell
@@ -37,9 +41,11 @@ EOF
 mount -a
 ```
 
-**Podman**
+## Podman
 
-Install Podman. Depending on the Linux distribution the command changes. For example for Ubuntu:
+**Install Podman**
+
+Depending on the Linux distribution the command changes. For example for Ubuntu:
 
 ```shell
 sudo apt update
@@ -57,13 +63,17 @@ cgroup_manager = "cgroupfs"
 EOF
 ```
 
-Install missing CNI plugins v1.1.1
+**CNI plugins**
+
+Install missing CNI plugins v1.1.1:
 ```
 curl -SLO http://archive.ubuntu.com/ubuntu/pool/universe/g/golang-github-containernetworking-plugins/containernetworking-plugins_1.1.1+ds1-3_amd64.deb
 sudo dpkg -i containernetworking-plugins_1.1.1+ds1-3_amd64.deb
 ```
 
 > Reference: https://bugs.launchpad.net/ubuntu/+source/libpod/+bug/2024394
+
+**Container runtime**
 
 Upgrade `crun`, version >= 1.9.0:
 
@@ -84,9 +94,13 @@ podman info | grep -i crun
 
 > Reference: https://noobient.com/2023/11/15/fixing-ubuntu-containers-failing-to-start-with-systemd/
 
-**Configure systemd resource delegation, to run Podman in rootless mode**
+## Systemd
 
-For root user slice:
+**Configure systemd resource delegation**
+
+This is required in order to run Podman in rootless mode and manage resources in control groups with delegation.
+
+For the root user slice:
 
 ```shell
 cat <<EOF >/etc/systemd/system/user-0.slice
@@ -128,7 +142,9 @@ EOF
 
 Note: `Delegate=yes` delegate all supported controllers.
 
-**Create a KinD cluster**
+## KinD
+
+**Create a cluster**
 
 Install kind [the way](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) you prefer.
 
@@ -153,11 +169,11 @@ $ systemd-run --scope --user podman exec -it kind-control-plane bash
     565 ?        00:01:23 kube-apiserver
 ```
 
-**Deep dive**
+# Deep dive
 
 Taking a look at what is going on under the hood, it can be noted that Podman created the KinD control-plane container's `cgroup` (`a4cfc6bc8a38ee23e42839393eedba68a92f7f8b3a23e70328a29e58c0c59d38` in the example below).
 
-Te container, the `init.scope` and the `kubelet.service` cgroups can be noted:
+The container, the `init.scope` and the `kubelet.service` cgroups can be noted:
 
 ```shell
 $ systemctl status
