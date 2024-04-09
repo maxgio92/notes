@@ -1,0 +1,42 @@
+---
+Title: Kind with Podman rootless mode on WSL2
+---
+
+sudo apt update
+# install podman
+sudo apt install -y podman
+# install kind
+
+# disable cgroupv1 for all cgroup controllers - ref: https://devpress.csdn.net/postgresql/630fab296a097251580cf46e.html
+cat <<EOF >/etc/wsl.conf
+[wsl2]
+kernelCommandLine = cgroup_no_v1=all
+EOF
+# or globally at /Users/${USER}/.wslconfig
+
+# From Windows host, restart WSL
+wsl --shutdown
+
+# Move the cgroupv2 mount to classic /sys/fs/cgroup, for podman/docker clients
+cat <<EOF >>/etc/fstab
+cgroup2 /sys/fs/cgroup cgroup2 rw,nosuid,nodev,noexec,relatime,nsdelegate 0 0
+EOF
+mount -a
+
+# Install missing CNI plugins v1.1.1 - ref: https://bugs.launchpad.net/ubuntu/+source/libpod/+bug/2024394
+curl -SLO http://archive.ubuntu.com/ubuntu/pool/universe/g/golang-github-containernetworking-plugins/containernetworking-plugins_1.1.1+ds1-3_amd64.deb
+sudo dpkg -i containernetworking-plugins_1.1.1+ds1-3_amd64.deb
+
+# Upgrade crun >= 1.9.0 - ref: https://noobient.com/2023/11/15/fixing-ubuntu-containers-failing-to-start-with-systemd/
+mkdir -p ~/.local/bin
+curl -sL "https://github.com/containers/crun/releases/download/${CRUN_VER}/crun-${CRUN_VER}-linux-amd64" -o "${HOME}/.local/bin/crun"
+chmod +x ~/.local/bin/crun
+mkdir -p ~/.config/containers"
+cat << EOF > ~/.config/containers/containers.conf
+[engine.runtimes]
+crun = [
+  "${HOME}/.local/bin/crun",
+  "/usr/bin/crun"
+]
+EOF
+podman info | grep -i crun
