@@ -181,7 +181,7 @@ $ ps -C nginx -o user -o args n
   <span style=color:#ae81ff>100100</span> nginx: worker process
   <span style=color:#ae81ff>100100</span> nginx: worker process
   <span style=color:#ae81ff>100100</span> nginx: worker process
-</code></pre></div><p>Indeed, Podman creates a dedicated user namespace for containers:</p><pre><code>$ ls --type user
+</code></pre></div><p>Indeed, Podman creates a dedicated user namespace for containers:</p><pre><code>$ lsns --type user
         NS TYPE  NPROCS   PID USER  COMMAND
 4026531837 user      10   260 massi /lib/systemd/systemd --user
 4026532263 user      90   532 massi /usr/bin/podman
