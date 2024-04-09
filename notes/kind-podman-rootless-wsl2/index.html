@@ -13,7 +13,7 @@ cat <<EOF >>/etc/wsl.conf [boot] systemd=true EOF Disable cgroupv1 for the WSL i
 cat <<EOF >>/etc/wsl.conf [wsl2] kernelCommandLine = cgroup_no_v1=all systemd.unified_cgroup_hierarchy=1 EOF  References:
  https://docs.kernel.org/admin-guide/cgroup-v2.html https://devpress.csdn.net/postgresql/630fab296a097251580cf46e.html https://github.com/spurin/wsl-cgroupsv2   From Windows host, restart WSL
 wsl --shutdown Move the cgroupv2 mount to classic /sys/fs/cgroup, for podman/docker clients
-cat <<EOF >>/etc/fstab cgroup2 /sys/fs/cgroup cgroup2 rw,nosuid,nodev,noexec,relatime,nsdelegate 0 0 EOF mount -a Podman"><meta itemprop=wordCount content="722"><meta itemprop=keywords content><meta name=twitter:card content="summary"><meta name=twitter:title content="Kind with Podman rootless mode on WSL2"><meta name=twitter:description content="Enable systemd on the WSL machine
+cat <<EOF >>/etc/fstab cgroup2 /sys/fs/cgroup cgroup2 rw,nosuid,nodev,noexec,relatime,nsdelegate 0 0 EOF mount -a Podman"><meta itemprop=wordCount content="852"><meta itemprop=keywords content><meta name=twitter:card content="summary"><meta name=twitter:title content="Kind with Podman rootless mode on WSL2"><meta name=twitter:description content="Enable systemd on the WSL machine
 cat <<EOF >>/etc/wsl.conf [boot] systemd=true EOF Disable cgroupv1 for the WSL instance (or globally at \Users%USERPROFILE%.wslconfig), for all cgroup controllers:
 cat <<EOF >>/etc/wsl.conf [wsl2] kernelCommandLine = cgroup_no_v1=all systemd.unified_cgroup_hierarchy=1 EOF  References:
  https://docs.kernel.org/admin-guide/cgroup-v2.html https://devpress.csdn.net/postgresql/630fab296a097251580cf46e.html https://github.com/spurin/wsl-cgroupsv2   From Windows host, restart WSL
@@ -160,7 +160,24 @@ COMMAND
 Running scope as unit: run-r3403981399e3484c92993c384f192d63.scope
 CONTAINER           IMAGE               CREATED             STATE               NAME                     ATTEMPT             POD ID              POD
 0a98af2598be4       0500518ebaa68       <span style=color:#ae81ff>36</span> minutes ago      Running             local-path-provisioner   <span style=color:#ae81ff>0</span>                   4796ab87414f8       local-path-provisioner-7577fdbbfb-zjdbq
-</code></pre></div><blockquote><p>Reference: <a href=https://kind.sigs.k8s.io/docs/user/rootless/#creating-a-kind-cluster-with-rootless-podman>https://kind.sigs.k8s.io/docs/user/rootless/#creating-a-kind-cluster-with-rootless-podman</a></p></blockquote><p>Validate the control plane container:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>$ kubectl version
+</code></pre></div><p>Trying to run a rootful standard Nginx pod, it can be noted that the root user that runs the Nginx daemon in the container, is mapped to the UID 1000 in the root namespace, looking outside of the container:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>$ kubectl run --image nginx nginx
+pod/nginx created
+$ ps -C nginx -o user -o args n
+    USER COMMAND
+    <span style=color:#ae81ff>1000</span> nginx: master process nginx -g daemon off;
+  <span style=color:#ae81ff>100100</span> nginx: worker process
+  <span style=color:#ae81ff>100100</span> nginx: worker process
+  <span style=color:#ae81ff>100100</span> nginx: worker process
+  <span style=color:#ae81ff>100100</span> nginx: worker process
+  <span style=color:#ae81ff>100100</span> nginx: worker process
+  <span style=color:#ae81ff>100100</span> nginx: worker process
+  <span style=color:#ae81ff>100100</span> nginx: worker process
+  <span style=color:#ae81ff>100100</span> nginx: worker process
+</code></pre></div><p>Indeed, Podman creates a dedicated user namespace for containers:</p><pre><code>$ ls --type user
+        NS TYPE  NPROCS   PID USER  COMMAND
+4026531837 user      10   260 massi /lib/systemd/systemd --user
+4026532263 user      90   532 massi /usr/bin/podman
+</code></pre><blockquote><p>Reference: <a href=https://kind.sigs.k8s.io/docs/user/rootless/#creating-a-kind-cluster-with-rootless-podman>https://kind.sigs.k8s.io/docs/user/rootless/#creating-a-kind-cluster-with-rootless-podman</a></p></blockquote><p>Validate the control plane container:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>$ kubectl version
 Client Version: v1.29.3
 Kustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3
 Server Version: v1.29.2
