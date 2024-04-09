@@ -88,7 +88,8 @@ IOAccounting=yes
 TasksAccounting=yes
 ```
 
-For all user services (/etc/systemd/system/user@.service.d/delegate.conf):
+For all user manager instances (/etc/systemd/system/user@.service.d/delegate.conf):atest/user@.service.html
+
 ```
 [Service]
 Delegate=cpu cpuset io memory pids
@@ -101,3 +102,6 @@ Test - ref: https://kind.sigs.k8s.io/docs/user/rootless/#creating-a-kind-cluster
 ```
 systemd-run --scope --user kind create cluster
 ```
+
+Documentation:
+- https://www.freedesktop.org/software/systemd/man/latest/user@.service.html
