@@ -295,7 +295,7 @@ $ ps -C nginx -o user -o args n
 Indeed, Podman creates a dedicated user namespace for containers:
 
 ```
-$ ls --type user
+$ lsns --type user
         NS TYPE  NPROCS   PID USER  COMMAND
 4026531837 user      10   260 massi /lib/systemd/systemd --user
 4026532263 user      90   532 massi /usr/bin/podman
