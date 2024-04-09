@@ -60,3 +60,32 @@ crun = [
 EOF
 podman info | grep -i crun
 ```
+
+Configure systemd resource delegation - ref: https://unix.stackexchange.com/questions/624428/cgroups-v2-cgroup-controllers-not-delegated-to-non-privileged-users-on-centos-s/625079#625079
+
+/etc/systemd/system/user-0.slice:
+```
+[Unit]
+Before=systemd-logind.service
+[Slice]
+Slice=user.slice
+[Install]
+WantedBy=multi-user.target
+```
+
+/etc/systemd/system/user@.service.d/delegate.conf:
+```
+[Service]
+Delegate=cpu cpuset io memory pids
+```
+
+/etc/systemd/system/user-.slice.d/override.conf:
+```
+[Slice]
+Slice=user.slice
+
+CPUAccounting=yes
+MemoryAccounting=yes
+IOAccounting=yes
+TasksAccounting=yes
+```
