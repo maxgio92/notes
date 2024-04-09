@@ -97,10 +97,21 @@ Delegate=cpu cpuset io memory pids
 
 Note: `Delegate=yes` delegate all supported controllers.
 
-Test - ref: https://kind.sigs.k8s.io/docs/user/rootless/#creating-a-kind-cluster-with-rootless-podman
-
+Create the cluster - ref: https://kind.sigs.k8s.io/docs/user/rootless/#creating-a-kind-cluster-with-rootless-podman
 ```
 systemd-run --scope --user kind create cluster
+```
+
+Validate the control plane container:
+```
+$ kubectl version
+Client Version: v1.29.3
+Kustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3
+Server Version: v1.29.2
+$ systemd-run --scope --user podman exec -it kind-control-plane bash
+# ps -C kube-apiserver
+    PID TTY          TIME CMD
+    565 ?        00:01:23 kube-apiserver
 ```
 
 Documentation:
