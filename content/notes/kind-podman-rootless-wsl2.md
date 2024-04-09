@@ -67,7 +67,7 @@ Configure systemd resource delegation - ref:
 - https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
 - https://unix.stackexchange.com/questions/624428/cgroups-v2-cgroup-controllers-not-delegated-to-non-privileged-users-on-centos-s/625079#625079
 
-/etc/systemd/system/user-0.slice:
+For root user slice (/etc/systemd/system/user-0.slice):
 ```
 [Unit]
 Before=systemd-logind.service
@@ -77,15 +77,7 @@ Slice=user.slice
 WantedBy=multi-user.target
 ```
 
-/etc/systemd/system/user@.service.d/delegate.conf:
-```
-[Service]
-Delegate=cpu cpuset io memory pids
-```
-
-Note: `Delegate=yes` delegate all supported controllers.
-
-/etc/systemd/system/user-.slice.d/override.conf:
+For all user slices (/etc/systemd/system/user-.slice.d/override.conf):
 ```
 [Slice]
 Slice=user.slice
@@ -95,6 +87,14 @@ MemoryAccounting=yes
 IOAccounting=yes
 TasksAccounting=yes
 ```
+
+For all user services (/etc/systemd/system/user@.service.d/delegate.conf):
+```
+[Service]
+Delegate=cpu cpuset io memory pids
+```
+
+Note: `Delegate=yes` delegate all supported controllers.
 
 Test - ref: https://kind.sigs.k8s.io/docs/user/rootless/#creating-a-kind-cluster-with-rootless-podman
 
