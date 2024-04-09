@@ -105,3 +105,6 @@ systemd-run --scope --user kind create cluster
 
 Documentation:
 - https://www.freedesktop.org/software/systemd/man/latest/user@.service.html
+- https://www.freedesktop.org/software/systemd/man/latest/systemd.slice.html
+- https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+- https://docs.podman.io/en/stable/markdown/podman.1.html
