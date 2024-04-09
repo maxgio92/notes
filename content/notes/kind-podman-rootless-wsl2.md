@@ -22,7 +22,7 @@ Disable cgroupv1 for the WSL instance (or globally at \Users\${USER}\.wslconfig)
 ```shell
 cat <<EOF >/etc/wsl.conf
 [wsl2]
-kernelCommandLine = cgroup_no_v1=all
+kernelCommandLine = cgroup_no_v1=all systemd.unified_cgroup_hierarchy=1
 EOF
 ```
 
