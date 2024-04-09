@@ -138,7 +138,24 @@ Now run the `kind` command to create cluster containers as user slices, instead 
 systemd-run --scope --user kind create cluster
 ```
 
-For example, podman will create the container's `cgroup` (`a4cfc6bc8a38ee23e42839393eedba68a92f7f8b3a23e70328a29e58c0c59d38` in the example below).
+> Reference: https://kind.sigs.k8s.io/docs/user/rootless/#creating-a-kind-cluster-with-rootless-podman
+
+Validate the control plane container:
+
+```shell
+$ kubectl version
+Client Version: v1.29.3
+Kustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3
+Server Version: v1.29.2
+$ systemd-run --scope --user podman exec -it kind-control-plane bash
+# ps -C kube-apiserver
+    PID TTY          TIME CMD
+    565 ?        00:01:23 kube-apiserver
+```
+
+**Deep dive**
+
+Taking a look at what is going on under the hood, it can be noted that Podman created the KinD control-plane container's `cgroup` (`a4cfc6bc8a38ee23e42839393eedba68a92f7f8b3a23e70328a29e58c0c59d38` in the example below).
 
 Te container, the `init.scope` and the `kubelet.service` cgroups can be noted:
 
@@ -283,20 +300,8 @@ $ ls --type user
 4026531837 user      10   260 massi /lib/systemd/systemd --user
 4026532263 user      90   532 massi /usr/bin/podman
 ```
-> Reference: https://kind.sigs.k8s.io/docs/user/rootless/#creating-a-kind-cluster-with-rootless-podman
 
-Validate the control plane container:
-
-```shell
-$ kubectl version
-Client Version: v1.29.3
-Kustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3
-Server Version: v1.29.2
-$ systemd-run --scope --user podman exec -it kind-control-plane bash
-# ps -C kube-apiserver
-    PID TTY          TIME CMD
-    565 ?        00:01:23 kube-apiserver
-```
+That's it.
 
 ---
 
