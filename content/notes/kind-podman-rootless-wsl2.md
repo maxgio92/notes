@@ -1,5 +1,5 @@
 ---
-Title: Kind with Podman rootless mode on WSL2
+Title: Kind with Podman rootless mode on WSL2 and deep dive
 ---
 
 **Enable systemd on the WSL machine**
