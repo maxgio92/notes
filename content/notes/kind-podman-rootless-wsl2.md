@@ -63,7 +63,9 @@ EOF
 podman info | grep -i crun
 ```
 
-Configure systemd resource delegation - ref: https://unix.stackexchange.com/questions/624428/cgroups-v2-cgroup-controllers-not-delegated-to-non-privileged-users-on-centos-s/625079#625079
+Configure systemd resource delegation - ref:
+- https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+- https://unix.stackexchange.com/questions/624428/cgroups-v2-cgroup-controllers-not-delegated-to-non-privileged-users-on-centos-s/625079#625079
 
 /etc/systemd/system/user-0.slice:
 ```
