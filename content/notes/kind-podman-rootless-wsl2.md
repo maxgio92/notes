@@ -17,7 +17,9 @@ cgroup_manager = "cgroupfs"
 
 Install kind
 
-Disable cgroupv1 for the WSL instance (or globally at \Users\${USER}\.wslconfig) , for all cgroup controllers - ref: https://devpress.csdn.net/postgresql/630fab296a097251580cf46e.html
+Disable cgroupv1 for the WSL instance (or globally at \Users\${USER}\.wslconfig) , for all cgroup controllers - refs:
+- https://devpress.csdn.net/postgresql/630fab296a097251580cf46e.html
+- https://github.com/spurin/wsl-cgroupsv2
 
 ```shell
 cat <<EOF >/etc/wsl.conf
@@ -88,4 +90,10 @@ CPUAccounting=yes
 MemoryAccounting=yes
 IOAccounting=yes
 TasksAccounting=yes
+```
+
+Test - ref: https://kind.sigs.k8s.io/docs/user/rootless/#creating-a-kind-cluster-with-rootless-podman
+
+```
+systemd-run --scope --user kind create cluster
 ```
