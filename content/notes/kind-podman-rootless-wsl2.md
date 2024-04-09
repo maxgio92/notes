@@ -81,6 +81,8 @@ WantedBy=multi-user.target
 Delegate=cpu cpuset io memory pids
 ```
 
+Note: `Delegate=yes` delegate all supported controllers.
+
 /etc/systemd/system/user-.slice.d/override.conf:
 ```
 [Slice]
