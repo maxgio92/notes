@@ -7,6 +7,14 @@ Install podman
 ```shell
 sudo apt install -y podman
 ```
+
+Configure podman /etc/containers/containers.conf
+```shell
+log_driver = "k8s-file"
+events_logger = "file"
+cgroup_manager = "cgroupfs"
+```
+
 Install kind
 
 Disable cgroupv1 for the WSL instance (or globally at \Users\${USER}\.wslconfig) , for all cgroup controllers - ref: https://devpress.csdn.net/postgresql/630fab296a097251580cf46e.html
