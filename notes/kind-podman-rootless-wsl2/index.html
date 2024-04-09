@@ -13,7 +13,7 @@ sudo apt install -y podman Configure podman /etc/containers/containers.conf
 log_driver = &#34;k8s-file&#34; events_logger = &#34;file&#34; cgroup_manager = &#34;cgroupfs&#34; Install kind
 Disable cgroupv1 for the WSL instance (or globally at \Users${USER}.wslconfig) , for all cgroup controllers - refs:
  https://devpress.csdn.net/postgresql/630fab296a097251580cf46e.html https://github.com/spurin/wsl-cgroupsv2  cat <<EOF >/etc/wsl.conf [wsl2] kernelCommandLine = cgroup_no_v1=all systemd.unified_cgroup_hierarchy=1 EOF From Windows host, restart WSL
-wsl --shutdown Move the cgroupv2 mount to classic /sys/fs/cgroup, for podman/docker clients"><meta itemprop=wordCount content="174"><meta itemprop=keywords content><meta name=twitter:card content="summary"><meta name=twitter:title content="Kind with Podman rootless mode on WSL2"><meta name=twitter:description content="sudo apt update Install podman
+wsl --shutdown Move the cgroupv2 mount to classic /sys/fs/cgroup, for podman/docker clients"><meta itemprop=wordCount content="180"><meta itemprop=keywords content><meta name=twitter:card content="summary"><meta name=twitter:title content="Kind with Podman rootless mode on WSL2"><meta name=twitter:description content="sudo apt update Install podman
 sudo apt install -y podman Configure podman /etc/containers/containers.conf
 log_driver = &#34;k8s-file&#34; events_logger = &#34;file&#34; cgroup_manager = &#34;cgroupfs&#34; Install kind
 Disable cgroupv1 for the WSL instance (or globally at \Users${USER}.wslconfig) , for all cgroup controllers - refs:
@@ -54,7 +54,7 @@ Slice=user.slice
 WantedBy=multi-user.target
 </code></pre><p>/etc/systemd/system/user@.service.d/delegate.conf:</p><pre><code>[Service]
 Delegate=cpu cpuset io memory pids
-</code></pre><p>/etc/systemd/system/user-.slice.d/override.conf:</p><pre><code>[Slice]
+</code></pre><p>Note: <code>Delegate=yes</code> delegate all supported controllers.</p><p>/etc/systemd/system/user-.slice.d/override.conf:</p><pre><code>[Slice]
 Slice=user.slice
 
 CPUAccounting=yes
