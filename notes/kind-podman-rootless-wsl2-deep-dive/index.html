@@ -36,11 +36,11 @@ mount -a
 </span><span style=color:#e6db74>IOAccounting=yes
 </span><span style=color:#e6db74>TasksAccounting=yes
 </span><span style=color:#e6db74>EOF</span>
-</code></pre></div><p>For all user manager instances:</p><pre><code>cat &lt;&lt;EOF &gt;/etc/systemd/system/user@.service.d/delegate.conf
-[Service]
-Delegate=cpu cpuset io memory pids
-EOF
-</code></pre><blockquote><p>References:</p><ul><li><a href=https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html>https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html</a></li><li><a href=https://unix.stackexchange.com/questions/624428/cgroups-v2-cgroup-controllers-not-delegated-to-non-privileged-users-on-centos-s/625079#625079>https://unix.stackexchange.com/questions/624428/cgroups-v2-cgroup-controllers-not-delegated-to-non-privileged-users-on-centos-s/625079#625079</a></li></ul></blockquote><p>Note: <code>Delegate=yes</code> delegate all supported controllers.</p><h2 id=podman>Podman</h2><h3 id=install-podman>Install Podman</h3><p>Depending on the Linux distribution the command changes. For example for Ubuntu:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>sudo apt update
+</code></pre></div><p>For all user manager instances:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>cat <span style=color:#e6db74>&lt;&lt;EOF &gt;/etc/systemd/system/user@.service.d/delegate.conf
+</span><span style=color:#e6db74>[Service]
+</span><span style=color:#e6db74>Delegate=cpu cpuset io memory pids
+</span><span style=color:#e6db74>EOF</span>
+</code></pre></div><blockquote><p>References:</p><ul><li><a href=https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html>https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html</a></li><li><a href=https://unix.stackexchange.com/questions/624428/cgroups-v2-cgroup-controllers-not-delegated-to-non-privileged-users-on-centos-s/625079#625079>https://unix.stackexchange.com/questions/624428/cgroups-v2-cgroup-controllers-not-delegated-to-non-privileged-users-on-centos-s/625079#625079</a></li></ul></blockquote><p>Note: <code>Delegate=yes</code> delegate all supported controllers.</p><h2 id=podman>Podman</h2><h3 id=install-podman>Install Podman</h3><p>Depending on the Linux distribution the command changes. For example for Ubuntu:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>sudo apt update
 sudo apt install -y podman
 </code></pre></div><p>As journald is not available in WSL, configure podman&rsquo;s log driver, events logger.
 Also, set the cgroup manager to <code>cgroupfs</code>:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>cat <span style=color:#e6db74>&lt;&lt;EOF &gt;/etc/containers/containers.conf
