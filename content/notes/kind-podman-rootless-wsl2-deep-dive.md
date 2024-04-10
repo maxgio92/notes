@@ -23,7 +23,7 @@ This guide comes directly from the notes I've taken collecting the informations 
 
 ## WSL
 
-**Enable systemd on the WSL machine**
+### Enable systemd on the WSL machine
 
 ```shell
 cat <<EOF >>/etc/wsl.conf
@@ -60,9 +60,9 @@ mount -a
 
 ## Systemd
 
-**Configure systemd resource delegation**
+### Configure systemd resource delegation
 
-This is required in order to run Podman in rootless mode and manage resources in control groups with delegation.
+This is required in order to run Podman in rootless mode and manage resources with control delegation to the cgroups subtrees.
 
 For the root user slice:
 
@@ -108,7 +108,7 @@ Note: `Delegate=yes` delegate all supported controllers.
 
 ## Podman
 
-**Install Podman**
+### Install Podman
 
 Depending on the Linux distribution the command changes. For example for Ubuntu:
 
@@ -128,7 +128,7 @@ cgroup_manager = "cgroupfs"
 EOF
 ```
 
-**CNI plugins**
+### CNI plugins
 
 Install missing CNI plugins v1.1.1:
 ```
@@ -138,7 +138,7 @@ sudo dpkg -i containernetworking-plugins_1.1.1+ds1-3_amd64.deb
 
 > Reference: https://bugs.launchpad.net/ubuntu/+source/libpod/+bug/2024394
 
-**Container runtime**
+### Container runtime
 
 Upgrade `crun`, version >= 1.9.0:
 
@@ -161,7 +161,7 @@ podman info | grep -i crun
 
 ## KinD
 
-**Create a cluster**
+### Create a cluster
 
 Install kind [the way](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) you prefer.
 
