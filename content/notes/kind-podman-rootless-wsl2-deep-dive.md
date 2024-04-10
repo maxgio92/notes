@@ -2,6 +2,23 @@
 Title: Kind with Podman rootless mode on WSL2 and deep dive
 ---
 
+# Introduction
+
+This is a straightforward guide for a full setup of [KinD](https://kind.sigs.k8s.io/) with [Podman](https://podman.io/) run in rootless mode as a backend, on [Windows Subsystem for Linux](https://learn.microsoft.com/en-us/windows/wsl/about) (WSL) version 2.
+
+After the setup guide a brief deep dive follows.
+
+This guide comes directly from the notes I've taken collecting the informations available on the web to use KinD rootless on my WSL workspace, and from the exploration I've gone through out of curiosity.
+
+# Table of contents
+
+1. Setup
+    1. WSL
+    3. Systemd
+    4. Podman
+    5. KinD
+6. Deep dive
+
 # Setup
 
 ## WSL
@@ -15,7 +32,7 @@ systemd=true
 EOF
 ```
 
-Disable cgroupv1 for the WSL instance (or globally at \Users\%USERPROFILE%\.wslconfig), for all cgroup controllers:
+Disable cgroupv1 for the WSL instance (or globally at `\Users\%USERPROFILE%\.wslconfig`), for all cgroup controllers:
 
 ```shell
 cat <<EOF >>/etc/wsl.conf
@@ -40,6 +57,54 @@ cgroup2 /sys/fs/cgroup cgroup2 rw,nosuid,nodev,noexec,relatime,nsdelegate 0 0
 EOF
 mount -a
 ```
+
+## Systemd
+
+**Configure systemd resource delegation**
+
+This is required in order to run Podman in rootless mode and manage resources in control groups with delegation.
+
+For the root user slice:
+
+```shell
+cat <<EOF >/etc/systemd/system/user-0.slice
+[Unit]
+Before=systemd-logind.service
+[Slice]
+Slice=user.slice
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+For all other user slices:
+
+```shell
+cat <<EOF >/etc/systemd/system/user-.slice.d/override.conf
+[Slice]
+Slice=user.slice
+
+CPUAccounting=yes
+MemoryAccounting=yes
+IOAccounting=yes
+TasksAccounting=yes
+EOF
+```
+
+For all user manager instances:
+
+```
+cat <<EOF >/etc/systemd/system/user@.service.d/delegate.conf
+[Service]
+Delegate=cpu cpuset io memory pids
+EOF
+```
+
+> References:
+> - https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+> - https://unix.stackexchange.com/questions/624428/cgroups-v2-cgroup-controllers-not-delegated-to-non-privileged-users-on-centos-s/625079#625079
+
+Note: `Delegate=yes` delegate all supported controllers.
 
 ## Podman
 
@@ -93,54 +158,6 @@ podman info | grep -i crun
 ```
 
 > Reference: https://noobient.com/2023/11/15/fixing-ubuntu-containers-failing-to-start-with-systemd/
-
-## Systemd
-
-**Configure systemd resource delegation**
-
-This is required in order to run Podman in rootless mode and manage resources in control groups with delegation.
-
-For the root user slice:
-
-```shell
-cat <<EOF >/etc/systemd/system/user-0.slice
-[Unit]
-Before=systemd-logind.service
-[Slice]
-Slice=user.slice
-[Install]
-WantedBy=multi-user.target
-EOF
-```
-
-For all other user slices:
-
-```shell
-cat <<EOF >/etc/systemd/system/user-.slice.d/override.conf
-[Slice]
-Slice=user.slice
-
-CPUAccounting=yes
-MemoryAccounting=yes
-IOAccounting=yes
-TasksAccounting=yes
-EOF
-```
-
-For all user manager instances:
-
-```
-cat <<EOF >/etc/systemd/system/user@.service.d/delegate.conf
-[Service]
-Delegate=cpu cpuset io memory pids
-EOF
-```
-
-> References:
-> - https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
-> - https://unix.stackexchange.com/questions/624428/cgroups-v2-cgroup-controllers-not-delegated-to-non-privileged-users-on-centos-s/625079#625079
-
-Note: `Delegate=yes` delegate all supported controllers.
 
 ## KinD
 
