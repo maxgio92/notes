@@ -93,7 +93,7 @@ EOF
 
 For all user manager instances:
 
-```
+```shell
 cat <<EOF >/etc/systemd/system/user@.service.d/delegate.conf
 [Service]
 Delegate=cpu cpuset io memory pids
