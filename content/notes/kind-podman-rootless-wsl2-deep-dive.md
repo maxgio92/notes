@@ -1,5 +1,5 @@
 ---
-Title: Kind with Podman rootless mode on WSL2 and deep dive
+Title: Kind with Podman rootless on WSL2 and deep dive
 ---
 
 # Introduction
