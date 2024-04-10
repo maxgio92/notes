@@ -110,7 +110,7 @@ Note: `Delegate=yes` delegate all supported controllers.
 
 ### Install Podman
 
-Depending on the Linux distribution the command changes. For example for Ubuntu:
+Depending on the Linux distribution [the commands](https://podman.io/docs/installation#installing-on-linux) change. In my case, Ubuntu:
 
 ```shell
 sudo apt update
