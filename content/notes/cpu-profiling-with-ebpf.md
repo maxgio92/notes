@@ -7,8 +7,6 @@ libbpf:
 - Example: https://github.com/libbpf/libbpf-bootstrap/blob/master/examples/c/profile.bpf.c
 - From BCC: https://nakryiko.com/posts/bcc-to-libbpf-howto-guide/
 
-Ad averlo trovato prima
-
 Examples from Linux sources:
 - User space: https://github.com/torvalds/linux/blob/b0546776ad3f332e215cebc0b063ba4351971cca/samples/bpf/trace_event_user.c
 - Kernel space: https://github.com/torvalds/linux/blob/b0546776ad3f332e215cebc0b063ba4351971cca/samples/bpf/trace_event_kern.c
@@ -42,3 +40,4 @@ Stack walking:
 - https://c9x.me/x86/html/file_module_x86_id_154.html
 - https://www.polarsignals.com/blog/posts/2022/11/29/dwarf-based-stack-walking-using-ebpf
 - [DataDog's Stack traces in Go](https://github.com/DataDog/go-profiler-notes/blob/main/stack-traces.md)
+- https://stackoverflow.com/questions/57268045/how-to-read-stack-trace-kernelside-in-ebpf
