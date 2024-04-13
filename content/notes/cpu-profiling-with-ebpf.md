@@ -34,6 +34,7 @@ Other material:
 - [Official Linux Offwaketime:
   - [bpf](https://elixir.bootlin.com/linux/latest/source/samples/bpf/offwaketime.bpf.c)
   - [user](https://elixir.bootlin.com/linux/latest/source/samples/bpf/offwaketime_user.c)
+- https://stackoverflow.com/questions/23618743/implementing-an-interrupt-driven-sampling-profiler 
 
 Stack walking:
 - [x86 assembly](./X86-stack-walking.pdf)
