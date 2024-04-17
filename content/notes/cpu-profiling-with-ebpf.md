@@ -42,3 +42,4 @@ Stack walking:
 - https://www.polarsignals.com/blog/posts/2022/11/29/dwarf-based-stack-walking-using-ebpf
 - [DataDog's Stack traces in Go](https://github.com/DataDog/go-profiler-notes/blob/main/stack-traces.md)
 - https://stackoverflow.com/questions/57268045/how-to-read-stack-trace-kernelside-in-ebpf
+- NEW: https://www.brendangregg.com/blog/2024-03-17/the-return-of-the-frame-pointers.html
