@@ -43,3 +43,11 @@ Stack walking:
 - [DataDog's Stack traces in Go](https://github.com/DataDog/go-profiler-notes/blob/main/stack-traces.md)
 - https://stackoverflow.com/questions/57268045/how-to-read-stack-trace-kernelside-in-ebpf
 - NEW: https://www.brendangregg.com/blog/2024-03-17/the-return-of-the-frame-pointers.html
+
+Symbolization:
+- https://jvns.ca/blog/2018/01/09/resolving-symbol-addresses/
+- https://www.polarsignals.com/blog/posts/2022/01/13/fantastic-symbols-and-where-to-find-them
+
+Extra:
+- ORC: https://lwn.net/Articles/728339/
+- LBR: https://lwn.net/Articles/680985/
