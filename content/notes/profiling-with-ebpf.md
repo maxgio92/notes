@@ -51,3 +51,6 @@ Symbolization:
 Beyond frame pointers:
 - ORC: https://lwn.net/Articles/728339/
 - LBR: https://lwn.net/Articles/680985/
+
+Extra:
+- Off-CPU profiling: https://www.brendangregg.com/FlameGraphs/offcpuflamegraphs.html
