@@ -47,6 +47,7 @@ Stack walking:
 Symbolization:
 - https://jvns.ca/blog/2018/01/09/resolving-symbol-addresses/
 - https://www.polarsignals.com/blog/posts/2022/01/13/fantastic-symbols-and-where-to-find-them
+- https://mpatrol.sourceforge.net/doc/Call-stacks-and-symbol-tables.html
 
 Beyond frame pointers:
 - ORC: https://lwn.net/Articles/728339/
