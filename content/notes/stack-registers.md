@@ -30,7 +30,7 @@ The memory is already set for the program, it never grows or shrinks, unless mor
 The heap acquires memory from the bottom of the same region, and “grows up” towards the middle of the same memory region.
 Virtual memory and paging, etc, are all kernel stuff. The program uses the one-big linear memory region model that the compiler works out.
 
-![memory-regions-stack-instructions](https://github.com/maxgio92/notes/blob/68c5220995702493845a3d96cc9d6dc7ce61ec8f/content/notes/memory-regions-allocations.jpg)
+![memory-regions-stack-instructions](https://raw.githubusercontent.com/maxgio92/notes/68c5220995702493845a3d96cc9d6dc7ce61ec8f/content/notes/memory-regions-allocations.jpg)
 
 ## What about the frame pointer? How does it relate to the base pointer?
 
