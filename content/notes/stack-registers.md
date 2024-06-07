@@ -30,9 +30,9 @@ The memory is already set for the program, it never grows or shrinks, unless mor
 The heap acquires memory from the bottom of the same region, and “grows up” towards the middle of the same memory region.
 Virtual memory and paging, etc, are all kernel stuff. The program uses the one-big linear memory region model that the compiler works out.
 
-![](https://github.com/maxgio92/notes/blob/68c5220995702493845a3d96cc9d6dc7ce61ec8f/content/notes/memory-regions-allocations.jpg)
+![memory-regions-stack-instructions](https://github.com/maxgio92/notes/blob/68c5220995702493845a3d96cc9d6dc7ce61ec8f/content/notes/memory-regions-allocations.jpg)
 
-## But what about the frame pointer? How does it relate to the base pointer?
+## What about the frame pointer? How does it relate to the base pointer?
 
 The frame pointer is the base pointer because is set up when a function is called to establish a fixed reference (base) point for accessing local variables and parameters within the function's stack frame. Depending on what ABI you use, parameters are passed either on the stack or via registers. For instance, on i386 System V ABI, parameter 0 is at the base pointer + 8 (i.e. "8(%ebp)"). In the x86-64 ABI, parameter 0 is stored in the %rdi register.
 
@@ -45,6 +45,8 @@ Below the parameters on the stack (remember, the stack grows down) are:
 Remember: the return address is a snapshot of the program counter, so it points to instructions (code).
 The previous frame pointer is a snapshot of the base pointer, so it points to the stack (data).
 
+![stack-return-address-previous-frame-pointer](https://raw.githubusercontent.com/maxgio92/notes/5ab379b18942d782ac152cc81ad9029ae15d8dd1/content/notes/memory-stack-ip-bp.png)
+
 Below the local variables are other stack frames resulting from more recent function calls, as well as generic stack space used for computation and temporary storage. The most recent of these is pointed to by the real stack pointer. This is the difference between the stack pointer and the frame/base pointer.
 
 However, the frame pointer is not always required. Modern compilers can generate code that just uses the stack pointer. At any point in code generation, it can determine where the return address, parameters, and locals are relative to the stack pointer address (either by a constant offset or programmatically).
@@ -52,3 +54,7 @@ However, the frame pointer is not always required. Modern compilers can generate
 Without a frame pointer, though, it is much more difficult for debuggers to determine the stack backtrace. In particular, hardware debuggers that do not have symbolic program information are almost always unable to show the stack.
 
 Why would you not use a frame pointer? In most architectures it frees up a register, essentially increasing the size of the CPU's fastest and best memory -- its register file.
+
+## Register names
+
+On 16 bit ISA SP, BP and IP, on 32 bit ESP, EBP and EIP, on 64 bit RSP, RBP and RIP.
