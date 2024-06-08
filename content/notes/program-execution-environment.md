@@ -23,6 +23,8 @@ Meanwhile, usually, the base pointer (BP) is a snapshot of the stack pointer (SP
 ![stack-frame](https://raw.githubusercontent.com/maxgio92/notes/14bdde325f646b53ee0b6501f0ba9d3ecbaded4f/content/notes/memory-stack-frames-simple.png)
 > In this image, the base poiner is referred to as frame pointer (FP). We'll go into it later on.
 
+### The call path
+
 Usually the current base pointer is also pushed to the stack when a new function is called. But it's not mandatory and it depends on how the binary has been compiled.
 
 > **The saved base pointers and the stack unwinding**
@@ -41,7 +43,9 @@ So, the CALL - RET pair is very useful in the reusability of code.
 
 Because all of the above points need to be memorized on the stack, the stack size will naturally increase (and thus the stack and base pointers too).
 
-When a function finishes normally and returns, if the compiler can tell it won’t need to call it again right away, then it is ‘popped’ off the stack and the stack pointer returns to the last position (towards the top) it was before. In the case of a function calling a function, the program counter returns to the next line in the previous stack frame and starts executing from there. The return address was stored in a register or in RAM automatically when the stack frame was created for the function, and in C is not alterable from the source code.
+### The return path
+
+When a function finishes normally and returns, if the compiler can tell it won’t need to call it again right away, then it is popped off the stack and the stack pointer returns to the last position (towards the top) it was before. In the case of a function calling a function, the program counter returns to the next line in the previous stack frame and starts executing from there. The return address was stored in a register or in RAM automatically when the stack frame was created for the function, and in C is not alterable from the source code.
 
 In a nutshell, the PC is used to memorize the current instruction address:
 - After a semicolon, it should increase by 8 bytes (assuming a 64bit instruction set) to point to the next instruction
