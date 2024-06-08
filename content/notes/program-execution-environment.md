@@ -101,11 +101,12 @@ Finally, on 64-bit they're usually called RSP, RBP, and RIP.
 
 > Note: the memory allocation during the fork is only mentioned here.
 
-On program execution (Unix-like fork and exec system call groups) OS allocates memory to later store the program's instructions (code) and data.
+On program execution (Unix-like fork and exec system call groups) OS allocates memory to later store the program's instructions (code) and data (in the stack).
 On Unix-like operating systems, the exec family of system calls replaces the program executed by a process.
-When a process calls exec, all instructions and data - in ELF executable format, they're the text and the data sections - in the process is replaced with the executable of the new program.
+When a process calls exec, all instructions - in ELF executable format it's the text section - and the data in the process is replaced with the executable of the new program.
 The OS then sets the PC to the memory address of the first instruction, which is fetched, decoded, and executed one by one.
-> As a detail, although all data is replaced, all open file descriptors remain open after calling exec unless explicitly set to close-on-exec.
+> I couldn't find yet where the information about how to set up the stack at exec time from an ELF file are stored in the ELF structure.
+> Also, as a detail, although all data is replaced, all open file descriptors remain open after calling exec unless explicitly set to close-on-exec.
 
 ![memory-map-exec](https://raw.githubusercontent.com/maxgio92/notes/d3bf6f231c330ba746354cc463469245fc9de7bc/content/notes/memory-map-exec.png)
 
