@@ -25,7 +25,9 @@ Meanwhile, usually, the base pointer (BP) is a snapshot of the stack pointer (SP
 
 Usually the current base pointer is also pushed to the stack when a new function is called. But it's not mandatory and it depends on how the binary has been compiled.
 
-> When the base pointer is pushed to the stack, it points to the previous frame's base pointer, enabling debuggers to walk the stack, also called stack unwinding.
+> **The saved base pointers and the stack unwinding**
+> 
+> When the base pointer is pushed to the stack, it points to the previous frame's base pointer, enabling debuggers or profilers to walk the stack, also called stack unwinding. But FPO or frame pointer omission optimization will actually eliminate this and use the base pointer as another register and access locals directly off of the stack pointer. In this case, the stack unwinding is a bit more difficult since it can no longer directly access the stack frames of earlier function calls.
 
 In particular, CALL instruction pushes also the current value of PC (next instruction address) and the function arguments into the stack, and gives control to the target address (PC is set to the target address of CALL instruction).
 So, the just pushed return address is a snapshot of the program counter, and the saved (pushed) frame pointer is a snapshot of the base pointer, both available in the stack.
