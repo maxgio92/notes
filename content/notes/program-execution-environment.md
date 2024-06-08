@@ -11,7 +11,9 @@ It always points to somewhere in the code.
 ![memory-program-counter-2](https://raw.githubusercontent.com/maxgio92/notes/14bdde325f646b53ee0b6501f0ba9d3ecbaded4f/content/notes/memory-cpu-program-counter-1.gif)
 
 The stack pointer and base pointer instead point to the data (the stack).
-Considering a binary program in ELF format, code, and data are represented by the text and the data sections.
+Considering a binary program in ELF format, the code is represented by the text section.
+
+![memory-program-counter-2](https://raw.githubusercontent.com/maxgio92/notes/3db4d57bd2a84df56925e19ab24b03badfd649f1/content/notes/memory-process-data-code.png)
 
 As the stack grows whenever anything new is added to the stack, including new variables, the stack pointer is the lowest position in the stack (the stack grows from the highest address to the lowest address): so when a new variable of 4 bytes is declared, the stack pointer will be increased by 4 bytes too.
 Specifically, a stack pointer points to the first free and unused address on the stack.
