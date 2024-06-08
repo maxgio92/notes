@@ -4,22 +4,22 @@ Title: The memory stack and the BP, SP, PC pointer registers
 
 ## The program counter, the stack pointer, and the base pointer
 
-The program counter (PC) /instruction pointer (IP) is a register that points to code, that is, the instruction that will be executed next.
+The program counter (PC)/instruction pointer (IP) is a register that points to code, that is, the instruction that will be executed next.
 It always points to somewhere in the code.
 The stack pointer (and base pointer) points to the data: the stack contains data. 
-Considering that the stack grows whenever you add anything new to your stack, including new variables, the stack pointer is the lowest position in the stack (the stack grows from highest address to the lowest address): so if you declare a new variable of 4 bytes, the stack pointer will be increased by 4 bytes too.
+Considering that the stack grows whenever you add anything new to your stack, including new variables, the stack pointer is the lowest position in the stack (the stack grows from the highest address to the lowest address): so if you declare a new variable of 4 bytes, the stack pointer will be increased by 4 bytes too.
 Specifically, a stack pointer points to the first free and unused address on the stack. You reserve more space on stack by adjusting the stack pointer.
 
-CALL instruction pushes the current value of PC (next instruction address) and the function arguments into stack, and gives control to the target address (PC is set to target address of CALL instruction).
+CALL instruction pushes the current value of PC (next instruction address) and the function arguments into stack, and gives control to the target address (PC is set to the target address of CALL instruction).
 So, the just pushed return address is a snapshot of the program counter, available in the stack.
 As a result, control is passed to the called address (subroutine) and the return address (the address of the instruction next to CALL) is available.[
 RET instruction POPs value from stack (the return address) and puts it in PC.
 So, the next instruction is from return.
-So, the CALL - RET pair is very useful in code reusability of code.
+So, the CALL - RET pair is very useful in the reusability of code.
 
 Because all of the above points need to be memorized on the stack, the stack size will naturally increase (and thus the stack and base pointers too).
 
-When a function finishes normally and returns, if the compiler can tell it won’t need to call it again right away, then it is ‘popped’ off the stack and the stack pointer returns to the last position (towards the top) it was before. In the case of a function calling a function, the program counter returns to the next line in the previous stack frame and starts executing from there. The return address was stored in a register or in ram automatically when the stack frame is created for the function, and in C is not alterable from source code.
+When a function finishes normally and returns, if the compiler can tell it won’t need to call it again right away, then it is ‘popped’ off the stack and the stack pointer returns to the last position (towards the top) it was before. In the case of a function calling a function, the program counter returns to the next line in the previous stack frame and starts executing from there. The return address was stored in a register or in RAM automatically when the stack frame was created for the function, and in C is not alterable from the source code.
 
 In a nutshell, the PC is used to memorize the current instruction address:
 - After a semicolon, it should increase by 8 bytes (assuming a 64bit instruction set) to point to the next instruction
@@ -55,22 +55,29 @@ Without a frame pointer, though, it is much more difficult for debuggers to dete
 
 Why would you not use a frame pointer? In most architectures it frees up a register, essentially increasing the size of the CPU's fastest and best memory -- its register file.
 
-## Register names
+### Clarification about the register names
 
-On 16 bit ISA SP, BP and IP, on 32 bit ESP, EBP and EIP, on 64 bit RSP, RBP and RIP.
+On 16-bit ISA are usually called SP, BP, and IP.
+Instead on 32-bit ESP, EBP, and EIP.
+Finally, on 64-bit they're usually called RSP, RBP, and RIP.
 
-## How the instructions and the data in stack are loaded?
+## How the code and the data are loaded and organized in the allocated memory?
 
-On program execution (Unix-like fork and exec system call groups) OS allocates memory to store the program's instructions (code) and data.
-It then sets the program counter to the memory address of the first instruction, which is fetched, decoded, and executed one by one.
+> Note: the memory allocation during the fork is only mentioned here.
 
-On Linux, the exec family of system calls replaces the program executed by a process.
-When a process calls exec, all instructions (text ELF section) and data (data ELF section) in the process is replaced with the executable of the new program.
-As a detail, although all data is replaced, all open file descriptors remains open after calling exec unless explicitly set to close-on-exec.
+On program execution (Unix-like fork and exec system call groups) OS allocates memory to later store the program's instructions (code) and data.
+On Unix-like operating systems, the exec family of system calls replaces the program executed by a process.
+When a process calls exec, all instructions and data - in ELF executable format, they're the text and the data sections - in the process is replaced with the executable of the new program.
+The OS then sets the PC to the memory address of the first instruction, which is fetched, decoded, and executed one by one.
+> As a detail, although all data is replaced, all open file descriptors remain open after calling exec unless explicitly set to close-on-exec.
+
+![memory-map-exec](https://raw.githubusercontent.com/maxgio92/notes/d3bf6f231c330ba746354cc463469245fc9de7bc/content/notes/memory-map-exec.png)
 
 In particular, on Linux, on execs, the .text and .data ELF sections are loaded by the kernel at the base address.
-The main-stack is located just below and grows downwards.
-Each thread and function-call will have its own-stack / stack-frame.
-This is located located below the main-stack.
+The main stack is located just below and grows downwards.
+Each thread and function call will have its own-stack / stack frame.
+This is located below the main stack.
 Each stack is separated by a guard page to detect Stack-Overflow.
+
+![memory-map-elf](https://raw.githubusercontent.com/maxgio92/notes/d3bf6f231c330ba746354cc463469245fc9de7bc/content/notes/memory-map-elf.png)
 
