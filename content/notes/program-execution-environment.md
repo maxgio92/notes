@@ -1,8 +1,8 @@
 ---
-Title: The memory stack and the BP, SP, PC pointer registers
+Title: The program execution environment
 ---
 
-## The program counter, the stack pointer, and the base pointer
+## The program counter (PC), the stack pointer (SP), and the base pointer (BP) processor registers
 
 The program counter (PC)/instruction pointer (IP) is a register that points to code, that is, the instruction that will be executed next.
 It always points to somewhere in the code.
@@ -32,7 +32,7 @@ Virtual memory and paging, etc, are all kernel stuff. The program uses the one-b
 
 ![memory-regions-stack-instructions](https://raw.githubusercontent.com/maxgio92/notes/68c5220995702493845a3d96cc9d6dc7ce61ec8f/content/notes/memory-regions-allocations.jpg)
 
-## What about the frame pointer? How does it relate to the base pointer?
+## What about the frame pointer?
 
 The frame pointer is the base pointer because is set up when a function is called to establish a fixed reference (base) point for accessing local variables and parameters within the function's stack frame. Depending on what ABI you use, parameters are passed either on the stack or via registers. For instance, on i386 System V ABI, parameter 0 is at the base pointer + 8 (i.e. "8(%ebp)"). In the x86-64 ABI, parameter 0 is stored in the %rdi register.
 
@@ -81,3 +81,16 @@ Each stack is separated by a guard page to detect Stack-Overflow.
 
 ![memory-map-elf](https://raw.githubusercontent.com/maxgio92/notes/d3bf6f231c330ba746354cc463469245fc9de7bc/content/notes/memory-map-elf.png)
 
+### ELF structure
+
+Digging into the ELF format you can find below the structure of this executable and linkable format:
+
+![elf-structure](https://raw.githubusercontent.com/maxgio92/notes/20f4417f50afb71a79a8712decea1f76ffc16cc9/content/notes/elf-dissection.avif)
+
+## References
+
+* https://www2.it.uu.se/edu/course/homepage/os/vt19/module-2/process-management/
+* https://stackoverflow.com/questions/18278803/how-does-elf-file-format-defines-the-stack
+* https://stackoverflow.com/questions/21718397/what-are-the-esp-and-the-ebp-registers
+* https://groups.google.com/g/golang-nuts/c/wtw0Swe0CAY
+* https://www.polarsignals.com/blog/posts/2022/01/13/fantastic-symbols-and-where-to-find-them
