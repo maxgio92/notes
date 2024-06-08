@@ -20,6 +20,8 @@ Meanwhile, usually, the base pointer (BP) is a snapshot of the stack pointer (SP
 
 ![stack-frames](https://raw.githubusercontent.com/maxgio92/notes/14bdde325f646b53ee0b6501f0ba9d3ecbaded4f/content/notes/memory-stack-frames-simple.png)
 
+Also, usually the current base pointer is also pushed to the stack when a new function is called. This is also useful for the stack unwinding fundamental for debuggers. But it's not mandatory.
+
 CALL instruction pushes the current value of PC (next instruction address) and the function arguments into the stack, and gives control to the target address (PC is set to the target address of CALL instruction).
 So, the just pushed return address is a snapshot of the program counter, available in the stack.
 As a result, control is passed to the called address (subroutine) and the return address (the address of the instruction next to CALL) is available.[
