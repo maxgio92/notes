@@ -87,6 +87,8 @@ Digging into the ELF format you can find below the structure of this executable 
 
 ![elf-structure](https://raw.githubusercontent.com/maxgio92/notes/20f4417f50afb71a79a8712decea1f76ffc16cc9/content/notes/elf-dissection.avif)
 
+For more information please refer to the man of file formats and conventions for elf (`man 5 elf`).
+
 ## References
 
 * https://www2.it.uu.se/edu/course/homepage/os/vt19/module-2/process-management/
