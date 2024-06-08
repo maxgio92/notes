@@ -6,12 +6,19 @@ Title: The program execution environment
 
 The program counter (PC)/instruction pointer (IP) is a register that points to code, that is, the instruction that will be executed next.
 It always points to somewhere in the code.
-The stack pointer (and base pointer) points to the data: the stack contains data.
+
+![memory-program-counter-1](https://raw.githubusercontent.com/maxgio92/notes/14bdde325f646b53ee0b6501f0ba9d3ecbaded4f/content/notes/memory-cpu-program-counter.gif)
+![memory-program-counter-2](https://raw.githubusercontent.com/maxgio92/notes/14bdde325f646b53ee0b6501f0ba9d3ecbaded4f/content/notes/memory-cpu-program-counter-1.gif)
+
+The stack pointer and base pointer instead point to the data (the stack).
 Considering a binary program in ELF format, code, and data are represented by the text and the data sections.
 
 As the stack grows whenever anything new is added to the stack, including new variables, the stack pointer is the lowest position in the stack (the stack grows from the highest address to the lowest address): so when a new variable of 4 bytes is declared, the stack pointer will be increased by 4 bytes too.
 Specifically, a stack pointer points to the first free and unused address on the stack.
 It can reserve more space on the stack by adjusting the stack pointer, and then PUSH pushes data at the address pointed to by the stack pointer (e.g. local variables).
+Meanwhile, usually, the base pointer (BP) is a snapshot of the stack pointer (SP) at the start of the frame, so that function parameters and local variables are accessed by adding and subtracting, respectively, a constant offset from it:
+
+![stack-frames](https://raw.githubusercontent.com/maxgio92/notes/14bdde325f646b53ee0b6501f0ba9d3ecbaded4f/content/notes/memory-stack-frames-simple.png)
 
 CALL instruction pushes the current value of PC (next instruction address) and the function arguments into the stack, and gives control to the target address (PC is set to the target address of CALL instruction).
 So, the just pushed return address is a snapshot of the program counter, available in the stack.
