@@ -5,13 +5,12 @@ Title: The program execution environment
 ## The program counter (PC), the stack pointer (SP), and the base pointer (BP) processor registers
 
 The program counter (PC)/instruction pointer (IP) is a register that points to code, that is, the instruction that will be executed next.
-It always points to somewhere in the code.
+It always points to somewhere in the code. Considering a binary program in ELF format, the code is represented by the text section.
 
 ![memory-program-counter-1](https://raw.githubusercontent.com/maxgio92/notes/14bdde325f646b53ee0b6501f0ba9d3ecbaded4f/content/notes/memory-cpu-program-counter.gif)
 ![memory-program-counter-2](https://raw.githubusercontent.com/maxgio92/notes/14bdde325f646b53ee0b6501f0ba9d3ecbaded4f/content/notes/memory-cpu-program-counter-1.gif)
 
 The stack pointer and base pointer instead point to the data (the stack).
-Considering a binary program in ELF format, the code is represented by the text section.
 You can find below an example of the mapping of the memory of a process, considering the data (the stack) and the code (the instructions):
 
 ![memory-program-counter-2](https://raw.githubusercontent.com/maxgio92/notes/3db4d57bd2a84df56925e19ab24b03badfd649f1/content/notes/memory-process-data-code.png)
