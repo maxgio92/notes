@@ -52,6 +52,8 @@ In a nutshell, the PC is used to memorize the current instruction address:
 - If we are in an if() statement but the condition is false, or if we call a function, we'll jump on the 1st instruction of the desired block
 - If we are exiting a function, we'll assign the return address to it.
 
+### The data, the code and the heap areas
+
 The memory is already set for the program, it never grows or shrinks, unless more is needed then the OS steps in and gives it some new areas of memory to use.
 The heap acquires memory from the bottom of the same region, and “grows up” towards the middle of the same memory region.
 Virtual memory and paging, etc, are all kernel stuff. The program uses the one-big linear memory region model that the compiler works out.
