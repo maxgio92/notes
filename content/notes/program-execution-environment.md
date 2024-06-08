@@ -2,8 +2,9 @@
 Title: The program execution environment
 ---
 
-To execute a program we know that the CPU and the RAM are the main actors.
-Let's start with the main CPU pointer register fundamental to keep track of the execution of a program.
+We know that the CPU in order to execute programs leverage some memory. In particular the code instructions are backed by the RAM and in order to read from it needs pointers, which are mainly backed by its registers.
+
+Let's start with the main CPU pointer registers which are fundamental to keep track of the execution of a program.
 
 ## The program counter (PC), the stack pointer (SP), and the base pointer (BP) processor registers
 
