@@ -2,6 +2,9 @@
 Title: The program execution environment
 ---
 
+To execute a program we know that the CPU and the RAM are the main actors.
+Let's start with the main CPU pointer register fundamental to keep track of the execution of a program.
+
 ## The program counter (PC), the stack pointer (SP), and the base pointer (BP) processor registers
 
 The program counter (PC)/instruction pointer (IP) is a register that points to code, that is, the instruction that will be executed next.
