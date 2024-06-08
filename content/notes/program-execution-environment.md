@@ -12,6 +12,7 @@ It always points to somewhere in the code.
 
 The stack pointer and base pointer instead point to the data (the stack).
 Considering a binary program in ELF format, the code is represented by the text section.
+You can find below an example of the mapping of the memory of a process, considering the data (the stack) and the code (the instructions):
 
 ![memory-program-counter-2](https://raw.githubusercontent.com/maxgio92/notes/3db4d57bd2a84df56925e19ab24b03badfd649f1/content/notes/memory-process-data-code.png)
 
