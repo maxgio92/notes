@@ -6,7 +6,8 @@ Title: The program execution environment
 
 The program counter (PC)/instruction pointer (IP) is a register that points to code, that is, the instruction that will be executed next.
 It always points to somewhere in the code.
-The stack pointer (and base pointer) points to the data: the stack contains data. 
+The stack pointer (and base pointer) points to the data: the stack contains data.
+Considering a binary program in ELF format, code and data are represented by the text and the data sections.  
 Considering that the stack grows whenever you add anything new to your stack, including new variables, the stack pointer is the lowest position in the stack (the stack grows from the highest address to the lowest address): so if you declare a new variable of 4 bytes, the stack pointer will be increased by 4 bytes too.
 Specifically, a stack pointer points to the first free and unused address on the stack. You reserve more space on stack by adjusting the stack pointer.
 
