@@ -19,10 +19,11 @@ It can reserve more space on the stack by adjusting the stack pointer, and then 
 Meanwhile, usually, the base pointer (BP) is a snapshot of the stack pointer (SP) at the start of the frame, so that function parameters and local variables are accessed by adding and subtracting, respectively, a constant offset from it:
 
 ![stack-frame](https://raw.githubusercontent.com/maxgio92/notes/14bdde325f646b53ee0b6501f0ba9d3ecbaded4f/content/notes/memory-stack-frames-simple.png)
+> In this image, the base poiner is referred to as frame pointer (FP). We'll go into it later on.
 
 Usually the current base pointer is also pushed to the stack when a new function is called. But it's not mandatory and it depends on how the binary has been compiled.
 In particular, CALL instruction pushes also the current value of PC (next instruction address) and the function arguments into the stack, and gives control to the target address (PC is set to the target address of CALL instruction).
-So, the just pushed return address is a snapshot of the program counter and the frame pointer, when pushed, is a snapshot of the base pointer, both available in the stack.
+So, the just pushed return address is a snapshot of the program counter, and the frame pointer, when pushed, is a snapshot of the base pointer, both available in the stack.
 As a result, control is passed to the called address (subroutine) and the return address (the address of the instruction next to CALL) is available.[
 RET instruction POPs value from stack (the return address) and puts it in PC.
 So, the next instruction is from return.
