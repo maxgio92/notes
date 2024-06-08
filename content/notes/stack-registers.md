@@ -58,3 +58,19 @@ Why would you not use a frame pointer? In most architectures it frees up a regis
 ## Register names
 
 On 16 bit ISA SP, BP and IP, on 32 bit ESP, EBP and EIP, on 64 bit RSP, RBP and RIP.
+
+## How the instructions and the data in stack are loaded?
+
+On program execution (Unix-like fork and exec system call groups) OS allocates memory to store the program's instructions (code) and data.
+It then sets the program counter to the memory address of the first instruction, which is fetched, decoded, and executed one by one.
+
+On Linux, the exec family of system calls replaces the program executed by a process.
+When a process calls exec, all instructions (text ELF section) and data (data ELF section) in the process is replaced with the executable of the new program.
+As a detail, although all data is replaced, all open file descriptors remains open after calling exec unless explicitly set to close-on-exec.
+
+In particular, on Linux, on execs, the .text and .data ELF sections are loaded by the kernel at the base address.
+The main-stack is located just below and grows downwards.
+Each thread and function-call will have its own-stack / stack-frame.
+This is located located below the main-stack.
+Each stack is separated by a guard page to detect Stack-Overflow.
+
