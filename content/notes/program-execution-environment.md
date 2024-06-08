@@ -18,16 +18,17 @@ Specifically, a stack pointer points to the first free and unused address on the
 It can reserve more space on the stack by adjusting the stack pointer, and then PUSH pushes data at the address pointed to by the stack pointer (e.g. local variables).
 Meanwhile, usually, the base pointer (BP) is a snapshot of the stack pointer (SP) at the start of the frame, so that function parameters and local variables are accessed by adding and subtracting, respectively, a constant offset from it:
 
-![stack-frames](https://raw.githubusercontent.com/maxgio92/notes/14bdde325f646b53ee0b6501f0ba9d3ecbaded4f/content/notes/memory-stack-frames-simple.png)
+![stack-frame](https://raw.githubusercontent.com/maxgio92/notes/14bdde325f646b53ee0b6501f0ba9d3ecbaded4f/content/notes/memory-stack-frames-simple.png)
 
-Also, usually the current base pointer is also pushed to the stack when a new function is called. This is also useful for the stack unwinding fundamental for debuggers. But it's not mandatory.
-
-CALL instruction pushes the current value of PC (next instruction address) and the function arguments into the stack, and gives control to the target address (PC is set to the target address of CALL instruction).
+Usually the current base pointer is also pushed to the stack when a new function is called. But it's not mandatory and it depends on how the binary has been compiled.
+In particular, CALL instruction pushes also the current value of PC (next instruction address) and the function arguments into the stack, and gives control to the target address (PC is set to the target address of CALL instruction).
 So, the just pushed return address is a snapshot of the program counter, available in the stack.
 As a result, control is passed to the called address (subroutine) and the return address (the address of the instruction next to CALL) is available.[
 RET instruction POPs value from stack (the return address) and puts it in PC.
 So, the next instruction is from return.
 So, the CALL - RET pair is very useful in the reusability of code.
+
+![stack-frames](https://raw.githubusercontent.com/maxgio92/notes/14bdde325f646b53ee0b6501f0ba9d3ecbaded4f/content/notes/memory-stack-frames.png)
 
 Because all of the above points need to be memorized on the stack, the stack size will naturally increase (and thus the stack and base pointers too).
 
