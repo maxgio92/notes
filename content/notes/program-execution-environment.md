@@ -55,10 +55,12 @@ In a nutshell, the PC is used to memorize the current instruction address:
 ### The data, the code and the heap areas
 
 The memory is already set for the program, it never grows or shrinks, unless more is needed then the OS steps in and gives it some new areas of memory to use.
+I know this is too simplified, but we'll talk about how the program is loaded and organized in memory later on. 
+
 The heap acquires memory from the bottom of the same region, and “grows up” towards the middle of the same memory region.
 Virtual memory and paging, etc, are all kernel stuff. The program uses the one-big linear memory region model that the compiler works out.
 
-Below there is an example of the memory regions and mapping of data and code, particularly with the ELF executable format:
+Below is an example of the memory regions and mapping of data and code, particularly with the ELF executable format:
 
 ![memory-regions-stack-instructions](https://raw.githubusercontent.com/maxgio92/notes/68c5220995702493845a3d96cc9d6dc7ce61ec8f/content/notes/memory-regions-allocations.jpg)
 
