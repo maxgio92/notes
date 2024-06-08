@@ -23,7 +23,7 @@ Meanwhile, usually, the base pointer (BP) is a snapshot of the stack pointer (SP
 
 Usually the current base pointer is also pushed to the stack when a new function is called. But it's not mandatory and it depends on how the binary has been compiled.
 In particular, CALL instruction pushes also the current value of PC (next instruction address) and the function arguments into the stack, and gives control to the target address (PC is set to the target address of CALL instruction).
-So, the just pushed return address is a snapshot of the program counter, and the frame pointer, when pushed, is a snapshot of the base pointer, both available in the stack.
+So, the just pushed return address is a snapshot of the program counter, and the saved (pushed) frame pointer is a snapshot of the base pointer, both available in the stack.
 As a result, control is passed to the called address (subroutine) and the return address (the address of the instruction next to CALL) is available.[
 RET instruction POPs value from stack (the return address) and puts it in PC.
 So, the next instruction is from return.
