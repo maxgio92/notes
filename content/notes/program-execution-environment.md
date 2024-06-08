@@ -7,11 +7,13 @@ Title: The program execution environment
 The program counter (PC)/instruction pointer (IP) is a register that points to code, that is, the instruction that will be executed next.
 It always points to somewhere in the code.
 The stack pointer (and base pointer) points to the data: the stack contains data.
-Considering a binary program in ELF format, code and data are represented by the text and the data sections.  
-Considering that the stack grows whenever you add anything new to your stack, including new variables, the stack pointer is the lowest position in the stack (the stack grows from the highest address to the lowest address): so if you declare a new variable of 4 bytes, the stack pointer will be increased by 4 bytes too.
-Specifically, a stack pointer points to the first free and unused address on the stack. You reserve more space on stack by adjusting the stack pointer.
+Considering a binary program in ELF format, code, and data are represented by the text and the data sections.
 
-CALL instruction pushes the current value of PC (next instruction address) and the function arguments into stack, and gives control to the target address (PC is set to the target address of CALL instruction).
+As the stack grows whenever anything new is added to the stack, including new variables, the stack pointer is the lowest position in the stack (the stack grows from the highest address to the lowest address): so when a new variable of 4 bytes is declared, the stack pointer will be increased by 4 bytes too.
+Specifically, a stack pointer points to the first free and unused address on the stack.
+It can reserve more space on the stack by adjusting the stack pointer, and then PUSH pushes data at the address pointed to by the stack pointer (e.g. local variables).
+
+CALL instruction pushes the current value of PC (next instruction address) and the function arguments into the stack, and gives control to the target address (PC is set to the target address of CALL instruction).
 So, the just pushed return address is a snapshot of the program counter, available in the stack.
 As a result, control is passed to the called address (subroutine) and the return address (the address of the instruction next to CALL) is available.[
 RET instruction POPs value from stack (the return address) and puts it in PC.
