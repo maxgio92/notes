@@ -118,7 +118,7 @@ Each stack is separated by a guard page to detect Stack-Overflow.
 
 ![memory-map-elf](https://raw.githubusercontent.com/maxgio92/notes/d3bf6f231c330ba746354cc463469245fc9de7bc/content/notes/memory-map-elf.png)
 
-Going deeper on Linux `exec` path, I recommend [this chapter](https://github.com/0xAX/linux-insides/blob/f7c6b82a5c02309f066686dde697f4985645b3de/SysCall/linux-syscall-4.md#execve-system-call) from [Linux insides(https://0xax.gitbooks.io/linux-insides/content/index.html) book.
+Going deeper on Linux `exec` path, I recommend [this chapter](https://github.com/0xAX/linux-insides/blob/f7c6b82a5c02309f066686dde697f4985645b3de/SysCall/linux-syscall-4.md#execve-system-call) from the [Linux insides](https://0xax.gitbooks.io/linux-insides/content/index.html) book.
 
 ### ELF structure
 
