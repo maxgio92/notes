@@ -198,3 +198,4 @@ See you in the next episode!
 * https://groups.google.com/g/golang-nuts/c/wtw0Swe0CAY
 * https://www.polarsignals.com/blog/posts/2022/01/13/fantastic-symbols-and-where-to-find-them
 * https://0xax.gitbooks.io/linux-insides/content/index.html
+* https://blog.px.dev/cpu-profiling/
