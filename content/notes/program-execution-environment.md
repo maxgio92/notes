@@ -4,9 +4,9 @@ Title: The program execution environment
 
 CPU profiling allows us to analyze the program's performance, identify bottlenecks, and optimize its efficiency.
 
-Have you ever wondered what happens behind the scenes when you run a program and how to account CPU time to the actual program functions? And even more, how to write such a tool to profile the program?
+Have you ever wondered what happens behind the scenes when you run a program and how to account for CPU time for the actual program functions? And even more, how to write such a tool to profile the program?
 
-Even though great open-source projects provide continuous profiling with a vast support for compiled, JITed, and interpreted, languages, with or without debug info, with or without frame pointers, etc., don't be discouraged!
+Even though great open-source projects provide continuous profiling with vast support for compiled, JITed, and interpreted, languages, with or without debug info, with or without frame pointers, etc., don't be discouraged!
 
 Writing your own can be a fantastic learning experience. Building your own profiler offers a unique challenge and the satisfaction of unlocking powerful performance analysis tools.
 
@@ -18,11 +18,11 @@ So, buckle up and get ready to explore the fascinating world of program profilin
 
 ## Introduction
 
-We know that the programs are executed by the CPU and that the program's binary instructions are stored in a volatile memory that is the random access memory.
+We know that the CPU executes the programs and that the program's binary instructions are stored in a volatile memory which is the random access memory.
 
 As RAM locations are byte-addressable the CPU needs a way to keep track of the addresses in order to retrieve the data from it, which is in our case CPU instructions that are then executed.
 
-The CPU uses small built-in memory areas called register to hold data retrieved from main memory. Registers come in two types: general-purpose and special-purpose. Special-purpose registers include pointer registers, which are designed specifically to store pointers, which means, they store the memory address's value.
+The CPU uses small built-in memory areas called registers to hold data retrieved from the main memory. Registers come in two types: general-purpose and special-purpose. Special-purpose registers include pointer registers, which are designed specifically to store pointers, which means, they store the memory address's value.
 
 There are other types of registers but they're out of scope for this walkthrough.
 
