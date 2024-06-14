@@ -41,7 +41,7 @@ On the other side, the stack pointer (SP) and base pointer (BP) point to the sta
 
 While a detailed explanation of the stack is beyond the scope of this blog, here's a basic idea: it's a special area of memory that the CPU uses to manage data related to the program's functions (subroutines) as they are called and executed, pushing it to it in a LIFO method. We'll see later on in more detail.
 
-Data and code are organized in the process's address space with areas. Explaining how the OS manages access to memory with virtual and physical addressing or processor rings, is out of the scope.
+Data and code are organized in specific regions inside the process address space.
 
 As the stack grows whenever the CPU adds new data while executing the program, the stack pointer is at the lowest position in the stack.
 > Remember: the stack grows from the highest address to the lowest address
@@ -60,16 +60,23 @@ You can find a diagram in the picture below:
 
 ![stack-frame](https://raw.githubusercontent.com/maxgio92/notes/14bdde325f646b53ee0b6501f0ba9d3ecbaded4f/content/notes/memory-stack-frames-simple.png)
 
-In the previous image, the base pointer is referred to as the frame pointer (FP). What is fundamental here is the main stack structure is organized in sub-structures named frames. We'll go through it while explaining how the function call path works.
+In the previous image, the base pointer is referred to as the frame pointer (FP). What is fundamental here is that the stack is organized in sub-structures named frames. We'll go through it while explaining how the function call path works.
+
+> **Clarification about the register names**
+>
+> You'll find different names for these pointer register depending on the architectures:
+> * On 16-bit ISA are usually called `sp`, `bp`, and `ip`.
+> * Instead on 32-bit `esp`, `ebp`, and `eip`.
+> * Finally, on 64-bit they're usually called `rsp`, `rbp`, and `rip`.
 
 ### The call path
 
-When a new function is called a dedicated memory space dedicated to the new function is pushed to the stack. This memory space will contain function specific data like arguments, local variables, saved registers if needed.
-Also, the previous base pointer is also pushed to the stack.
+When a new function is called a new memory space dedicated to the function is pushed to the stack, namely a stack frame. It will contain function-specific data like arguments, local variables, and saved registers if needed.
+Moreover, the previous base pointer (BP) is also pushed to the stack.
 
 While this is usually true, it's not mandatory and it depends on how the binary has been compiled. This mainly depends on the compiler optimization techniques.
 
-> If you're interested on the main impacts of libraries compiled with this optimization and distributed by common Linux distributions I recommend this Brendan Gregg's great article: https://www.brendangregg.com/blog/2024-03-17/the-return-of-the-frame-pointers.html. 
+> If you're interested in the main impacts of libraries compiled with this optimization and distributed by common Linux distributions I recommend this Brendan Gregg's great article: https://www.brendangregg.com/blog/2024-03-17/the-return-of-the-frame-pointers.html. 
 
 In particular, CALL instruction pushes also the value of the program counter at the moment of the new function call (next instruction address), and gives control to the target address. The program counter is set to the target address of the `CALL` instruction, which is, the first instruction of the called function.
 
@@ -81,7 +88,7 @@ As a result, control is passed to the called subroutine address and the return a
 
 On the return path from the function, `RET` instruction `POP`s the return address from the stack and puts it in the program counter register. So, the next instruction is available from that return address.
 
-Since the program counter register holds the address of the next instruction to be executed, loading the return address into PC effectively points the program execution to the instruction that follows the function call. This ensures the program resumes execution from the correct location after the function is completed.
+Since the program counter register holds the address of the next instruction to be executed, loading the return address into the PC effectively points the program execution to the instruction that follows the function call. This ensures the program resumes execution from the correct location after the function is completed.
 
 ![stack-frames](https://raw.githubusercontent.com/maxgio92/notes/14bdde325f646b53ee0b6501f0ba9d3ecbaded4f/content/notes/memory-stack-frames.png)
 
@@ -95,18 +102,18 @@ As I'm a visual learner, the next section will show how the program's code and d
 
 The process address space is a virtual memory region allocated by the operating system (OS) for a running program. It provides a logical view of memory for the program and hides the complexities of physical memory manage
 
-While explaining how memory mapping implementations work in operating systems is out of scope here, it's important to say that user processes see one contigous memory space thanks to the memory mapping features provided by the OS.
+While explaining how memory mapping implementations work in operating systems is out of scope here, it's important to say that user processes see one contiguous memory space thanks to the memory mapping features provided by the OS.
 
-The address space is typically divided in different regions, and the following names are mostly standard for different OSes:
-* Text segment: this is the area where the (machine) code of the progam is stored
+The address space is typically divided into different regions, and the following names are mostly standard for different OSes:
+* Text segment: this is the area where the (machine) code of the program is stored
 * Data segment: this region contains typically static variables which are initialized
 * BSS (Block Started by Symbol) / Uninitialized data segment: it contains global and static variables that are not initialized when the program starts
-* Heap: it's a region available for dynamic allocation available to the running process. Programs can request pages from it at runtime (e.g. `malloc` from the C stdlib).
+* Heap: it's a region available for dynamic allocation available to the running process. Programs can request pages from it at runtime (e.g. `malloc` from the C standard library).
 * Stack: we already talked about it.
 
-The operating system can enforce protection for each of them, like marking the text segment read-only to prevent modificatio of the running program's instructions.
+The operating system can enforce protection for each of them, like marking the text segment read-only to prevent modification of the running program's instructions.
 
-When a program is loaded into memory, the operating system allocates a specific amount of memory for it and dedicate specific regions to static and dynamic allocation. The static allocation includes the allocation for the program's instructions and the stack.
+When a program is loaded into memory, the operating system allocates a specific amount of memory for it and dedicates specific regions to static and dynamic allocation. The static allocation includes the allocation for the program's instructions and the stack.
 
 Dynamic allocations can be handled by the stack or the heap. The heap usually acquires memory from the bottom of the same region and grows upwards towards the middle of the same memory region.
 
@@ -115,7 +122,7 @@ The next diagram will show the discussed memory regions:
 ![memory-regions-stack-instructions](https://raw.githubusercontent.com/maxgio92/notes/68c5220995702493845a3d96cc9d6dc7ce61ec8f/content/notes/memory-regions-allocations.jpg)
 > Credits for the diagram to [yousha.blog.ir](https://yousha.blog.ir/).
 
-Now let's get back to the pointer register. We mentioned that the base pointer is often called frame pointer.
+Now let's get back to the pointer register. We mentioned that the base pointer is often called a frame pointer.
 
 ## How the program is loaded into memory in Unix-like OSes?
 
@@ -125,7 +132,7 @@ When a process calls `exec`, all instructions - in ELF executable format it's th
 The OS then sets the PC to the memory address of the first instruction, which is fetched, decoded, and executed one by one.
 
 ![memory-map-exec](https://raw.githubusercontent.com/maxgio92/notes/d3bf6f231c330ba746354cc463469245fc9de7bc/content/notes/memory-map-exec.png)
-> I didn't manage yet to find yet where the information about how to set up the stack at exec time from an ELF file is stored in the ELF structure. If you do, feel free to share it!
+> I haven't managed yet to find where the information about how to set up the stack at exec time from an ELF file is stored in the ELF structure. If you do, feel free to share it!
 
 Moreover, as a detail, although all data is replaced, all open file descriptors remain open after calling exec unless explicitly set to close-on-exec.
 
@@ -145,9 +152,9 @@ For more information please refer to the man of file formats and conventions for
 
 ## Frame pointer and the stack unwinding
 
-Now let's go back to our pointer registers because we often read about frame pointer and less about the base pointer, but actually the frame pointer *is* the base pointer.
+Now let's go back to our pointer registers because we often read about the frame pointer and less about the base pointer, but actually the frame pointer *is* the base pointer.
 
-As already discussed, the name base pointer comes to the fact that is set up when a function is called to establish a fixed reference (base) to acces local variables and parameters within the function's stack frame.
+As already discussed, the name base pointer comes to the fact that is set up when a function is called to establish a fixed reference (base) to access local variables and parameters within the function's stack frame.
 
 Depending on the ABI, parameters are passed either on the stack or via registers. For instance:
 * x86-64 System V ABI: in the general purpose registers `rdi`, `rsi`, `rdx`, `rcx`, `r8`, and `r9` for the first six parameters. On the stack from the seventh parameter onward.
@@ -182,12 +189,6 @@ And this comes to the next episode of this series, which will dive into how to p
 I hope this has been interesting to you. Any feedback is more than appreciated.
 
 See you in the next episode!
-
-### Clarification about the register names
-
-On 16-bit ISA are usually called `sp`, `bp`, and `ip`.
-Instead on 32-bit `esp`, `ebp`, and `eip`.
-Finally, on 64-bit they're usually called `rsp`, `rbp`, and `rip`.
 
 ## References
 
