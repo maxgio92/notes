@@ -2,67 +2,91 @@
 Title: The program execution environment
 ---
 
-We know that the CPU in order to execute programs leverage some memory. In particular the code instructions are backed by the RAM and in order to read from it needs pointers, which are mainly backed by its registers.
+We know that the programs are executed by the CPU and that the program's binary instructions are stored in a volatile memory that is the random access memory.
 
-Let's start with the main CPU pointer registers which are fundamental to keep track of the execution of a program.
+The scope of this blog is to dig into how the CPU keeps track of and executes instructions as expected by the program.
+As RAM locations are byte-addressable the CPU needs a way to keep track of the addresses in order to retrieve the data from it, which is in our case CPU instructions that are then executed.
+
+The CPU uses small built-in memory areas called register to hold data retrieved from main memory. Registers come in two types: general-purpose and special-purpose. Special-purpose registers include pointer registers, which are designed specifically to store pointers, which means, they store the memory address's value.
+
+There are other types of registers but they're out of scope for this walkthrough.
+
+The first part will go through the main pointer registers, which are commonly implemented by the predominant architectures (x86, ARM, MIPS, PowerPC as far as I know).
+So, please consider that these specifics may differ depending on the architecture.
 
 ## The program counter (PC), the stack pointer (SP), and the base pointer (BP) processor registers
 
-The program counter (PC)/instruction pointer (IP) is a register that points to code, that is, the instruction that will be executed next.
-It always points to somewhere in the code. Considering a binary program in ELF format, the code is represented by the text section.
+The program counter (PC), often also called instruction pointer (IP) in x86 architectures, is a register that points to code, that is, the instruction that will be executed next. The instruction data will be fetched, will be stored in the instruction register (IR), and executed during the instruction cycle.
+Depending on the instruction set, the IP will be increased instruction by instruction by the instruction size (e.g. 8 bytes on 64 but Instruction Set Architectures).
+
+When compiling a program it will contain the instructions to be executed, that the CPU will fetch and execute, and how they're stored depends on the executable format. For example, considering the ELF format, the code is represented by the `.text` section.
 
 ![memory-program-counter-1](https://raw.githubusercontent.com/maxgio92/notes/14bdde325f646b53ee0b6501f0ba9d3ecbaded4f/content/notes/memory-cpu-program-counter.gif)
 ![memory-program-counter-2](https://raw.githubusercontent.com/maxgio92/notes/14bdde325f646b53ee0b6501f0ba9d3ecbaded4f/content/notes/memory-cpu-program-counter-1.gif)
 
-The stack pointer and base pointer instead point to the data (the stack).
-You can find below an example of the mapping of the memory of a process, considering the data (the stack) and the code (the instructions):
+On the other side, the stack pointer (SP) and base pointer (BP) point to the stack, which contains data about the program being executed.
+
+While a detailed explanation of the stack is beyond the scope of this blog, here's a basic idea: it's a special area of memory that the CPU uses to manage data related to the program's functions (subroutines) as they are called and executed, pushing it to it in a LIFO method. We'll see later on in more detail.
+
+Data and code are organized in the process's address space with areas. Explaining how the OS manages access to memory with virtual and physical addressing or processor rings, is out of the scope.
+
+As the stack grows whenever the CPU adds new data while executing the program, the stack pointer is at the lowest position in the stack.
+> Remember: the stack grows from the highest address to the lowest address
+So, when a new variable of 4 bytes is declared, the stack pointer will be increased by 4 bytes too.
+
+In the following image you can find an example considering a single process:
 
 ![memory-program-counter-2](https://raw.githubusercontent.com/maxgio92/notes/3db4d57bd2a84df56925e19ab24b03badfd649f1/content/notes/memory-process-data-code.png)
 
-As the stack grows whenever anything new is added to the stack, including new variables, the stack pointer is the lowest position in the stack (the stack grows from the highest address to the lowest address): so when a new variable of 4 bytes is declared, the stack pointer will be increased by 4 bytes too.
-Specifically, a stack pointer points to the first free and unused address on the stack.
-It can reserve more space on the stack by adjusting the stack pointer, and then PUSH pushes data at the address pointed to by the stack pointer (e.g. local variables).
-Meanwhile, usually, the base pointer (BP) is a snapshot of the stack pointer (SP) at the start of the frame, so that function parameters and local variables are accessed by adding and subtracting, respectively, a constant offset from it:
+Specifically, a stack pointer (SP) points to the first free and unused address on the stack.
+It can reserve more space on the stack by adjusting the stack pointer, and then `PUSH` instruction (valid in many architectures) pushes data at the address pointed to by the stack pointer (e.g. local variables).
+
+Meanwhile, usually, the base pointer (BP) is a snapshot of the stack pointer (SP) at the start of the frame, so that function parameters and local variables are accessed by adding and subtracting, respectively, a constant offset from it.
+
+You can find a diagram in the picture below:
 
 ![stack-frame](https://raw.githubusercontent.com/maxgio92/notes/14bdde325f646b53ee0b6501f0ba9d3ecbaded4f/content/notes/memory-stack-frames-simple.png)
-> In this image, the base poiner is referred to as frame pointer (FP). We'll go into it later on.
+
+In the previous image, the base pointer is referred to as the frame pointer (FP). What is fundamental here is the main stack structure is organized in sub-structures named frames. We'll go through it while explaining how the function call path works.
 
 ### The call path
 
-Usually the current base pointer is also pushed to the stack when a new function is called. But it's not mandatory and it depends on how the binary has been compiled.
+When a new function is called a dedicated memory space dedicated to the new function is pushed to the stack. This memory space will contain function specific data like arguments, local variables, saved registers if needed.
+Also, the previous base pointer is also pushed to the stack.
+
+While this is usually true, it's not mandatory and it depends on how the binary has been compiled. This mainly depends on the compiler optimization techniques.
+
+> If you're interested on the main impacts of libraries compiled with this optimization and distributed by common Linux distributions I recommend this Brendan Gregg's great article: https://www.brendangregg.com/blog/2024-03-17/the-return-of-the-frame-pointers.html. 
 
 > **The saved base pointers and the stack unwinding**
 > 
 > When the base pointer is pushed to the stack, it points to the previous frame's base pointer, enabling debuggers or profilers to walk the stack, also called stack unwinding. But FPO or frame pointer omission optimization will actually eliminate this and use the base pointer as another register and access locals directly off of the stack pointer. In this case, the stack unwinding is a bit more difficult since it can no longer directly access the stack frames of earlier function calls.
 
-In particular, CALL instruction pushes also the current value of PC (next instruction address) and the function arguments into the stack, and gives control to the target address (PC is set to the target address of CALL instruction).
-So, the just pushed return address is a snapshot of the program counter, and the saved (pushed) frame pointer is a snapshot of the base pointer, both available in the stack.
+In particular, CALL instruction pushes also the value of the program counter at the moment of the new function call (next instruction address), and gives control to the target address. The program counter is set to the target address of the `CALL` instruction, which is, the first instruction of the called function.
 
-As a result, control is passed to the called address (subroutine) and the return address (the address of the instruction next to CALL) is available.
-RET instruction POPs value from stack (the return address) and puts it in PC.
-So, the next instruction is from return.
-So, the CALL - RET pair is very useful in the reusability of code.
+In a nutshell: the just pushed return address is a snapshot of the program counter, and the pushed frame pointer is a snapshot of the base pointer, and they're both available in the stack.
 
-![stack-frames](https://raw.githubusercontent.com/maxgio92/notes/14bdde325f646b53ee0b6501f0ba9d3ecbaded4f/content/notes/memory-stack-frames.png)
-
-Because all of the above points need to be memorized on the stack, the stack size will naturally increase (and thus the stack and base pointers too).
+As a result, control is passed to the called subroutine address and the return address, that is the address of the instruction next to `CALL`, is available.
 
 ### The return path
 
-When a function finishes normally and returns, if the compiler can tell it won’t need to call it again right away, then it is popped off the stack and the stack pointer returns to the last position (towards the top) it was before. In the case of a function calling a function, the program counter returns to the next line in the previous stack frame and starts executing from there. The return address was stored in a register or in RAM automatically when the stack frame was created for the function, and in C is not alterable from the source code.
+On the return path from the function, `RET` instruction `POP`s the return address from the stack and puts it in the program counter register. So, the next instruction is available from that return address.
 
-In a nutshell, the PC is used to memorize the current instruction address:
-- After a semicolon, it should increase by 8 bytes (assuming a 64bit instruction set) to point to the next instruction
-- If we are in an if() statement but the condition is false, or if we call a function, we'll jump on the 1st instruction of the desired block
-- If we are exiting a function, we'll assign the return address to it.
+Since the program counter register holds the address of the next instruction to be executed, loading the return address into PC effectively points the program execution to the instruction that follows the function call. This ensures the program resumes execution from the correct location after the function is completed.
+
+![stack-frames](https://raw.githubusercontent.com/maxgio92/notes/14bdde325f646b53ee0b6501f0ba9d3ecbaded4f/content/notes/memory-stack-frames.png)
+
+In the case of a function calling a function, the program counter returns to the return address in the previous stack frame and starts executing from there.
+
+Because all of the above points need to be memorized on the stack, the stack size will naturally increase, and on return decrease. And of course, the same happens to the stack and base pointers.
 
 ### The data, the code and the heap areas
 
-The memory is already set for the program, it never grows or shrinks, unless more is needed then the OS steps in and gives it some new areas of memory to use.
+When a program is loaded into memory, the operating system statically allocates a specific amount of memory for it. This includes space for the program's instructions and the stack.
+
 I know this is too simplified, but we'll talk about how the program is loaded and organized in memory later on. 
 
-The heap acquires memory from the bottom of the same region, and “grows up” towards the middle of the same memory region.
-Virtual memory and paging, etc, are all kernel stuff. The program uses the one-big linear memory region model that the compiler works out.
+On dynamic allocations requested by the program, the heap acquires memory from the bottom of the same region and grows upwards towards the middle of the same memory region. While explaining how dynamic memory mapping implementations work in operating systems is out of scope here, but it's important to say that user processes see one contigous memory space thanks to the virtual memory mapping managed by the OS.
 
 Below is an example of the memory regions and mapping of data and code, particularly with the ELF executable format:
 
