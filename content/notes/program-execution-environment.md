@@ -1,5 +1,5 @@
 ---
-Title: The program execution environment
+Title: CPU profiling 101 (pt.1) - The execution environment
 ---
 
 CPU profiling allows us to analyze the program's performance, identify bottlenecks, and optimize its efficiency.
