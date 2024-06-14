@@ -2,9 +2,20 @@
 Title: The program execution environment
 ---
 
+Have you ever wondered what happens behind the scenes when you run a program and how to account CPU time to the actual program functions? And even more, how to write such a program a
+
+This blog series will embark on a journey to give you the basics for writing a program profiler.
+
+In this first episode, we'll explore the main concepts of a program execution environment, and we'll dig into how the CPU executes a program and keeps track of the execution. It will show how the tracking data is stored and available for profiling the running program.
+
+In this first episode, we'll set the stage by exploring the inner workings of a program's execution environment. We'll uncover how the CPU executes code, all while keeping track of each step. Finally, we'll delve into how this tracking data is stored and becomes the key to unlocking the secrets of a program's performance through profiling.
+
+In this first episode, we'll establish the foundation by exploring the program execution environment. We'll delve into the intricate CPU dance between the CPU and your code, where instructions are fetched and executed. But the CPU doesn't just blindly follow orders; it meticulously keeps track of this execution flow. We'll discover how this data is stored and becomes the raw material for profiling.
+
+## Introduction
+
 We know that the programs are executed by the CPU and that the program's binary instructions are stored in a volatile memory that is the random access memory.
 
-The scope of this blog is to dig into how the CPU keeps track of and executes instructions as expected by the program.
 As RAM locations are byte-addressable the CPU needs a way to keep track of the addresses in order to retrieve the data from it, which is in our case CPU instructions that are then executed.
 
 The CPU uses small built-in memory areas called register to hold data retrieved from main memory. Registers come in two types: general-purpose and special-purpose. Special-purpose registers include pointer registers, which are designed specifically to store pointers, which means, they store the memory address's value.
@@ -158,9 +169,13 @@ Frame pointer elimination (FPE) is an optimization that removes the need for a f
 
 Frame pointer omission (FPO) is instead an optimization that simply instructs the compiler to not generate instructions to push and pop the frame pointer at all during function calls and returns.
 
-Because the frame pointers are pushed on function call to the stack frame just-created for the new called function, and it's value is the value of the stack pointer at the moment of the `CALL`, it points to the previous stack frame.
+Because the frame pointers are pushed on function call to the stack frame just created for the newly called function, and its value is the value of the stack pointer at the moment of the `CALL`, it points to the previous stack frame.
 
-At the end, all the frame pointer saved to the stack can be used build a stack trace, by walking the stack. This technique is leveraged particularly by debuggers and profilers and it's usually referred to as *stack unwinding*.
+At the end, all the frame pointer saved to the stack can be used to build a stack trace, by walking the stack. This technique is leveraged particularly by debuggers and profilers and it's usually referred to as *stack unwinding*. You can see it in the following picture:
+
+![stack-walking](https://raw.githubusercontent.com/maxgio92/notes/5eeff1703e85c00799e7af0117a3898918d7a438/content/notes/stack-walking.avif)
+
+And this comes to the next episode of this series, which will dive into how to program stack unwinding, leveraging frame pointers.
 
 ### Clarification about the register names
 
