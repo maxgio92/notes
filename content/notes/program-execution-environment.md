@@ -58,10 +58,6 @@ While this is usually true, it's not mandatory and it depends on how the binary 
 
 > If you're interested on the main impacts of libraries compiled with this optimization and distributed by common Linux distributions I recommend this Brendan Gregg's great article: https://www.brendangregg.com/blog/2024-03-17/the-return-of-the-frame-pointers.html. 
 
-> **The saved base pointers and the stack unwinding**
-> 
-> When the base pointer is pushed to the stack, it points to the previous frame's base pointer, enabling debuggers or profilers to walk the stack, also called stack unwinding. But FPO or frame pointer omission optimization will actually eliminate this and use the base pointer as another register and access locals directly off of the stack pointer. In this case, the stack unwinding is a bit more difficult since it can no longer directly access the stack frames of earlier function calls.
-
 In particular, CALL instruction pushes also the value of the program counter at the moment of the new function call (next instruction address), and gives control to the target address. The program counter is set to the target address of the `CALL` instruction, which is, the first instruction of the called function.
 
 In a nutshell: the just pushed return address is a snapshot of the program counter, and the pushed frame pointer is a snapshot of the base pointer, and they're both available in the stack.
@@ -80,77 +76,97 @@ In the case of a function calling a function, the program counter returns to the
 
 Because all of the above points need to be memorized on the stack, the stack size will naturally increase, and on return decrease. And of course, the same happens to the stack and base pointers.
 
-### The data, the code and the heap areas
+As I'm a visual learner, the next section will show how the program's code and data are organized in its process address space. This should give you a clearer picture of their layout within the process's address space.
 
-When a program is loaded into memory, the operating system statically allocates a specific amount of memory for it. This includes space for the program's instructions and the stack.
+### The process address space regions
 
-I know this is too simplified, but we'll talk about how the program is loaded and organized in memory later on. 
+The process address space is a virtual memory region allocated by the operating system (OS) for a running program. It provides a logical view of memory for the program and hides the complexities of physical memory manage
 
-On dynamic allocations requested by the program, the heap acquires memory from the bottom of the same region and grows upwards towards the middle of the same memory region. While explaining how dynamic memory mapping implementations work in operating systems is out of scope here, but it's important to say that user processes see one contigous memory space thanks to the virtual memory mapping managed by the OS.
+While explaining how memory mapping implementations work in operating systems is out of scope here, it's important to say that user processes see one contigous memory space thanks to the memory mapping features provided by the OS.
 
-Below is an example of the memory regions and mapping of data and code, particularly with the ELF executable format:
+The address space is typically divided in different regions, and the following names are mostly standard for different OSes:
+* Text segment: this is the area where the (machine) code of the progam is stored
+* Data segment: this region contains typically static variables which are initialized
+* BSS (Block Started by Symbol) / Uninitialized data segment: it contains global and static variables that are not initialized when the program starts
+* Heap: it's a region available for dynamic allocation available to the running process. Programs can request pages from it at runtime (e.g. `malloc` from the C stdlib).
+* Stack: we already talked about it.
+
+The operating system can enforce protection for each of them, like marking the text segment read-only to prevent modificatio of the running program's instructions.
+
+When a program is loaded into memory, the operating system allocates a specific amount of memory for it and dedicate specific regions to static and dynamic allocation. The static allocation includes the allocation for the program's instructions and the stack.
+
+Dynamic allocations can be handled by the stack or the heap. The heap usually acquires memory from the bottom of the same region and grows upwards towards the middle of the same memory region.
+
+The next diagram will show the discussed memory regions:
 
 ![memory-regions-stack-instructions](https://raw.githubusercontent.com/maxgio92/notes/68c5220995702493845a3d96cc9d6dc7ce61ec8f/content/notes/memory-regions-allocations.jpg)
+> Credits for the diagram to [yousha.blog.ir](https://yousha.blog.ir/).
 
-## What about the frame pointer?
+Now let's get back to the pointer register. We mentioned that the base pointer is often called frame pointer.
 
-The frame pointer is the base pointer because is set up when a function is called to establish a fixed reference (base) point for accessing local variables and parameters within the function's stack frame. Depending on what ABI you use, parameters are passed either on the stack or via registers. For instance, on i386 System V ABI, parameter 0 is at the base pointer + 8 (i.e. "8(%ebp)"). In the x86-64 ABI, parameter 0 is stored in the %rdi register.
+## How the program is loaded into memory in Unix-like OSes?
 
-Below the parameters on the stack (remember, the stack grows down) are:
-- the return address
-- the previous frame pointer
-- saved register state
-- the local variables of the function.
-
-Remember: the return address is a snapshot of the program counter, so it points to instructions (code).
-The previous frame pointer is a snapshot of the base pointer, so it points to the stack (data).
-
-![stack-return-address-previous-frame-pointer](https://raw.githubusercontent.com/maxgio92/notes/5ab379b18942d782ac152cc81ad9029ae15d8dd1/content/notes/memory-stack-ip-bp.png)
-
-Below the local variables are other stack frames resulting from more recent function calls, as well as generic stack space used for computation and temporary storage. The most recent of these is pointed to by the real stack pointer. This is the difference between the stack pointer and the frame/base pointer.
-
-However, the frame pointer is not always required. Modern compilers can generate code that just uses the stack pointer. At any point in code generation, it can determine where the return address, parameters, and locals are relative to the stack pointer address (either by a constant offset or programmatically).
-
-Without a frame pointer, though, it is much more difficult for debuggers to determine the stack backtrace. In particular, hardware debuggers that do not have symbolic program information are almost always unable to show the stack.
-
-Why would you not use a frame pointer? In most architectures it frees up a register, essentially increasing the size of the CPU's fastest and best memory -- its register file.
-
-### Clarification about the register names
-
-On 16-bit ISA are usually called SP, BP, and IP.
-Instead on 32-bit ESP, EBP, and EIP.
-Finally, on 64-bit they're usually called RSP, RBP, and RIP.
-
-## How the code and the data are loaded and organized in the allocated memory?
-
-> Note: the memory allocation during the fork is only mentioned here.
-
-On program execution (Unix-like fork and exec system call groups) OS allocates memory to later store the program's instructions (code) and data (in the stack).
-On Unix-like operating systems, the exec family of system calls replaces the program executed by a process.
-When a process calls exec, all instructions - in ELF executable format it's the text section - and the data in the process is replaced with the executable of the new program.
+On program execution (Unix-like `fork` and `exec` system call groups) OS allocates memory to later store the program's instructions (in the text segment) and data (in the stack).
+The `exec` family of system calls replaces the program executed by a process.
+When a process calls `exec`, all instructions - in ELF executable format it's the `.text` section - and the data in the process are replaced with the executable of the new program.
 The OS then sets the PC to the memory address of the first instruction, which is fetched, decoded, and executed one by one.
-> I couldn't find yet where the information about how to set up the stack at exec time from an ELF file are stored in the ELF structure.
-> Also, as a detail, although all data is replaced, all open file descriptors remain open after calling exec unless explicitly set to close-on-exec.
 
 ![memory-map-exec](https://raw.githubusercontent.com/maxgio92/notes/d3bf6f231c330ba746354cc463469245fc9de7bc/content/notes/memory-map-exec.png)
+> I didn't manage yet to find yet where the information about how to set up the stack at exec time from an ELF file is stored in the ELF structure. If you do, feel free to share it!
 
-In particular, on Linux, on execs, the .text and .data ELF sections are loaded by the kernel at the base address.
-The main stack is located just below and grows downwards.
-Each thread and function call will have its own-stack / stack frame.
-This is located below the main stack.
-Each stack is separated by a guard page to detect Stack-Overflow.
+Moreover, as a detail, although all data is replaced, all open file descriptors remain open after calling exec unless explicitly set to close-on-exec.
+
+In particular, on Linux, on execs, the `.text` and `.data` ELF sections are loaded by the kernel at the base address. The main stack is located just below and grows downwards. Each function call will have its own stack frame. Each stack is separated by a guard page to detect stack overflow.
 
 ![memory-map-elf](https://raw.githubusercontent.com/maxgio92/notes/d3bf6f231c330ba746354cc463469245fc9de7bc/content/notes/memory-map-elf.png)
 
 If you want to go deeper on the Linux `exec` path, I recommend [this chapter](https://github.com/0xAX/linux-insides/blob/f7c6b82a5c02309f066686dde697f4985645b3de/SysCall/linux-syscall-4.md#execve-system-call) from the [Linux insides](https://0xax.gitbooks.io/linux-insides/content/index.html) book.
 
-### ELF structure
+### References: the ELF structure
 
 Digging into the ELF format you can find below the structure of this executable and linkable format:
 
 ![elf-structure](https://raw.githubusercontent.com/maxgio92/notes/20f4417f50afb71a79a8712decea1f76ffc16cc9/content/notes/elf-dissection.avif)
 
 For more information please refer to the man of file formats and conventions for elf (`man 5 elf`).
+
+## Frame pointer and the stack unwinding
+
+Now let's go back to our pointer registers because we often read about frame pointer and less about the base pointer, but actually the frame pointer *is* the base pointer.
+
+As already discussed, the name base pointer comes to the fact that is set up when a function is called to establish a fixed reference (base) to acces local variables and parameters within the function's stack frame.
+
+Depending on the ABI, parameters are passed either on the stack or via registers. For instance:
+* x86-64 System V ABI: in the general purpose registers `rdi`, `rsi`, `rdx`, `rcx`, `r8`, and `r9` for the first six parameters. On the stack from the seventh parameter onward.
+* 386 System V ABI: in the general purpose registers `eax`, `ecx`, `edx`, and `ebx` for the first four parameters. On the stack from the fifth parameter onward.
+
+In any case, the main data that is stored on the stack (frame) is:
+- the return address
+- the previous frame pointer
+- saved register state
+- the local variables of the function.
+
+![stack-return-address-previous-frame-pointer](https://raw.githubusercontent.com/maxgio92/notes/5ab379b18942d782ac152cc81ad9029ae15d8dd1/content/notes/memory-stack-ip-bp.png)
+> Remember: the return address is a snapshot of the program counter, so it points to instructions (code).
+The previous frame pointer is a snapshot of the base pointer, so it points to the stack (data).
+
+Below the local variables are other stack frames resulting from more recent function calls, as well as generic stack space used for computation and temporary storage. The most recent of these is pointed to by the stack pointer. This is the difference between the stack pointer and the frame/base pointer.
+
+However, the frame pointer is not always required. Compiler optimization technique can generate code that just uses the stack pointer.
+
+Frame pointer elimination (FPE) is an optimization that removes the need for a frame pointer under certain conditions, mainly to reduce the space allocated for the stack and to optimize performance because pushing and popping the frame pointer takes time during the function call. The compiler analyzes the function's code to see if it relies on the frame pointer for example to access local variables, or if the function does not call any other function. At any point in code generation, it can determine where the return address, parameters, and locals are relative to the stack pointer address (either by a constant offset or programmatically).
+
+Frame pointer omission (FPO) is instead an optimization that simply instructs the compiler to not generate instructions to push and pop the frame pointer at all during function calls and returns.
+
+Because the frame pointers are pushed on function call to the stack frame just-created for the new called function, and it's value is the value of the stack pointer at the moment of the `CALL`, it points to the previous stack frame.
+
+At the end, all the frame pointer saved to the stack can be used build a stack trace, by walking the stack. This technique is leveraged particularly by debuggers and profilers and it's usually referred to as *stack unwinding*.
+
+### Clarification about the register names
+
+On 16-bit ISA are usually called `sp`, `bp`, and `ip`.
+Instead on 32-bit `esp`, `ebp`, and `eip`.
+Finally, on 64-bit they're usually called `rsp`, `rbp`, and `rip`.
 
 ## References
 
