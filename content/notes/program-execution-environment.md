@@ -1,8 +1,8 @@
 ---
-Title: CPU profiling 101 pt.1 - The execution environment
+Title: Writing a CPU profiler 101 pt.1 - The execution environment
 ---
 
-CPU profiling allows us to analyze the program's performance, identify bottlenecks, and optimize its efficiency.
+Profiling the CPU allows us to analyze the program's performance, identify bottlenecks, and optimize its efficiency.
 
 Have you ever wondered what happens behind the scenes when you run a program and how to account for CPU time for the actual program functions? And even more, how to write such a tool to profile the program?
 
