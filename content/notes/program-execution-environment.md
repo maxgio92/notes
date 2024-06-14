@@ -2,15 +2,19 @@
 Title: The program execution environment
 ---
 
-Have you ever wondered what happens behind the scenes when you run a program and how to account CPU time to the actual program functions? And even more, how to write such a program a
+CPU profiling allows us to analyze the program's performance, identify bottlenecks, and optimize its efficiency.
+
+Have you ever wondered what happens behind the scenes when you run a program and how to account CPU time to the actual program functions? And even more, how to write such a tool to profile the program?
+
+Even though great open-source projects provide continuous profiling with a vast support for compiled, JITed, and interpreted, languages, with or without debug info, with or without frame pointers, etc., don't be discouraged!
+
+Writing your own can be a fantastic learning experience. Building your own profiler offers a unique challenge and the satisfaction of unlocking powerful performance analysis tools.
 
 This blog series will embark on a journey to give you the basics for writing a program profiler.
 
-In this first episode, we'll explore the main concepts of a program execution environment, and we'll dig into how the CPU executes a program and keeps track of the execution. It will show how the tracking data is stored and available for profiling the running program.
+In this first episode, we'll establish the foundation by exploring the program execution environment. We'll dig into how the CPU executes a program and keeps track of the execution flow. Finally, we'll discover how this tracking data is stored and becomes the key to unlocking the profiling primitives.
 
-In this first episode, we'll set the stage by exploring the inner workings of a program's execution environment. We'll uncover how the CPU executes code, all while keeping track of each step. Finally, we'll delve into how this tracking data is stored and becomes the key to unlocking the secrets of a program's performance through profiling.
-
-In this first episode, we'll establish the foundation by exploring the program execution environment. We'll delve into the intricate CPU dance between the CPU and your code, where instructions are fetched and executed. But the CPU doesn't just blindly follow orders; it meticulously keeps track of this execution flow. We'll discover how this data is stored and becomes the raw material for profiling.
+So, buckle up and get ready to explore the fascinating world of program profiling! This series will equip you with the knowledge to not only understand how programs run but also how to optimize them for peak performance.
 
 ## Introduction
 
