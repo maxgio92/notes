@@ -177,7 +177,11 @@ At the end, all the frame pointer saved to the stack can be used to build a stac
 
 ![stack-walking](https://raw.githubusercontent.com/maxgio92/notes/5eeff1703e85c00799e7af0117a3898918d7a438/content/notes/stack-walking.avif)
 
-And this comes to the next episode of this series, which will dive into how to program stack unwinding, leveraging frame pointers.
+And this comes to the next episode of this series, which will dive into how to program stack unwinding and how to account for each function CPU time!
+
+I hope this has been interesting to you. Any feedback is more than appreciated.
+
+See you in the next episode!
 
 ### Clarification about the register names
 
