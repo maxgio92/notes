@@ -14,8 +14,6 @@ This blog series will embark on a journey to give you the basics for writing a p
 
 In this first episode, we'll establish the foundation by exploring the program execution environment. We'll dig into how the CPU executes a program and keeps track of the execution flow. Finally, we'll discover how this tracking data is stored and becomes the key to unlocking the profiling primitives.
 
-So, buckle up and get ready to explore the fascinating world of program profiling! This series will equip you with the knowledge to not only understand how programs run but also how to optimize them for peak performance.
-
 ## Introduction
 
 We know that the CPU executes the programs and that the program's binary instructions are stored in a volatile memory which is the random access memory.
