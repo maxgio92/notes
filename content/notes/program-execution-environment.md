@@ -59,9 +59,10 @@ On the other side, the stack pointer (SP) and base pointer (BP) point to the sta
 
 While a detailed explanation of the stack is beyond the scope of this blog, here's a basic idea: it's a special area of memory that the CPU uses to manage data related to the program's functions (subroutines) as they are called and executed, pushing it to it in a LIFO method. We'll see later on in more detail.
 
-Data and code are organized in specific regions inside the process address space.
+Data and code are organized in specific regions inside the process address space. It's constantly updated by the CPU on push and pop operations on the stack - we'll see in a minute how. 
+The stack pointer is usually set by the OS during the load to point to the top of the stack memory region.
 
-As the stack grows whenever the CPU adds new data while executing the program, the stack pointer is at the lowest position in the stack.
+As the stack grows whenever the CPU adds new data while executing the program's instructions, the stack pointer decrements and is always at the lowest position in the stack.
 > Remember: the stack grows from the highest address to the lowest address
 So, when a new variable of 4 bytes is declared, the stack pointer will be increased by 4 bytes too.
 
@@ -72,7 +73,7 @@ In the following image you can find an example considering a single process:
 Specifically, a stack pointer (SP) points to the first free and unused address on the stack.
 It can reserve more space on the stack by adjusting the stack pointer, and then `PUSH` instruction (valid in many architectures) pushes data at the address pointed to by the stack pointer (e.g. local variables).
 
-Meanwhile, usually, the base pointer (BP) is a snapshot of the stack pointer (SP) at the start of the frame, so that function parameters and local variables are accessed by adding and subtracting, respectively, a constant offset from it.
+The base pointer (BP) is set during function calls by copying the current SP. The BP is a snapshot of the SP at the start of the frame, so that function parameters and local variables are accessed by adding and subtracting, respectively, a constant offset from it.
 
 You can find a diagram in the picture below:
 
