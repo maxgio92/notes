@@ -49,7 +49,7 @@ You can follow a diagram of a simplified instruction cycle in the picture below:
 
 Depending on the instruction set, the PC will be increased instruction by instruction by the instruction size (e.g. 8 bytes on 64 but Instruction Set Architectures).
 
-When compiling a program it will contain the instructions to be executed, that the CPU will fetch and execute, and how they're stored depends on the executable format. For example, considering the ELF format, the code is represented by the `.text` section.
+In an executable file, the machine code to be executed by the CPU is usually stored in a dedicated section, depending on the executable format. For example, in ELF (Executable and Linkable Format) the machine code is organized in the `.text` section.
 
 ![memory-program-counter-1](https://raw.githubusercontent.com/maxgio92/notes/14bdde325f646b53ee0b6501f0ba9d3ecbaded4f/content/notes/memory-cpu-program-counter.gif)
 ![memory-program-counter-2](https://raw.githubusercontent.com/maxgio92/notes/14bdde325f646b53ee0b6501f0ba9d3ecbaded4f/content/notes/memory-cpu-program-counter-1.gif)
