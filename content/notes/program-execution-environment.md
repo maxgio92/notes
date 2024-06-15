@@ -30,7 +30,24 @@ So, please consider that these specifics may differ depending on the architectur
 ## The program counter (PC), the stack pointer (SP), and the base pointer (BP) processor registers
 
 The program counter (PC), often also called instruction pointer (IP) in x86 architectures, is a register that points to code, that is, the instruction that will be executed next. The instruction data will be fetched, will be stored in the instruction register (IR), and executed during the instruction cycle.
-Depending on the instruction set, the IP will be increased instruction by instruction by the instruction size (e.g. 8 bytes on 64 but Instruction Set Architectures).
+You can follow a diagram of a simplified instruction cycle in the picture below:
+
+![cpu-pc-ir](https://raw.githubusercontent.com/maxgio92/notes/b76dfca9825c61c9d1d02c0eddf0b4619869185d/content/images/cpu-pc-ir-cycle.svg)
+
+1. The CPU control unit (CU) read the value of the PC
+2. It sends it to the CPU Memory Unit (MU)
+3. The MU reads the instruction code from the memory at the address pointed to by the PC
+4. The MU stores the instruction code to the IR
+5. The MU reads the istruction code
+6. The MU sends the instruction code to the CU
+7. The CU instructs the Register File (RF) to read operands - if available from registers, I'm simplifying - from general purpose registers (GPR)
+8. The RF reads operands from GPRs
+9. The CU sends them to the Arithmetic Logic Unit (ALU), which calculates and stores the result in its temporary memory
+10. The CU requests the ALU to perform the arithmetic and logic operations
+11. The RF reads the result from the ALU
+12. The RF stores the AL result in GPRs
+
+Depending on the instruction set, the PC will be increased instruction by instruction by the instruction size (e.g. 8 bytes on 64 but Instruction Set Architectures).
 
 When compiling a program it will contain the instructions to be executed, that the CPU will fetch and execute, and how they're stored depends on the executable format. For example, considering the ELF format, the code is represented by the `.text` section.
 
