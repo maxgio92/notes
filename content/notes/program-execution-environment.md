@@ -117,6 +117,8 @@ This memory space dedicated to these subroutines are the stack frames. You can f
 
 ![memory-sp-bp](https://raw.githubusercontent.com/maxgio92/notes/99171626abe0c24cf00a66c480287d4701ec61df/content/images/memory-sp-bp.svg)
 
+Please bear in mind that the stack layout can vary based on the ABI calling convention and the architecture.
+
 We'll now go through the call path and see which data is also pushed to the stack, which is used to keep track of the execution path.
 
 ### The call path
@@ -137,8 +139,6 @@ As a result, control is passed to the called subroutine address and the return a
 The following diagram wrap ups what's been discussed until now:
 
 ![pc-sp-bc-stack-code](https://raw.githubusercontent.com/maxgio92/notes/352907a2c42b9f695d0a97e6cd8d3e95977d024d/content/images/pc-sp-bc-stack-code.svg)
-
-In any case please bear in mind that the stack layout can vary based on the ABI calling convention and the architecture.
 
 ### The return path
 
