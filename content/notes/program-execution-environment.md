@@ -1,5 +1,5 @@
 ---
-Title: Unleashing the power of frame pointers for profilers pt.1 - The environment
+Title: 'Unleashing the power of frame pointers for profilers pt.1 - The environment'
 ---
 
 Profiling the CPU allows us to analyze the program's performance, identify bottlenecks, and optimize its efficiency.
@@ -61,7 +61,7 @@ In an executable file, the machine code to be executed by the CPU is usually sto
 
 On the other side, the stack pointer (SP) and base pointer (BP) point to the stack, which contains data about the program being executed.
 
-While a detailed explanation of the stack is beyond the scope of this blog, here's a basic idea: it's a special area of memory that the CPU uses to manage data related to the program's functions (subroutines) as they are called and executed, pushing it to it in a LIFO method. We'll see later on in more detail.
+While a detailed explanation of the stack is beyond the scope of this blog, here's a basic idea: it's a special area of memory that the CPU uses to manage data related to the program's functions (subroutines) as they are called and executed, pushing it to it in a LIFO method. And each stack is protected by a guard to avoid a stack overflow. We'll see later on in more detail.
 
 Data and code are organized in specific regions inside the process address space. It's constantly updated by the CPU on push and pop operations on the stack. The stack pointer is usually set by the OS during the load to point to the top of the stack memory region.
 
@@ -113,7 +113,7 @@ The base pointer (BP) is set during function calls by copying the current SP. Th
 
 Moreover when a new function is called a new space in the stack dedicated to the new function is created and some data, besides the function code like declaration of local variables is pushed.
 
-This memory space dedicated to these subroutines are the stack frames. You can find a simple scheme of stack frames with the main data pushed to the stack in the picture below:
+This memory space dedicated to these subroutines are the stack frames, so each function will have a stack frame. You can find a simple scheme of stack frames with the main data pushed to the stack in the picture below:
 
 ![memory-sp-bp](https://raw.githubusercontent.com/maxgio92/notes/99171626abe0c24cf00a66c480287d4701ec61df/content/images/memory-sp-bp.svg)
 
