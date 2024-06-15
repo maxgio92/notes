@@ -192,7 +192,7 @@ The OS then sets the PC to the memory address of the first instruction, which is
 
 Moreover, as a detail, although all data is replaced, all open file descriptors remain open after calling exec unless explicitly set to close-on-exec.
 
-In particular, on Linux, on execs, the `.text` and `.data` ELF sections are loaded by the kernel at the base address. The main stack is located just below and grows downwards. Each function call will have its own stack frame. Each stack is separated by a guard page to detect stack overflow.
+In particular, on Linux, on execs, the `.text` and `.data` ELF sections are loaded by the kernel at the base address. The main stack is located just below and grows downwards.
 
 ![memory-map-elf](https://raw.githubusercontent.com/maxgio92/notes/d3bf6f231c330ba746354cc463469245fc9de7bc/content/notes/memory-map-elf.png)
 
