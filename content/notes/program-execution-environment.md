@@ -55,9 +55,6 @@ Depending on the instruction set, the PC will be increased instruction by instru
 
 In an executable file, the machine code to be executed by the CPU is usually stored in a dedicated section, depending on the executable format. For example, in ELF (Executable and Linkable Format) the machine code is organized in the `.text` section.
 
-![memory-program-counter-1](https://raw.githubusercontent.com/maxgio92/notes/14bdde325f646b53ee0b6501f0ba9d3ecbaded4f/content/notes/memory-cpu-program-counter.gif)
-![memory-program-counter-2](https://raw.githubusercontent.com/maxgio92/notes/14bdde325f646b53ee0b6501f0ba9d3ecbaded4f/content/notes/memory-cpu-program-counter-1.gif)
-
 On the other side, the stack pointer (SP) and base pointer (BP) point to the stack, which contains data about the program being executed.
 
 While a detailed explanation of the stack is beyond the scope of this blog, here's a basic idea: it's a special area of memory that the CPU uses to manage data related to the program's functions (subroutines) as they are called and executed, pushing it to it in a LIFO method. We'll see later on in more detail.
