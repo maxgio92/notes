@@ -61,7 +61,7 @@ In an executable file, the machine code to be executed by the CPU is usually sto
 
 On the other side, the stack pointer (SP) and base pointer (BP) point to the stack, which contains data about the program being executed.
 
-While a detailed explanation of the stack is beyond the scope of this blog, here's a basic idea: it's a special area of memory that the CPU uses to manage data related to the program's functions (subroutines) as they are called and executed, pushing it to it in a LIFO method. And each stack is protected by a guard to avoid a stack overflow. We'll see later on in more detail.
+While a detailed explanation of the stack is beyond the scope of this blog, here's a basic idea: it's a special area of memory that the CPU uses to manage data related to the program's functions (subroutines) as they are called and executed, pushing it to it in a LIFO method. We'll see later on in more detail.
 
 Data and code are organized in specific regions inside the process address space. It's constantly updated by the CPU on push and pop operations on the stack. The stack pointer is usually set by the OS during the load to point to the top of the stack memory region.
 
@@ -128,8 +128,6 @@ Moreover, the previous base pointer (BP) is also pushed to the stack.
 
 While this is usually true, it's not mandatory and it depends on how the binary has been compiled. This mainly depends on the compiler optimization techniques.
 
-> If you're interested in the main impacts of libraries compiled with this optimization and distributed by common Linux distributions I recommend this Brendan Gregg's great article: https://www.brendangregg.com/blog/2024-03-17/the-return-of-the-frame-pointers.html. 
-
 In particular, CALL instruction pushes also the value of the program counter at the moment of the new function call (next instruction address), and gives control to the target address. The program counter is set to the target address of the `CALL` instruction, which is, the first instruction of the called function.
 
 In a nutshell: the just pushed return address is a snapshot of the program counter, and the pushed frame pointer is a snapshot of the base pointer, and they're both available in the stack.
@@ -150,7 +148,7 @@ Since the program counter register holds the address of the next instruction to 
 
 In the case of a function calling a function, the program counter returns to the return address in the previous stack frame and starts executing from there.
 
-Because all of the above points need to be memorized on the stack, the stack size will naturally increase, and on return decrease. And of course, the same happens to the stack and base pointers.
+Because all of the above points need to be memorized on the stack, the stack size will naturally increase, and on return decrease. And of course, the same happens to the stack and base pointers. Naturally, the stack is protected by a guard to avoid the stack overflow accessing unexpected area of memory.
 
 As I'm a visual learner, the next section will show how the program's code and data are organized in its process address space. This should give you a clearer picture of their layout within the process's address space.
 
@@ -233,6 +231,8 @@ However, the frame pointer is not always required. Compiler optimization techniq
 Frame pointer elimination (FPE) is an optimization that removes the need for a frame pointer under certain conditions, mainly to reduce the space allocated for the stack and to optimize performance because pushing and popping the frame pointer takes time during the function call. The compiler analyzes the function's code to see if it relies on the frame pointer for example to access local variables, or if the function does not call any other function. At any point in code generation, it can determine where the return address, parameters, and locals are relative to the stack pointer address (either by a constant offset or programmatically).
 
 Frame pointer omission (FPO) is instead an optimization that simply instructs the compiler to not generate instructions to push and pop the frame pointer at all during function calls and returns.
+
+> If you're interested in the impacts of libraries compiled and distributed with this optimization I recommend the following Brendan Gregg's great article: https://www.brendangregg.com/blog/2024-03-17/the-return-of-the-frame-pointers.html.
 
 Because the frame pointers are pushed on function call to the stack frame just created for the newly called function, and its value is the value of the stack pointer at the moment of the `CALL`, it points to the previous stack frame.
 
