@@ -109,13 +109,15 @@ It can reserve more space on the stack by adjusting the stack pointer like in th
 
 As a detail, a more concise way could be to use `push` that combines the decrement of the SP (i.e. by 4 bytes) and the store of the operand (i.e. the integer `10`) at the new address pointed to by the SP.
 
-The base pointer (BP) is set during function calls by copying the current SP. The BP is a snapshot of the SP at the start of the frame, so that function parameters and local variables are accessed by adding and subtracting, respectively, a constant offset from it.
+The base pointer (BP) is set during function calls by copying the current SP. The BP is a snapshot of the SP at the moment of the function call (e.g. when the CPU fetches a `call` instruction), so that function parameters and local variables are accessed by adding and subtracting, respectively, a constant offset from it.
 
-You can find a diagram in the picture below:
+Moreover when a new function is called a new space in the stack dedicated to the new function is created and some data, besides the function code like declaration of local variables is pushed.
 
-![stack-frame](https://raw.githubusercontent.com/maxgio92/notes/14bdde325f646b53ee0b6501f0ba9d3ecbaded4f/content/notes/memory-stack-frames-simple.png)
+This memory space dedicated to these subroutines are the stack frames. You can find a simple scheme of stack frames with the main data pushed to the stack in the picture below:
 
-In the previous image, the base pointer is referred to as the frame pointer (FP). What is fundamental here is that the stack is organized in sub-structures named frames. We'll go through it while explaining how the function call path works.
+![memory-sp-bp](https://raw.githubusercontent.com/maxgio92/notes/aaaf6e5a61f55180ca1df82d4ee02c40005a1aed/content/images/memory-sp-bp.svg)
+
+We'll now go through the call path and see which data is also pushed to the stack, which is used to keep track of the execution path.
 
 ### The call path
 
