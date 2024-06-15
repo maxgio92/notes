@@ -92,8 +92,8 @@ add  rsp, 4              ; Add 4 back to stack pointer to deallocate local varia
 
 > **Clarification about the register names**
 >
-> You'll find different names for these pointer register depending on the architectures:
-> * On 16-bit ISA are usually called `sp`, `bp`, and `ip`.
+> You'll find different names for these pointer registers depending on the architectures. For example for x86:
+> * On 16-bit architecture are usually called `sp`, `bp`, and `ip`.
 > * Instead on 32-bit `esp`, `ebp`, and `eip`.
 > * Finally, on 64-bit they're usually called `rsp`, `rbp`, and `rip`.
 
