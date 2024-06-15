@@ -134,6 +134,10 @@ In a nutshell: the just pushed return address is a snapshot of the program count
 
 As a result, control is passed to the called subroutine address and the return address, that is the address of the instruction next to `CALL`, is available.
 
+The following diagram wrap ups what's been discussed until now:
+
+![pc-sp-bc-stack-code](https://raw.githubusercontent.com/maxgio92/notes/352907a2c42b9f695d0a97e6cd8d3e95977d024d/content/images/pc-sp-bc-stack-code.svg)
+
 ### The return path
 
 On the return path from the function, `RET` instruction `POP`s the return address from the stack and puts it in the program counter register. So, the next instruction is available from that return address.
