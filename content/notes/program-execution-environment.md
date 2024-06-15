@@ -138,6 +138,8 @@ The following diagram wrap ups what's been discussed until now:
 
 ![pc-sp-bc-stack-code](https://raw.githubusercontent.com/maxgio92/notes/352907a2c42b9f695d0a97e6cd8d3e95977d024d/content/images/pc-sp-bc-stack-code.svg)
 
+In any case please bear in mind that the stack layout can vary based on the ABI calling convention and the architecture.
+
 ### The return path
 
 On the return path from the function, `RET` instruction `POP`s the return address from the stack and puts it in the program counter register. So, the next instruction is available from that return address.
