@@ -37,15 +37,19 @@ You can follow a diagram of a simplified instruction cycle in the picture below:
 1. The CPU control unit (CU) read the value of the PC
 2. It sends it to the CPU Memory Unit (MU)
 3. The MU reads the instruction code from the memory at the address pointed to by the PC
-4. The MU stores the instruction code to the IR
-5. The MU reads the istruction code
-6. The MU sends the instruction code to the CU
+4. The MU stores the opcode to the IR
+5. The MU reads the opcode
+6. The MU sends the opcode to the CU
 7. The CU instructs the Register File (RF) to read operands - if available from registers, I'm simplifying - from general purpose registers (GPR)
 8. The RF reads operands from GPRs
 9. The CU sends them to the Arithmetic Logic Unit (ALU), which calculates and stores the result in its temporary memory
 10. The CU requests the ALU to perform the arithmetic and logic operations
 11. The RF reads the result from the ALU
 12. The RF stores the AL result in GPRs
+
+For example, considering a `CALL` instruction, this could be the flow considering the PC, the IR and the mainly involved general purpose registers to store the operands:
+
+![cpu-pc-ir-call](https://raw.githubusercontent.com/maxgio92/notes/4979fc04a3da60187ea4e3175dfa8966abdf0fc6/content/images/cpu-pc-ir-cycle-2.svg)
 
 Depending on the instruction set, the PC will be increased instruction by instruction by the instruction size (e.g. 8 bytes on 64 but Instruction Set Architectures).
 
