@@ -115,7 +115,7 @@ Moreover when a new function is called a new space in the stack dedicated to the
 
 This memory space dedicated to these subroutines are the stack frames. You can find a simple scheme of stack frames with the main data pushed to the stack in the picture below:
 
-![memory-sp-bp](https://raw.githubusercontent.com/maxgio92/notes/aaaf6e5a61f55180ca1df82d4ee02c40005a1aed/content/images/memory-sp-bp.svg)
+![memory-sp-bp](https://raw.githubusercontent.com/maxgio92/notes/99171626abe0c24cf00a66c480287d4701ec61df/content/images/memory-sp-bp.svg)
 
 We'll now go through the call path and see which data is also pushed to the stack, which is used to keep track of the execution path.
 
