@@ -64,7 +64,7 @@ Data and code are organized in specific regions inside the process address space
 As the stack grows whenever the CPU adds new data while executing the program's instructions, the stack pointer decrements and is always at the lowest position in the stack.
 > Remember: the stack grows from the highest address to the lowest address:
 > 
-> ![memory-program-counter-2](https://raw.githubusercontent.com/maxgio92/notes/3db4d57bd2a84df56925e19ab24b03badfd649f1/content/notes/memory-process-data-code.png)
+> ![mem-stack-code-heap](https://raw.githubusercontent.com/maxgio92/notes/faf4b0c39f4a1e2e84a3bb497729fa5863aed5ed/content/images/mem-stack-code-heap.svg)
 
 So, when a new variable of 4 bytes is declared, the stack pointer will be increased by 4 bytes too.
 
