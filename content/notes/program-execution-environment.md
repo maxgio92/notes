@@ -29,6 +29,8 @@ So, please consider that these specifics may differ depending on the architectur
 
 ## The program counter (PC), the stack pointer (SP), and the base pointer (BP) processor registers
 
+### The program counter
+
 The program counter (PC), often also called instruction pointer (IP) in x86 architectures, is a register that points to code, that is, the instruction that will be executed next. The instruction data will be fetched, will be stored in the instruction register (IR), and executed during the instruction cycle.
 You can follow a diagram of a simplified instruction cycle in the picture below:
 
@@ -54,6 +56,8 @@ For example, considering a `CALL` instruction, this could be the flow considerin
 Depending on the instruction set, the PC will be increased instruction by instruction by the instruction size (e.g. 8 bytes on 64 but Instruction Set Architectures).
 
 In an executable file, the machine code to be executed by the CPU is usually stored in a dedicated section, depending on the executable format. For example, in ELF (Executable and Linkable Format) the machine code is organized in the `.text` section.
+
+### The stack pointer and the base pointer
 
 On the other side, the stack pointer (SP) and base pointer (BP) point to the stack, which contains data about the program being executed.
 
@@ -91,6 +95,7 @@ mov  dword ptr [rsp], 10  ; Move 10 (dword = 4 bytes) to memory pointed to by SP
 ; Function cleanup (potential instruction to restore stack space)
 add  rsp, 4              ; Add 4 back to stack pointer to deallocate local variable space
 ```
+Even though `sub` + `mov` is more explicit, as far as I know `push` is more concise and combines the update 
 
 > **Clarification about the register names**
 >
@@ -100,7 +105,9 @@ add  rsp, 4              ; Add 4 back to stack pointer to deallocate local varia
 > * Finally, on 64-bit they're usually called `rsp`, `rbp`, and `rip`.
 
 Specifically, a stack pointer (SP) points to the first free and unused address on the stack.
-It can reserve more space on the stack by adjusting the stack pointer, and then `PUSH` instruction (valid in many architectures) pushes data at the address pointed to by the stack pointer (e.g. local variables).
+It can reserve more space on the stack by adjusting the stack pointer like in the previous code example.
+
+As a detail, a more concise way could be to use `push` that combines the decrement of the SP (i.e. by 4 bytes) and the store of the operand (i.e. the integer `10`) at the new address pointed to by the SP.
 
 The base pointer (BP) is set during function calls by copying the current SP. The BP is a snapshot of the SP at the start of the frame, so that function parameters and local variables are accessed by adding and subtracting, respectively, a constant offset from it.
 
