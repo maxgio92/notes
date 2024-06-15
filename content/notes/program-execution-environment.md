@@ -1,5 +1,5 @@
 ---
-Title: Unleashing the power of frame pointers for profiling pt.1 - The execution environment
+Title: Unleashing the power of frame pointers pt.1 - The profiler environment
 ---
 
 Profiling the CPU allows us to analyze the program's performance, identify bottlenecks, and optimize its efficiency.
