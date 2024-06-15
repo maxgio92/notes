@@ -62,7 +62,9 @@ While a detailed explanation of the stack is beyond the scope of this blog, here
 Data and code are organized in specific regions inside the process address space. It's constantly updated by the CPU on push and pop operations on the stack. The stack pointer is usually set by the OS during the load to point to the top of the stack memory region.
 
 As the stack grows whenever the CPU adds new data while executing the program's instructions, the stack pointer decrements and is always at the lowest position in the stack.
-> Remember: the stack grows from the highest address to the lowest address
+> Remember: the stack grows from the highest address to the lowest address:
+> 
+> ![memory-program-counter-2](https://raw.githubusercontent.com/maxgio92/notes/3db4d57bd2a84df56925e19ab24b03badfd649f1/content/notes/memory-process-data-code.png)
 
 So, when a new variable of 4 bytes is declared, the stack pointer will be increased by 4 bytes too.
 
@@ -78,7 +80,7 @@ void myFunction() {
 the simplified resulting machine code could be something like the following: 
 
 ```assembly
- Allocate space for local variables (assuming 4 bytes for integer)
+; Allocate space for local variables (assuming 4 bytes for integer)
 sub  rsp, 4               ; Subtract 4 from stack pointer (SP) to reserve space
 
 ; Move value 10 (in binary) to localVar's memory location
@@ -96,10 +98,6 @@ add  rsp, 4              ; Add 4 back to stack pointer to deallocate local varia
 > * On 16-bit architecture are usually called `sp`, `bp`, and `ip`.
 > * Instead on 32-bit `esp`, `ebp`, and `eip`.
 > * Finally, on 64-bit they're usually called `rsp`, `rbp`, and `rip`.
-
-In the following image you can find an example considering a single process:
-
-![memory-program-counter-2](https://raw.githubusercontent.com/maxgio92/notes/3db4d57bd2a84df56925e19ab24b03badfd649f1/content/notes/memory-process-data-code.png)
 
 Specifically, a stack pointer (SP) points to the first free and unused address on the stack.
 It can reserve more space on the stack by adjusting the stack pointer, and then `PUSH` instruction (valid in many architectures) pushes data at the address pointed to by the stack pointer (e.g. local variables).
