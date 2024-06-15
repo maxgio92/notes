@@ -59,12 +59,43 @@ On the other side, the stack pointer (SP) and base pointer (BP) point to the sta
 
 While a detailed explanation of the stack is beyond the scope of this blog, here's a basic idea: it's a special area of memory that the CPU uses to manage data related to the program's functions (subroutines) as they are called and executed, pushing it to it in a LIFO method. We'll see later on in more detail.
 
-Data and code are organized in specific regions inside the process address space. It's constantly updated by the CPU on push and pop operations on the stack - we'll see in a minute how. 
-The stack pointer is usually set by the OS during the load to point to the top of the stack memory region.
+Data and code are organized in specific regions inside the process address space. It's constantly updated by the CPU on push and pop operations on the stack. The stack pointer is usually set by the OS during the load to point to the top of the stack memory region.
 
 As the stack grows whenever the CPU adds new data while executing the program's instructions, the stack pointer decrements and is always at the lowest position in the stack.
 > Remember: the stack grows from the highest address to the lowest address
+
 So, when a new variable of 4 bytes is declared, the stack pointer will be increased by 4 bytes too.
+
+For, considering a C function that declare a local variable:
+
+``` c
+void myFunction() {
+  int localVar = 10; // Local variable declaration
+  // Use localVar here
+}
+```
+
+the simplified resulting machine code could be something like the following: 
+
+```assembly
+ Allocate space for local variables (assuming 4 bytes for integer)
+sub  esp, 4               ; Subtract 4 from stack pointer (ESP) to reserve space
+
+; Move value 10 (in binary) to localVar's memory location
+mov  dword ptr [esp], 10  ; Move 10 (dword = 4 bytes) to memory pointed to by ESP (stack top)
+
+; ...
+
+; Function cleanup (potential instruction to restore stack space)
+add  esp, 4              ; Add 4 back to stack pointer to deallocate local variable space
+```
+
+> **Clarification about the register names**
+>
+> You'll find different names for these pointer register depending on the architectures:
+> * On 16-bit ISA are usually called `sp`, `bp`, and `ip`.
+> * Instead on 32-bit `esp`, `ebp`, and `eip`.
+> * Finally, on 64-bit they're usually called `rsp`, `rbp`, and `rip`.
 
 In the following image you can find an example considering a single process:
 
@@ -80,13 +111,6 @@ You can find a diagram in the picture below:
 ![stack-frame](https://raw.githubusercontent.com/maxgio92/notes/14bdde325f646b53ee0b6501f0ba9d3ecbaded4f/content/notes/memory-stack-frames-simple.png)
 
 In the previous image, the base pointer is referred to as the frame pointer (FP). What is fundamental here is that the stack is organized in sub-structures named frames. We'll go through it while explaining how the function call path works.
-
-> **Clarification about the register names**
->
-> You'll find different names for these pointer register depending on the architectures:
-> * On 16-bit ISA are usually called `sp`, `bp`, and `ip`.
-> * Instead on 32-bit `esp`, `ebp`, and `eip`.
-> * Finally, on 64-bit they're usually called `rsp`, `rbp`, and `rip`.
 
 ### The call path
 
