@@ -79,15 +79,15 @@ the simplified resulting machine code could be something like the following:
 
 ```assembly
  Allocate space for local variables (assuming 4 bytes for integer)
-sub  esp, 4               ; Subtract 4 from stack pointer (ESP) to reserve space
+sub  rsp, 4               ; Subtract 4 from stack pointer (SP) to reserve space
 
 ; Move value 10 (in binary) to localVar's memory location
-mov  dword ptr [esp], 10  ; Move 10 (dword = 4 bytes) to memory pointed to by ESP (stack top)
+mov  dword ptr [rsp], 10  ; Move 10 (dword = 4 bytes) to memory pointed to by SP (stack top)
 
 ; ...
 
 ; Function cleanup (potential instruction to restore stack space)
-add  esp, 4              ; Add 4 back to stack pointer to deallocate local variable space
+add  rsp, 4              ; Add 4 back to stack pointer to deallocate local variable space
 ```
 
 > **Clarification about the register names**
