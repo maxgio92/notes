@@ -208,7 +208,7 @@ For more information please refer to the man of file formats and conventions for
 
 Now let's get back to main characters of this blog, which are the pointer register. We mentioned that the base pointer is also called the frame pointer, indeed it points to a single stack frame. But, let's see how they're vital for CPU profiling.
 
-## Frame pointer and the stack unwinding
+## Frame pointer and the stack walking
 
 I've read more often the name _frame pointer_ than _base pointer_, but actually the frame pointer *is* the base pointer.
 
@@ -238,19 +238,24 @@ Frame pointer omission (FPO) is instead an optimization that simply instructs th
 
 > If you're interested in the impacts of libraries compiled and distributed with this optimization I recommend the following Brendan Gregg's great article: [The Return of the Frame Pointers](https://www.brendangregg.com/blog/2024-03-17/the-return-of-the-frame-pointers.html).
 
-Because the frame pointers are pushed on function call to the stack frame just created for the newly called function, and its value is the value of the stack pointer at the moment of the `CALL`, it points to the previous stack frame.
+Because the frame pointer is pushed on function call to the stack frame just created for the newly called function, and its value is the value of the stack pointer at the moment of the `CALL`, it points to the previous stack frame. One technique to talk the stack is to follow the linked list of the saved frame pointers, beginning with the value hold by the frame (base) pointer register.
 
-At the end, all the frame pointer saved to the stack can be used to build a stack trace, by walking the stack until the top of the stack, inside the frame of a main function.
-All the pushed frame pointers can be memorized, and on every RET (function return) which pops a stack frame, repeating until reaching the top of the stack (see, the main function) a stack trace can be built, with the frame pointers memorized until that point.
-The same continues on and on, mainly on subsequent CALLs and RETs.
+Thanks to the *stack walking* technique that leverages the saved frame pointers, stack traces can be built. As a `RET` (function returns) pops a stack frame out of the stack, when consequent `RET`s reach the top of the stack, which is the stack frame of the main function, a stack trace is complete. The same goes on and on with subsequent chains of call-returns that reach the top of the stack.
 
-This technique is leveraged particularly by debuggers and profilers and it's usually referred to as *stack unwinding*.
-
-You can see it in the following picture:
+You can see it in the following picture a simplified scheme of the linked list of frame pointers:
 
 ![stack-walking](https://raw.githubusercontent.com/maxgio92/notes/5eeff1703e85c00799e7af0117a3898918d7a438/content/notes/stack-walking.avif)
 
-And this comes to the next episode of this series, which will dive into how to program stack unwinding and how to account for each function CPU time!
+This technique is particularly useful for profilers and debuggers. For example:
+
+```shell
+$ ./my-profiler run --pid 12345
+ 2.6%     main.main;runtime.main;runtime.goexit;
+65.3%     main.foo;runtime.main;runtime.goexit;
+32.1%     main.bar;runtime.main;runtime.goexit;
+```
+
+And this comes to the next episode of this series, which will dive into how to program stack walking and how to account for each function CPU time!
 
 I hope this has been interesting to you. Any feedback is more than appreciated.
 
