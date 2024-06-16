@@ -234,7 +234,7 @@ Frame pointer elimination (FPE) is an optimization that removes the need for a f
 
 Frame pointer omission (FPO) is instead an optimization that simply instructs the compiler to not generate instructions to push and pop the frame pointer at all during function calls and returns.
 
-> If you're interested in the impacts of libraries compiled and distributed with this optimization I recommend the following Brendan Gregg's great article: https://www.brendangregg.com/blog/2024-03-17/the-return-of-the-frame-pointers.html.
+> If you're interested in the impacts of libraries compiled and distributed with this optimization I recommend the following Brendan Gregg's great article: [The Return of the Frame Pointers](https://www.brendangregg.com/blog/2024-03-17/the-return-of-the-frame-pointers.html).
 
 Because the frame pointers are pushed on function call to the stack frame just created for the newly called function, and its value is the value of the stack pointer at the moment of the `CALL`, it points to the previous stack frame.
 
