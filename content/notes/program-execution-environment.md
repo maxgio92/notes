@@ -214,7 +214,7 @@ As already discussed, the name base pointer comes to the fact that is set up whe
 
 What is pushed to the stack are also the parameters, but depending on the ABI, they can be passed either on the stack or via registers. For instance:
 * x86-64 System V ABI: in the general purpose registers `rdi`, `rsi`, `rdx`, `rcx`, `r8`, and `r9` for the first six parameters. On the stack from the seventh parameter onward.
-* 386 System V ABI: in the general purpose registers `eax`, `ecx`, `edx`, and `ebx` for the first four parameters. On the stack from the fifth parameter onward.
+* i386 System V ABI: in the general purpose registers `eax`, `ecx`, `edx`, and `ebx` for the first four parameters. On the stack from the fifth parameter onward.
 
 In general, the data that is commonly stored on the stack is:
 - the return address
