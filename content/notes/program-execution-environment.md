@@ -57,7 +57,7 @@ Depending on the instruction set, the PC will be increased instruction by instru
 
 In an executable file, the machine code to be executed by the CPU is usually stored in a dedicated section, depending on the executable format. For example, in ELF (Executable and Linkable Format) the machine code is organized in the `.text` section.
 
-### The stack pointer and the base pointer
+### The stack pointer
 
 On the other side, the stack pointer (SP) and base pointer (BP) point to the stack, which contains data about the program being executed.
 
@@ -108,6 +108,8 @@ Specifically, a stack pointer (SP) points to the first free and unused address o
 It can reserve more space on the stack by adjusting the stack pointer like in the previous code example.
 
 As a detail, a more concise way could be to use `push` that combines the decrement of the SP (i.e. by 4 bytes) and the store of the operand (i.e. the integer `10`) at the new address pointed to by the SP.
+
+### The base pointer
 
 The base pointer (BP) is set during function calls by copying the current SP. The BP is a snapshot of the SP at the moment of the function call (e.g. when the CPU fetches a `call` instruction), so that function parameters and local variables are accessed by adding and subtracting, respectively, a constant offset from it.
 
