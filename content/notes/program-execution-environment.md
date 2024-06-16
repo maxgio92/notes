@@ -220,7 +220,7 @@ In any case, the main data that is stored on the stack (frame) is:
 - saved register state
 - the local variables of the function.
 
-![stack-return-address-previous-frame-pointer](https://raw.githubusercontent.com/maxgio92/notes/5ab379b18942d782ac152cc81ad9029ae15d8dd1/content/notes/memory-stack-ip-bp.png)
+![memory-sp-bp-3]([https://raw.githubusercontent.com/maxgio92/notes/5ab379b18942d782ac152cc81ad9029ae15d8dd1/content/notes/memory-stack-ip-bp.png](https://github.com/maxgio92/notes/raw/95038de4ae46e0b980cfbdbae35817132b3afffd/content/images/memory-sp-bp-3.svg)
 > Remember: the return address is a snapshot of the program counter, so it points to instructions (code).
 The previous frame pointer is a snapshot of the base pointer, so it points to the stack (data).
 
