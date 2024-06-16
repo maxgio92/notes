@@ -123,7 +123,7 @@ Please bear in mind that the stack layout can vary based on the ABI calling conv
 
 We'll now go through the call path and see which data is also pushed to the stack, which is used to keep track of the execution path.
 
-### The call path
+## The call path
 
 When a new function is called a new memory space dedicated to the function is pushed to the stack, namely a stack frame. It will contain function-specific data like arguments, local variables, and saved registers if needed.
 Moreover, the previous base pointer (BP) is also pushed to the stack.
@@ -140,7 +140,7 @@ The following diagram wrap ups what's been discussed until now:
 
 ![pc-sp-bc-stack-code](https://raw.githubusercontent.com/maxgio92/notes/352907a2c42b9f695d0a97e6cd8d3e95977d024d/content/images/pc-sp-bc-stack-code.svg)
 
-### The return path
+## The return path
 
 On the return path from the function, `RET` instruction `POP`s the return address from the stack and puts it in the program counter register. So, the next instruction is available from that return address.
 
