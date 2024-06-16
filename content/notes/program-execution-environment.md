@@ -165,16 +165,19 @@ The address space is typically divided into different regions, and the following
 * Heap: it's a region available for dynamic allocation available to the running process. Programs can request pages from it at runtime (e.g. `malloc` from the C standard library).
 * Stack: we already talked about it.
 
+The next diagram will show the discussed memory regions starting from the physical perspective to the perspective of the single virtual address space of a program process:
+
+![memory-regions-stack-instructions](https://raw.githubusercontent.com/maxgio92/notes/68c5220995702493845a3d96cc9d6dc7ce61ec8f/content/notes/memory-regions-allocations.jpg)
+> Credits for the diagram to [yousha.blog.ir](https://yousha.blog.ir/).
+
 The operating system can enforce protection for each of them, like marking the text segment read-only to prevent modification of the running program's instructions.
 
 When a program is loaded into memory, the operating system allocates a specific amount of memory for it and dedicates specific regions to static and dynamic allocation. The static allocation includes the allocation for the program's instructions and the stack.
 
 Dynamic allocations can be handled by the stack or the heap. The heap usually acquires memory from the bottom of the same region and grows upwards towards the middle of the same memory region.
 
-The next diagram will show the discussed memory regions:
-
-![memory-regions-stack-instructions](https://raw.githubusercontent.com/maxgio92/notes/68c5220995702493845a3d96cc9d6dc7ce61ec8f/content/notes/memory-regions-allocations.jpg)
-> Credits for the diagram to [yousha.blog.ir](https://yousha.blog.ir/).
+For example:
+![memory-regions-program-allocations](https://raw.githubusercontent.com/maxgio92/notes/d3bf6f231c330ba746354cc463469245fc9de7bc/content/notes/memory-map-elf.png)
 
 Now let's get back to the pointer register. We mentioned that the base pointer is often called a frame pointer.
 
@@ -191,8 +194,6 @@ The OS then sets the PC to the memory address of the first instruction, which is
 Moreover, as a detail, although all data is replaced, all open file descriptors remain open after calling exec unless explicitly set to close-on-exec.
 
 In particular, on Linux, on execs, the `.text` and `.data` ELF sections are loaded by the kernel at the base address. The main stack is located just below and grows downwards.
-
-![memory-map-elf](https://raw.githubusercontent.com/maxgio92/notes/d3bf6f231c330ba746354cc463469245fc9de7bc/content/notes/memory-map-elf.png)
 
 If you want to go deeper on the Linux `exec` path, I recommend [this chapter](https://github.com/0xAX/linux-insides/blob/f7c6b82a5c02309f066686dde697f4985645b3de/SysCall/linux-syscall-4.md#execve-system-call) from the [Linux insides](https://0xax.gitbooks.io/linux-insides/content/index.html) book.
 
