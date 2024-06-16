@@ -27,7 +27,7 @@ There are other types of registers but they're out of scope for this walkthrough
 The first part will go through the main pointer registers, which are commonly implemented by the predominant architectures (x86, ARM, MIPS, PowerPC as far as I know).
 So, please consider that these specifics may differ depending on the architecture.
 
-## The program counter (PC), the stack pointer (SP), and the base pointer (BP) processor registers
+## The good, the bad and the ugly pointer registers
 
 ### The program counter
 
