@@ -152,7 +152,7 @@ Because all of the above points need to be memorized on the stack, the stack siz
 
 As I'm a visual learner, the next section will show how the program's code and data are organized in its process address space. This should give you a clearer picture of their layout within the process's address space.
 
-### The process address space regions
+## The process address space's regions
 
 The process address space is a virtual memory region allocated by the operating system (OS) for a running program. It provides a logical view of memory for the program and hides the complexities of physical memory manage
 
@@ -180,8 +180,6 @@ For example:
 
 ![memory-regions-program-allocations](https://raw.githubusercontent.com/maxgio92/notes/d3bf6f231c330ba746354cc463469245fc9de7bc/content/notes/memory-map-elf.png)
 
-Now let's get back to the pointer register. We mentioned that the base pointer is often called a frame pointer.
-
 ## How the program is loaded into memory in Unix-like OSes?
 
 On program execution (Unix-like `fork` and `exec` system call groups) OS allocates memory to later store the program's instructions (in the text segment) and data (in the stack).
@@ -206,17 +204,19 @@ Digging into the ELF format you can find below the structure of this executable 
 
 For more information please refer to the man of file formats and conventions for elf (`man 5 elf`).
 
+Now let's get back to main characters of this blog, which are the pointer register. We mentioned that the base pointer is also called the frame pointer, indeed it points to a single stack frame. But, let's see how they're vital for CPU profiling.
+
 ## Frame pointer and the stack unwinding
 
-Now let's go back to our pointer registers because we often read about the frame pointer and less about the base pointer, but actually the frame pointer *is* the base pointer.
+Personally I've read the name frame pointer than base pointer, but actually the frame pointer *is* the base pointer.
 
-As already discussed, the name base pointer comes to the fact that is set up when a function is called to establish a fixed reference (base) to access local variables and parameters within the function's stack frame.
+As already discussed, the name base pointer comes to the fact that is set up when a function is called and is pushed to the new stack frame, to establish a fixed reference (base) to access local variables and parameters within the function's stack frame.
 
-Depending on the ABI, parameters are passed either on the stack or via registers. For instance:
+What is pushed to the stack are also the parameters, but depending on the ABI, they can be passed either on the stack or via registers. For instance:
 * x86-64 System V ABI: in the general purpose registers `rdi`, `rsi`, `rdx`, `rcx`, `r8`, and `r9` for the first six parameters. On the stack from the seventh parameter onward.
 * 386 System V ABI: in the general purpose registers `eax`, `ecx`, `edx`, and `ebx` for the first four parameters. On the stack from the fifth parameter onward.
 
-In any case, the main data that is stored on the stack (frame) is:
+In general, the data that is commonly stored on the stack is:
 - the return address
 - the previous frame pointer
 - saved register state
