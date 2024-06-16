@@ -208,7 +208,7 @@ Now let's get back to main characters of this blog, which are the pointer regist
 
 ## Frame pointer and the stack unwinding
 
-Personally I've read the name frame pointer than base pointer, but actually the frame pointer *is* the base pointer.
+I've read more often the name _frame pointer_ than _base pointer_, but actually the frame pointer *is* the base pointer.
 
 As already discussed, the name base pointer comes to the fact that is set up when a function is called and is pushed to the new stack frame, to establish a fixed reference (base) to access local variables and parameters within the function's stack frame.
 
