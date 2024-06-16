@@ -177,6 +177,7 @@ When a program is loaded into memory, the operating system allocates a specific 
 Dynamic allocations can be handled by the stack or the heap. The heap usually acquires memory from the bottom of the same region and grows upwards towards the middle of the same memory region.
 
 For example:
+
 ![memory-regions-program-allocations](https://raw.githubusercontent.com/maxgio92/notes/d3bf6f231c330ba746354cc463469245fc9de7bc/content/notes/memory-map-elf.png)
 
 Now let's get back to the pointer register. We mentioned that the base pointer is often called a frame pointer.
