@@ -240,11 +240,13 @@ Frame pointer omission (FPO) is instead an optimization that simply instructs th
 
 Because the frame pointers are pushed on function call to the stack frame just created for the newly called function, and its value is the value of the stack pointer at the moment of the `CALL`, it points to the previous stack frame.
 
-At the end, all the frame pointer saved to the stack can be used to build a stack trace, by walking the stack until the top of the stack, which inside the frame pointer of a main function: all the pushed frame pointers be tracked, and on every RET (function return) which pops a stack frame that continues until reaching the top of the stack (see, the main function) a stack trace is built.
-
+At the end, all the frame pointer saved to the stack can be used to build a stack trace, by walking the stack until the top of the stack, inside the frame of a main function.
+All the pushed frame pointers can be memorized, and on every RET (function return) which pops a stack frame, repeating until reaching the top of the stack (see, the main function) a stack trace can be built, with the frame pointers memorized until that point.
 The same continues on and on, mainly on subsequent CALLs and RETs.
 
-This technique is leveraged particularly by debuggers and profilers and it's usually referred to as *stack unwinding*. You can see it in the following picture:
+This technique is leveraged particularly by debuggers and profilers and it's usually referred to as *stack unwinding*.
+
+You can see it in the following picture:
 
 ![stack-walking](https://raw.githubusercontent.com/maxgio92/notes/5eeff1703e85c00799e7af0117a3898918d7a438/content/notes/stack-walking.avif)
 
