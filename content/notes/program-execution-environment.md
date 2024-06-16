@@ -182,7 +182,7 @@ For example:
 
 ![memory-regions-program-allocations](https://raw.githubusercontent.com/maxgio92/notes/d3bf6f231c330ba746354cc463469245fc9de7bc/content/notes/memory-map-elf.png)
 
-## How the program is loaded into memory in Unix-like OSes?
+## Program loading in Unix-like OSes
 
 On program execution (Unix-like `fork` and `exec` system call groups) OS allocates memory to later store the program's instructions (in the text segment) and data (in the stack).
 The `exec` family of system calls replaces the program executed by a process.
