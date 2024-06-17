@@ -189,7 +189,7 @@ When a process calls `exec`, all sections are replaced, including the `.text` se
 
 In particular, the loader parses the executable file, decides which is the base address, allocates memory for the program segments based on the base address, loads the segments in memory, and prepares the execution environment.
 
-Once the loader completes its tasks, the OS sets the process context and the PC to the first instruction in the `.text` section, that is fetched, decoded, and executed by the CPU. Ans so on and so forth.
+Once the loader completes its tasks, it signals the kernel the program is ready. The kernel sets the process context and the PC to the first instruction in the `.text` section, which is fetched, decoded, and executed by the CPU.
 
 ![memory-map-exec](https://raw.githubusercontent.com/maxgio92/notes/d3bf6f231c330ba746354cc463469245fc9de7bc/content/notes/memory-map-exec.png)
 > I haven't managed yet to find where the information about how to set up the stack at exec time from an ELF file is stored in the ELF structure. If you do, feel free to share it!
@@ -200,7 +200,7 @@ In particular, on Linux, on execs, the `.text` and `.data` ELF sections are load
 
 If you want to go deeper on the Linux `exec` path, I recommend [this chapter](https://github.com/0xAX/linux-insides/blob/f7c6b82a5c02309f066686dde697f4985645b3de/SysCall/linux-syscall-4.md#execve-system-call) from the [Linux insides](https://0xax.gitbooks.io/linux-insides/content/index.html) book.
 
-Now let's get back to main characters of this blog, which are the pointer register. We mentioned that the base pointer is also called the frame pointer, indeed it points to a single stack frame. But, let's see how they're vital for CPU profiling.
+Now let's get back to the main characters of this blog, which are the pointer register. We mentioned that the base pointer is also called the frame pointer, indeed it points to a single stack frame. But, let's see how they're vital for CPU profiling.
 
 <!--
 ### References: the ELF structure
