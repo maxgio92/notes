@@ -240,7 +240,11 @@ Frame pointer omission (FPO) is instead an optimization that simply instructs th
 > If you're interested in the impacts of libraries compiled and distributed with this optimization I recommend the following Brendan Gregg's great article: [The Return of the Frame Pointers](https://www.brendangregg.com/blog/2024-03-17/the-return-of-the-frame-pointers.html).
 
 Because the frame pointer is pushed on function call to the stack frame just created for the newly called function, and its value is the value of the stack pointer at the moment of the `CALL`, it points to the previous stack frame.
-One technique to walk the stack is to follow the linked list of the saved frame pointers, beginning with the value hold by the frame (base) pointer register.
+
+A fundmental data needed by CPU profilers is to build stack traces, to understand the execution flow of a program and calculate the time spent for each trace and function.
+
+One standard technique to build a stack trace is by walking fhe stack.
+And one technique to walk the stack is to follow the linked list of the saved frame pointers, beginning with the value hold by the frame (base) pointer register.
 
 Thanks to the *stack walking* technique that leverages the saved frame pointers, stack traces can be built. As a `RET` (function returns) pops a stack frame out of the stack, when consequent `RET`s reach the top of the stack, which is the stack frame of the main function, a stack trace is complete. The same goes on and on with subsequent chains of call-returns that reach the top of the stack.
 
