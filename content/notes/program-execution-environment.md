@@ -185,8 +185,8 @@ Dynamic allocations can be handled by the stack or the heap. The heap usually ac
 
 On program execution (Unix-like `fork` and `exec` system call groups) OS allocates memory to later store the program's instructions (in the text segment) and data (in the stack).
 The `exec` family of system calls replaces the program executed by a process.
-When a process calls `exec`, all instructions - in ELF executable format it's the `.text` section - and the data in the process are replaced with the executable of the new program.
-The OS then sets the PC to the memory address of the first instruction, which is fetched, decoded, and executed one by one.
+When a process calls `exec`, all sections are replaced, including the `.text` section, and the data in the process are replaced with the executable of the new program.
+The OS then sets the PC to the memory address of the first instruction (see, in the `.text` section), which is fetched, decoded, and executed one by one.
 
 ![memory-map-exec](https://raw.githubusercontent.com/maxgio92/notes/d3bf6f231c330ba746354cc463469245fc9de7bc/content/notes/memory-map-exec.png)
 > I haven't managed yet to find where the information about how to set up the stack at exec time from an ELF file is stored in the ELF structure. If you do, feel free to share it!
