@@ -194,8 +194,6 @@ Once the loader completes its tasks, it signals the kernel the program is ready.
 
 Moreover, as a detail, although all data is replaced, all open file descriptors remain open after calling exec unless explicitly set to close-on-exec.
 
-In particular, on Linux, on execs, the `.text` and `.data` ELF sections are loaded by the kernel at the base address. The main stack is located just below and grows downwards.
-
 If you want to go deeper on the Linux `exec` path, I recommend [this chapter](https://github.com/0xAX/linux-insides/blob/f7c6b82a5c02309f066686dde697f4985645b3de/SysCall/linux-syscall-4.md#execve-system-call) from the [Linux insides](https://0xax.gitbooks.io/linux-insides/content/index.html) book.
 
 Now let's get back to the main characters of this blog, which are the pointer register. We mentioned that the base pointer is also called the frame pointer, indeed it points to a single stack frame. But, let's see how they're vital for CPU profiling.
