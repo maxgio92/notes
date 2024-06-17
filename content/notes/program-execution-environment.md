@@ -244,9 +244,9 @@ Because the frame pointer is pushed on function call to the stack frame just cre
 A fundmental data needed by CPU profilers is to build stack traces, to understand the execution flow of a program and calculate the time spent for each trace and function.
 
 One standard technique to build a stack trace is by walking fhe stack.
-And one technique to walk the stack is to follow the linked list of the saved frame pointers, beginning with the value hold by the frame (base) pointer register.
+And one technique to walk the stack is to follow the linked list of the saved frame pointers, beginning with the value hold by the base pointer register.
 
-Thanks to the *stack walking* technique that leverages the saved frame pointers, stack traces can be built. As a `RET` (function returns) pops a stack frame out of the stack, when consequent `RET`s reach the top of the stack, which is the stack frame of the main function, a stack trace is complete. The same goes on and on with subsequent chains of call-returns that reach the top of the stack.
+Because a `RET` (function returns) pops a stack frame out of the stack, when consequent `RET`s reach the top of the stack, which is the stack frame of the main function, a stack trace is complete. The same goes on and on with subsequent chains of call-returns that reach the top of the stack.
 
 You can see it in the following picture a simplified scheme of the linked list of frame pointers:
 
