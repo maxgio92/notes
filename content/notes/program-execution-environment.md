@@ -163,7 +163,8 @@ While explaining how memory mapping implementations work in operating systems is
 The address space is typically divided into different regions, and the following names are mostly standard for different OSes:
 * Text segment: this is the area where the (machine) code of the program is stored
 * Data segment: this region contains typically static variables which are initialized
-* BSS (Block Started by Symbol) / Uninitialized data segment: it contains global and static variables that are not initialized when the program starts
+* BSS (Block Started by Symbol) segment: it contains global and static variables that are not initialized when the program starts.
+Because the data would be a block of zeros, the BSS content is omitted in the executable file, saving space. Instead, the program headers allow the loader to know how much space to allocate for the BSS section in virtual memory and it filled it out with zeros. That's why, despite uninitialized data being data, is not placed in the data section.
 * Heap: it's a region available for dynamic allocation available to the running process. Programs can request pages from it at runtime (e.g. `malloc` from the C standard library).
 * Stack: we already talked about it.
 
@@ -178,9 +179,7 @@ When a program is loaded into memory, the operating system allocates a specific 
 
 Dynamic allocations can be handled by the stack or the heap. The heap usually acquires memory from the bottom of the same region and grows upwards towards the middle of the same memory region.
 
-For example:
-
-![memory-regions-program-allocations](https://raw.githubusercontent.com/maxgio92/notes/d3bf6f231c330ba746354cc463469245fc9de7bc/content/notes/memory-map-elf.png)
+![memory-regions](https://raw.githubusercontent.com/maxgio92/notes/59f07658eff43514da934a5db48ec84ef7ce509e/content/images/memory-regions.svg)
 
 ## Program loading in Unix-like OSes
 
