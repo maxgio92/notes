@@ -124,8 +124,7 @@ We'll now go through the call path and see which data is also pushed to the stac
 
 ## The call path
 
-When a new function is called a new memory space dedicated to the function is pushed to the stack, namely a stack frame. It will contain function-specific data like arguments, local variables, and saved registers if needed.
-Moreover, the previous base pointer (BP) is also pushed to the stack.
+When a new function is called the previous base pointer (BP) is also pushed to the new stack frame.
 
 While this is usually true, it's not mandatory and it depends on how the binary has been compiled. This mainly depends on the compiler optimization techniques.
 
