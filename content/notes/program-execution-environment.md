@@ -70,7 +70,7 @@ As the stack grows whenever the CPU adds new data while executing the program's 
 > 
 > ![mem-stack-code-heap](https://raw.githubusercontent.com/maxgio92/notes/faf4b0c39f4a1e2e84a3bb497729fa5863aed5ed/content/images/mem-stack-code-heap.svg)
 
-So, when a new variable of 4 bytes is declared, the stack pointer will be increased by 4 bytes too.
+So, when a new variable of 4 bytes is declared, the stack pointer will be decreased by 4 bytes too.
 
 For, considering a C function that declare a local variable:
 
