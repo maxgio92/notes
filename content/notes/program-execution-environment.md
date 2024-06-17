@@ -112,7 +112,7 @@ As a detail, a more concise way could be to use `push` that combines the decreme
 
 The base pointer (BP) is set during function calls by copying the current SP. The BP is a snapshot of the SP at the moment of the function call (e.g. when the CPU fetches a `call` instruction), so that function parameters and local variables are accessed by adding and subtracting, respectively, a constant offset from it.
 
-Moreover when a new function is called a new space in the stack dedicated to the new function is created and some data, besides the function code like declaration of local variables is pushed.
+Moreover when a new function is called a new space in the stack dedicated to the new function is created and some data like declaration of local variables is pushed.
 
 This memory space dedicated to these subroutines are the stack frames, so each function will have a stack frame. You can find a simple scheme of stack frames with the main data pushed to the stack in the picture below:
 
