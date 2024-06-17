@@ -181,7 +181,7 @@ Dynamic allocations can be handled by the stack or the heap. The heap usually ac
 
 ## Program loading in Unix-like OSes
 
-On program execution (Unix-like `fork` and `exec` system call groups) OS allocates memory to later store the program's instructions (in the text segment) and data (in the stack).
+On program execution (Unix-like `fork` and `exec` system call groups) OS allocates memory to later store the program's code and data.
 The `exec` family of system calls replaces the program executed by a process.
 When a process calls `exec`, all sections are replaced, including the `.text` section, and the data in the process are replaced with the executable of the new program.
 
