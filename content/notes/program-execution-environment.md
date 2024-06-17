@@ -95,7 +95,6 @@ mov  dword ptr [rsp], 10  ; Move 10 (dword = 4 bytes) to memory pointed to by SP
 ; Function cleanup (potential instruction to restore stack space)
 add  rsp, 4              ; Add 4 back to stack pointer to deallocate local variable space
 ```
-Even though `sub` + `mov` is more explicit, as far as I know `push` is more concise and combines the update of the SP with the move of value.
 
 > **Clarification about the register names**
 >
