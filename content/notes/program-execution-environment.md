@@ -72,7 +72,7 @@ As the stack grows whenever the CPU adds new data while executing the program's 
 
 So, when a new variable of 4 bytes is declared, the stack pointer will be decreased by 4 bytes too.
 
-For, considering a C function that declare a local variable:
+For instance, considering a C function that declare a local variable:
 
 ``` c
 void myFunction() {
