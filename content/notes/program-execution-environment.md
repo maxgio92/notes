@@ -248,7 +248,7 @@ You can see it in the following picture a simplified scheme of the linked list o
 
 ![stack-walking](https://raw.githubusercontent.com/maxgio92/notes/5eeff1703e85c00799e7af0117a3898918d7a438/content/notes/stack-walking.avif)
 
-This technique is particularly useful for profilers and debuggers. For example:
+This technique is particularly useful for profilers and debuggers. The following is a basic example of what a profiler could retrieve, leveraging frame pointers:
 
 ```shell
 $ ./my-profiler run --pid 12345
