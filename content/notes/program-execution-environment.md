@@ -154,13 +154,13 @@ Because all of the above points need to be memorized on the stack, the stack siz
 
 As I'm a visual learner, the next section will show how the program's code and data are organized in its process address space. This should give you a clearer picture of their layout within the process's address space.
 
-## The process address space's regions
+## The address space regions
 
-The process address space is a virtual memory region allocated by the operating system (OS) for a running program. It provides a logical view of memory for the program and hides the complexities of physical memory manage
+The process address space is a logical view of memory managed by the operating system, hiding the complexity of managing physical memory.
 
 While explaining how memory mapping implementations work in operating systems is out of scope here, it's important to say that user processes see one contiguous memory space thanks to the memory mapping features provided by the OS.
 
-The address space is typically divided into different regions, and the following names are mostly standard for different OSes:
+The address space is typically divided into different regions, and the following names are mostly standard between the operating systems:
 * Text segment: this is the area where the (machine) code of the program is stored
 * Data segment: this region contains typically static variables which are initialized
 * BSS (Block Started by Symbol) segment: it contains global and static variables that are not initialized when the program starts.
