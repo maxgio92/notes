@@ -261,7 +261,7 @@ $ ./my-profiler run --pid 12345
 32.1%     main.bar;runtime.main;runtime.goexit;
 ```
 
-And this comes to the next episode of this series, which will dive into how to program stack walking and how to account for each function CPU time!
+And this comes to the next episode of this series, which will dive into how to write a basic low-overhead, kernel-assisted CPU profiler leveraging eBPF, that will produce a result like the one above!
 
 I hope this has been interesting to you. Any feedback is more than appreciated.
 
