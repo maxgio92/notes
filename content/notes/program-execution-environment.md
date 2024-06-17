@@ -179,7 +179,7 @@ When a program is loaded into memory, the operating system allocates a specific 
 
 Dynamic allocations can be handled by the stack or the heap. The heap usually acquires memory from the bottom of the same region and grows upwards towards the middle of the same memory region.
 
-![memory-regions](https://raw.githubusercontent.com/maxgio92/notes/59f07658eff43514da934a5db48ec84ef7ce509e/content/images/memory-regions.svg)
+![memory-regions](https://raw.githubusercontent.com/maxgio92/notes/b64ccd53d5c3a07969dd70f1a5a394c04edd8c35/content/images/memory-regions.svg)
 
 ## Program loading in Unix-like OSes
 
@@ -197,6 +197,9 @@ In particular, on Linux, on execs, the `.text` and `.data` ELF sections are load
 
 If you want to go deeper on the Linux `exec` path, I recommend [this chapter](https://github.com/0xAX/linux-insides/blob/f7c6b82a5c02309f066686dde697f4985645b3de/SysCall/linux-syscall-4.md#execve-system-call) from the [Linux insides](https://0xax.gitbooks.io/linux-insides/content/index.html) book.
 
+Now let's get back to main characters of this blog, which are the pointer register. We mentioned that the base pointer is also called the frame pointer, indeed it points to a single stack frame. But, let's see how they're vital for CPU profiling.
+
+<!--
 ### References: the ELF structure
 
 Digging into the ELF format you can find below the structure of this executable and linkable format:
@@ -204,8 +207,7 @@ Digging into the ELF format you can find below the structure of this executable 
 ![elf-structure](https://raw.githubusercontent.com/maxgio92/notes/20f4417f50afb71a79a8712decea1f76ffc16cc9/content/notes/elf-dissection.avif)
 
 For more information please refer to the man of file formats and conventions for elf (`man 5 elf`).
-
-Now let's get back to main characters of this blog, which are the pointer register. We mentioned that the base pointer is also called the frame pointer, indeed it points to a single stack frame. But, let's see how they're vital for CPU profiling.
+-->
 
 ## Frame pointer and the stack walking
 
