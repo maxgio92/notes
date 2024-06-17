@@ -171,7 +171,7 @@ The next diagram will show the discussed memory regions starting from the physic
 ![memory-regions-stack-instructions](https://raw.githubusercontent.com/maxgio92/notes/68c5220995702493845a3d96cc9d6dc7ce61ec8f/content/notes/memory-regions-allocations.jpg)
 > Credits for the diagram to [yousha.blog.ir](https://yousha.blog.ir/).
 
-The operating system can enforce protection for each of them, like marking the text segment read-only to prevent modification of the running program's instructions.
+The operating system can enforce protection for each of them, like marking the text section read-only to prevent modification of the running program's instructions.
 
 When a program is loaded into memory, the operating system allocates a specific amount of memory for it and dedicates specific regions to static and dynamic allocation. The static allocation includes the allocation for the program's instructions and the stack.
 
