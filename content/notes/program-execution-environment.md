@@ -224,8 +224,7 @@ In general, the data that is commonly stored on the stack is:
 - saved register state
 - the local variables of the function.
 
-<!--![memory-sp-bp-3](https://github.com/maxgio92/notes/raw/95038de4ae46e0b980cfbdbae35817132b3afffd/content/images/memory-sp-bp-3.svg)-->
-![memory-sp-bp-3](https://raw.githubusercontent.com/maxgio92/notes/d71e12c82b2ce913609525ad55b98da4d8a64a4b/content/images/memory-sp-bp-3-dark.svg)
+![memory-sp-bp-3](https://github.com/maxgio92/notes/raw/95038de4ae46e0b980cfbdbae35817132b3afffd/content/images/memory-sp-bp-3.svg)
 
 > Remember: the return address is a snapshot of the program counter, so it points to instructions (code).
 The previous frame pointer is a snapshot of the base pointer, so it points to the stack (data).
