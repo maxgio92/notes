@@ -132,7 +132,7 @@ In particular, CALL instruction pushes also the value of the program counter at 
 
 In a nutshell: the just pushed return address is a snapshot of the program counter, and the pushed frame pointer is a snapshot of the base pointer, and they're both available in the stack.
 
-As a result, control is passed to the called subroutine address and the return address, that is the address of the instruction next to `CALL`, is available.
+As a result, control is passed to the called subroutine address and the return address, that is the address of the instruction next to `CALL`, is available on the stack.
 
 The following diagram wrap ups what's been discussed until now:
 
