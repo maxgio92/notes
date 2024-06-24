@@ -49,6 +49,7 @@ Symbolization:
 - https://www.polarsignals.com/blog/posts/2022/01/13/fantastic-symbols-and-where-to-find-them
 - http://web.cse.ohio-state.edu/~reeves.92/CSE2421au12/SlidesDay52.pdf
 - https://mpatrol.sourceforge.net/doc/Call-stacks-and-symbol-tables.html
+- Go binary structure: https://utcc.utoronto.ca/%7Ecks/space/blog/programming/GoBinaryStructureNotes
 
 Beyond frame pointers:
 - ORC: https://lwn.net/Articles/728339/
