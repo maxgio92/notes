@@ -19,9 +19,76 @@ To summarize:
 
 To run the program with a fixed frequency the perf subsystem provides us a clock software event ([`PERF_COUNT_SW_CPU_CLOCK`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/perf_event.h#L119)) and luckily eBPF programs can be attached to perf events.
 
-So we'll leverage a software CPU clock Perf event just to be able to run the probe every x nanoseconds.
+So we'll leverage a software CPU clock Perf event just to be able to run the probe every x nanoseconds. The userspace loader prepares the Perf event to attach the program to it:
+
+```go
+attr := &unix.PerfEventAttr{
+
+  // If type is PERF_TYPE_SOFTWARE, we are measuring software events provided by the kernel.
+  Type: unix.PERF_TYPE_SOFTWARE,
+
+  // This reports the CPU clock, a high-resolution per-CPU timer.
+  Config: unix.PERF_COUNT_SW_CPU_CLOCK,
+
+  // A "sampling" event is one that generates an overflow notification every N events,
+  // where N is given by sample_period.
+  // sample_freq can be used if you wish to use frequency rather than period.
+  // sample_period and sample_freq are mutually exclusive.
+  // The kernel will adjust the sampling period to try and achieve the desired rate.
+  Sample: t.samplingPeriodMillis * 1000 * 1000,
+}
+
+t.logger.Debug().Msg("opening the sampling software cpu block perf event")
+
+// Create the perf event file descriptor that corresponds to one event that is measured.
+// We're measuring a clock timer software event just to run the program on a periodic schedule.
+// When a specified number of clock samples occur, the kernel will trigger the program.
+evt, err := unix.PerfEventOpen(
+  // The attribute set.
+  attr,
+
+  // the specified task.
+  //t.pid,
+  -1,
+
+  // on the Nth CPU.
+  i,
+
+  // The group_fd argument allows event groups to be created. An event group has one event which
+  // is the group leader. A single event on its own is created with group_fd = -1 and is considered
+  // to be a group with only 1 member.
+  -1,
+
+  // The flags.
+  0,
+)
+if err != nil {
+  return nil, errors.Wrap(err, "error creating the perf event")
+}
+defer func() {
+  if err := unix.Close(evt); err != nil {
+    t.logger.Fatal().Err(err).Msg("failed to close perf event")
+  }
+}()
+```
 
 eBPF helpers are functions that, as you might have guessed, simplify work. The [`bpf_get_stackid`](https://elixir.bootlin.com/linux/v6.8.5/source/kernel/bpf/stackmap.c#L283) helper returns the stack id of the program that is currently running, at the moment of the eBPF program execution in the very process context.
+
+```c
+u64 one = 1;
+...
+key.kernel_stack_id = bpf_get_stackid(ctx, &stack_traces, 0 | BPF_F_FAST_STACK_CMP);
+key.user_stack_id = bpf_get_stackid(ctx, &stack_traces, 0 | BPF_F_FAST_STACK_CMP | BPF_F_USER_STACK);
+...
+/* Upsert stack trace histogram */
+count = (u64*)bpf_map_lookup_elem(&histogram, &key);
+if (count) {
+  (*count)++;
+} else {
+  bpf_map_update_elem(&histogram, &key, &one, BPF_NOEXIST);
+  bpf_map_update_elem(&binprm_info, &key.pid, &exe_path_str, BPF_ANY);
+}
+```
 
 eBPF maps are ways to exchange data, often useful with programs running in user space. There are different types of maps and one of them is the [`BPF_MAP_TYPE_STACK_TRACE`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/bpf.h#L914) that we can access directly in user space to retrieve the sampled stack's trace, by passing the sampled stack ID.
 
@@ -50,11 +117,41 @@ Because this is a demonstration and the profiler is simple we'll consider just E
 
 The ELF structure contains a symbol table (`symtab` section) that holds information needed to locate and relocate a program's symbolic definitions and references. With that information, we're able to, if this table is not missing as in the case of stripped binaries, associate instruction addresses with subroutine names.
 
-As the user space program is written in Go, we can leverage the standard library to access that information with:
+As the user space program is written in Go, we can leverage the `debug/elf` from the standard library to access that information with:
 
 ```go
-elf.ETC ETC ETC
+// Open the file
+file, err := elf.Open(pathname)
+...
+// Read symbols from the .symtab section
+syms, err := file.Symbols()
+...
+for _, s := range syms {
+  // The symbol is correct if the trace instruction pointer address
+  // is within the symbol address range
+  if ip >= s.Value && ip < (s.Value+s.Size) {
+    sym = s.Name
+  }
+}
 ```
+
+## Binary path
+
+To access the ELF binary we need the process's binary pathname. Thanks to the `binprm_info` kernel structure we're able to collect this information from the eBPF program and pass it through a map to the userspace program.
+
+```c
+struct path path = BPF_CORE_READ(task, mm, exe_file, f_path);
+
+buffer_t *string_buf = get_buffer(0);
+if (string_buf == NULL) {
+  return NULL;
+}
+/* Write path string from path struct to the buffer */
+size_t buf_off = get_pathname_from_path(&path, string_buf);
+return &string_buf->data[buf_off];
+```
+
+## Wrapping up
 
 The program loads the eBPF program, attaches it to the perf event created, and reads stack IDs which accesses stack traces. With traces' instruction pointers it resolves symbols and on exit, it calculates the statistics as explained before. For example:
 
