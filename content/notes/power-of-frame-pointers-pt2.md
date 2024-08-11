@@ -137,6 +137,14 @@ Once the sampling completes, we're able to calculate the program's residency fra
 residencyFraction = nStackSamples / nTotalSamples * 100.
 ```
 
+```go
+fractionTable := make(map[string]float64, len(countTable))
+for trace, count := range countTable {
+	residencyFraction := float64(count) / float64(sampleCount)
+	fractionTable[trace] = residencyFraction
+}
+```
+
 Finally, because traces are an array of pushed instruction pointers, we need to translate IPs to symbols.
 
 ### Symbolization
