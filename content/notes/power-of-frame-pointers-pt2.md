@@ -90,7 +90,37 @@ if (count) {
 }
 ```
 
-eBPF maps are ways to exchange data, often useful with programs running in user space. There are different types of maps and one of them is the [`BPF_MAP_TYPE_STACK_TRACE`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/bpf.h#L914) that we can access directly in user space to retrieve the sampled stack's trace, by passing the sampled stack ID.
+eBPF maps are ways to exchange data, often useful with programs running in user space. There are different types of maps and one of them is the [`BPF_MAP_TYPE_STACK_TRACE`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/bpf.h#L914) that we can access directly in user space to retrieve the sampled stack's trace, by passing the sampled stack ID:
+
+**eBPF**:
+
+```c
+struct {
+	__uint(type, BPF_MAP_TYPE_STACK_TRACE);
+	__uint(key_size, sizeof(u32));
+	__uint(value_size, PERF_MAX_STACK_DEPTH * sizeof(u64));
+	__uint(max_entries, K_NUM_MAP_ENTRIES);
+} stack_traces SEC(".maps");
+```
+
+**Userspace with libbpf-go**:
+
+```go
+func (t *Profile) getStackTrace(stackTraces *bpf.BPFMap, id uint32) (*StackTrace, error) {
+	stackBinary, err := stackTraces.GetValue(unsafe.Pointer(&id))
+	if err != nil {
+		return nil, err
+	}
+
+	var stackTrace StackTrace
+	err = binary.Read(bytes.NewBuffer(stackBinary), binary.LittleEndian, &stackTrace)
+	if err != nil {
+		return nil, err
+	}
+
+	return &stackTrace, nil
+}
+```
 
 This is mostly the needed work in kernel space, which is pretty simple, thanks to the available kernel instrumentation.
 
