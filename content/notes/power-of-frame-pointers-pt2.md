@@ -169,18 +169,12 @@ func (t *Profile) RunProfile(ctx context.Context) error {
 		var symbols string
 		if int32(key.UserStackId) >= 0 {
 			trace, err := t.getStackTrace(stackTraces, key.UserStackId)
-			if err != nil {
-				t.logger.Err(err).Uint32("id", key.UserStackId).Msg("error getting user stack trace")
-				return nil, errors.Wrap(err, "error getting user stack")
-			}
+			...
 			symbols += t.getTraceSymbols(t.pid, trace, true)
 		}
 		if int32(key.KernelStackId) >= 0 {
 			st, err := t.getStackTrace(stackTraces, key.KernelStackId)
-			if err != nil {
-				t.logger.Err(err).Uint32("id", key.KernelStackId).Msg("error getting kernel stack trace")
-				return nil, errors.Wrap(err, "error getting kernel stack")
-			}
+			...
 			symbols += t.getTraceSymbols(t.pid, st, false)
 		}
 }
