@@ -23,12 +23,8 @@ So we'll leverage a software CPU clock Perf event just to be able to run the pro
 
 ```go
 attr := &unix.PerfEventAttr{
-
-  // If type is PERF_TYPE_SOFTWARE, we are measuring software events provided by the kernel.
-  Type: unix.PERF_TYPE_SOFTWARE,
-
-  // This reports the CPU clock, a high-resolution per-CPU timer.
-  Config: unix.PERF_COUNT_SW_CPU_CLOCK,
+  Type: unix.PERF_TYPE_SOFTWARE, // If type is PERF_TYPE_SOFTWARE, we are measuring software events provided by the kernel.
+  Config: unix.PERF_COUNT_SW_CPU_CLOCK, // This reports the CPU clock, a high-resolution per-CPU timer.
 
   // A "sampling" event is one that generates an overflow notification every N events,
   // where N is given by sample_period.
@@ -38,38 +34,16 @@ attr := &unix.PerfEventAttr{
   Sample: t.samplingPeriodMillis * 1000 * 1000,
 }
 
-t.logger.Debug().Msg("opening the sampling software cpu block perf event")
-
 // Create the perf event file descriptor that corresponds to one event that is measured.
 // We're measuring a clock timer software event just to run the program on a periodic schedule.
 // When a specified number of clock samples occur, the kernel will trigger the program.
 evt, err := unix.PerfEventOpen(
-  // The attribute set.
-  attr,
-
-  // the specified task.
-  //t.pid,
-  -1,
-
-  // on the Nth CPU.
-  i,
-
-  // The group_fd argument allows event groups to be created. An event group has one event which
-  // is the group leader. A single event on its own is created with group_fd = -1 and is considered
-  // to be a group with only 1 member.
-  -1,
-
-  // The flags.
-  0,
+  attr, // The attribute set.
+  t.pid, // The specified task.
+  i, // on the Nth CPU.
+  -1, // The group_fd argument allows event groups to be created.
+  0, // The flags.
 )
-if err != nil {
-  return nil, errors.Wrap(err, "error creating the perf event")
-}
-defer func() {
-  if err := unix.Close(evt); err != nil {
-    t.logger.Fatal().Err(err).Msg("failed to close perf event")
-  }
-}()
 ```
 
 eBPF helpers are functions that, as you might have guessed, simplify work. The [`bpf_get_stackid`](https://elixir.bootlin.com/linux/v6.8.5/source/kernel/bpf/stackmap.c#L283) helper returns the stack id of the program that is currently running, at the moment of the eBPF program execution in the very process context.
