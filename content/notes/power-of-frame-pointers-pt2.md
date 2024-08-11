@@ -34,9 +34,11 @@ In user space, we're able then to access:
 - the stack traces (keyed by their stack IDs)
 
 We access the histogram of the sampled stacks that contain their IDs, to collect the traces.
-Once the sampling completes, we're able to provide the information of how much a specific stack trace (function) has been run within the profile time's frame, by calculating:
+Once the sampling completes, we're able to calculate the program's residency fraction for each subroutine, that is, how much a specific subroutine has been run within a time frame:
 
-stackRunPercentage = nStackSamples / nTotalSamples * 100.
+```
+residencyFraction = nStackSamples / nTotalSamples * 100.
+```
 
 Finally, because traces are an array of pushed instruction pointers, we need to translate IPs to symbols.
 
