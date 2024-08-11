@@ -123,6 +123,21 @@ that we can access directly in user space to retrieve the sampled stack's trace,
 **Userspace with libbpf-go**:
 
 ```go
+
+type HistogramKey struct {
+	Pid int32
+
+	// UserStackId, an index into the stack-traces map.
+	UserStackId uint32
+
+	// KernelStackId, an index into the stack-traces map.
+	KernelStackId uint32
+}
+
+// StackTrace is an array of instruction pointers (IP).
+// 127 is the size of the profile, as for the default PERF_MAX_STACK_DEPTH.
+type StackTrace [127]uint64
+
 func (t *Profile) getStackTrace(stackTraces *bpf.BPFMap, id uint32) (*StackTrace, error) {
 	stackBinary, err := stackTraces.GetValue(unsafe.Pointer(&id))
 	if err != nil {
@@ -136,6 +151,38 @@ func (t *Profile) getStackTrace(stackTraces *bpf.BPFMap, id uint32) (*StackTrace
 	}
 
 	return &stackTrace, nil
+}
+
+func (t *Profile) RunProfile(ctx context.Context) error {
+	...
+	for it := histogram.Iterator(); it.Next(); {
+		k := it.Key()
+
+		// Get count for the specific sampled stack trace.
+		countBinary, err := histogram.GetValue(unsafe.Pointer(&k[0]))
+		...
+		var key HistogramKey
+		if err = binary.Read(bytes.NewBuffer(k), binary.LittleEndian, &key); err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("error reading the stack profile count key %v", k))
+		}
+		...
+		var symbols string
+		if int32(key.UserStackId) >= 0 {
+			trace, err := t.getStackTrace(stackTraces, key.UserStackId)
+			if err != nil {
+				t.logger.Err(err).Uint32("id", key.UserStackId).Msg("error getting user stack trace")
+				return nil, errors.Wrap(err, "error getting user stack")
+			}
+			symbols += t.getTraceSymbols(t.pid, trace, true)
+		}
+		if int32(key.KernelStackId) >= 0 {
+			st, err := t.getStackTrace(stackTraces, key.KernelStackId)
+			if err != nil {
+				t.logger.Err(err).Uint32("id", key.KernelStackId).Msg("error getting kernel stack trace")
+				return nil, errors.Wrap(err, "error getting kernel stack")
+			}
+			symbols += t.getTraceSymbols(t.pid, st, false)
+		}
 }
 ```
 
