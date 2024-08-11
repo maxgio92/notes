@@ -192,7 +192,7 @@ for _, s := range syms {
 
 ## Binary path
 
-To access the ELF binary we need the process's binary pathname. Thanks to the `binprm_info` kernel structure we're able to collect this information from the eBPF program and pass it through a map to the userspace program.
+To access the ELF binary we need the process's binary pathname. The path can be accessed from the task's user space memory mapping descriptor ([`mm_struct`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/mm_types.h#L734)`->exe_file->f_path`) that we can pass it through an eBPF map to the user space program.
 
 ```c
 struct path path = BPF_CORE_READ(task, mm, exe_file, f_path);
@@ -205,6 +205,8 @@ if (string_buf == NULL) {
 size_t buf_off = get_pathname_from_path(&path, string_buf);
 return &string_buf->data[buf_off];
 ```
+
+To retrieve the pathname from the `path` `struct` we need to walk the directory hierarchy until reaching the root directory of the same mount.
 
 ## Wrapping up
 
