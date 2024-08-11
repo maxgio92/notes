@@ -75,22 +75,37 @@ defer func() {
 eBPF helpers are functions that, as you might have guessed, simplify work. The [`bpf_get_stackid`](https://elixir.bootlin.com/linux/v6.8.5/source/kernel/bpf/stackmap.c#L283) helper returns the stack id of the program that is currently running, at the moment of the eBPF program execution in the very process context.
 
 ```c
-u64 one = 1;
-...
 key.kernel_stack_id = bpf_get_stackid(ctx, &stack_traces, 0 | BPF_F_FAST_STACK_CMP);
 key.user_stack_id = bpf_get_stackid(ctx, &stack_traces, 0 | BPF_F_FAST_STACK_CMP | BPF_F_USER_STACK);
+```
+
+eBPF maps are ways to exchange data, often useful with programs running in user space. There are different types of maps. We use an hash map (`BPF_MAP_TYPE_HASH`) to exchange the histogram with the stack IDs:
+
+```c
+struct {
+	__uint(type, BPF_MAP_TYPE_HASH);
+	__type(key, histogram_key_t);		/* per-process stack trace key */
+	__type(value, u64);			/* sample count */
+	__uint(max_entries, K_NUM_MAP_ENTRIES);
+} histogram SEC(".maps");
 ...
-/* Upsert stack trace histogram */
-count = (u64*)bpf_map_lookup_elem(&histogram, &key);
-if (count) {
-  (*count)++;
-} else {
-  bpf_map_update_elem(&histogram, &key, &one, BPF_NOEXIST);
-  bpf_map_update_elem(&binprm_info, &key.pid, &exe_path_str, BPF_ANY);
+SEC("perf_event")
+int sample_stack_trace(struct bpf_perf_event_data* ctx)
+{
+	...
+	u64 one = 1;
+	...
+	/* Upsert stack trace histogram */
+	count = (u64*)bpf_map_lookup_elem(&histogram, &key);
+	if (count) {
+	  (*count)++;
+	} else {
+	  bpf_map_update_elem(&histogram, &key, &one, BPF_NOEXIST);
+	}
 }
 ```
 
-eBPF maps are ways to exchange data, often useful with programs running in user space. There are different types of maps and one of them is the [`BPF_MAP_TYPE_STACK_TRACE`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/bpf.h#L914) that we can access directly in user space to retrieve the sampled stack's trace, by passing the sampled stack ID:
+and the type [`BPF_MAP_TYPE_STACK_TRACE`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/bpf.h#L914):
 
 **eBPF**:
 
@@ -102,6 +117,8 @@ struct {
 	__uint(max_entries, K_NUM_MAP_ENTRIES);
 } stack_traces SEC(".maps");
 ```
+
+that we can access directly in user space to retrieve the sampled stack's trace, by passing the sampled stack ID:
 
 **Userspace with libbpf-go**:
 
