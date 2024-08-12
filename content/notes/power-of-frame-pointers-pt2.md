@@ -187,28 +187,26 @@ func (t *Profile) getStackTrace(stackTraces *bpf.BPFMap, id uint32) (*StackTrace
 }
 
 func (t *Profile) RunProfile(ctx context.Context) error {
-	...
+	// ...
 	for it := histogram.Iterator(); it.Next(); {
 		k := it.Key()
 
 		// Get count for the specific sampled stack trace.
 		countBinary, err := histogram.GetValue(unsafe.Pointer(&k[0]))
-		...
+		
 		var key HistogramKey
 		if err = binary.Read(bytes.NewBuffer(k), binary.LittleEndian, &key); err != nil {
 			return nil, errors.Wrap(err, fmt.Sprintf("error reading the stack profile count key %v", k))
 		}
-		...
+		// ...
 		var symbols string
 		if int32(key.UserStackId) >= 0 {
 			trace, err := t.getStackTrace(stackTraces, key.UserStackId)
-			...
-			symbols += t.getTraceSymbols(t.pid, trace, true)
+			// ...
 		}
 		if int32(key.KernelStackId) >= 0 {
-			st, err := t.getStackTrace(stackTraces, key.KernelStackId)
-			...
-			symbols += t.getTraceSymbols(t.pid, st, false)
+			trace, err := t.getStackTrace(stackTraces, key.KernelStackId)
+			// ...
 		}
 }
 ```
