@@ -419,6 +419,8 @@ You can see a full working example at [github.com/maxgio92/yap](https://github.c
 
 I personally would like to use statistics to build graph structures, like [flamegraphs](https://github.com/brendangregg/FlameGraph).
 
+Also, I'd like to investigate other ways to extend symbolization support for stripped binaries and collect traces when binaries are built without frame pointers.
+
 ## Thanks
 
 Thanks for your time, I hope you enjoyed this blog.
