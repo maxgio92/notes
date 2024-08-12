@@ -282,7 +282,7 @@ size_t buf_off = get_pathname_from_path(&path, string_buf);
 return &string_buf->data[buf_off];
 ```
 
-To retrieve the pathname from the `path` `struct` we need to walk the directory hierarchy until reaching the root directory of the same mount.
+To retrieve the pathname from the `path` `struct` we need to walk the directory hierarchy until reaching the root directory of the same mount. For sake of simplicity we skip this part.
 
 ## Wrapping up
 
