@@ -414,6 +414,10 @@ The statistics are finally printed out like below:
 
 You can see a full working example at [github.com/maxgio92/yap](https://github.com/maxgio92/yap). YAP is a sampling-based, low overhead kernel-assisted profiler.
 
+## Next
+
+I personally would like to use the statistics to build graph structures, like [flamegraphs](https://github.com/brendangregg/FlameGraph).
+
 ## Thanks
 
 Thanks for your time, I hope you enjoyed this blog.
