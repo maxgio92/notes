@@ -12,7 +12,7 @@ To summarize the main actors and responsibilities:
 - in kernel space: an eBPF sampler program samples with fixed frequency stack traces for a specific process;
 - in userspace: a program collects the samples, calculates the statistics, and resolves the subroutine's symbols.
 
-## Kernel space
+## eBPF Program loading and attaching
 
 To run the eBPF program with a fixed frequency the perf subsystem exposes a kernel software event of type CPU clock ([`PERF_COUNT_SW_CPU_CLOCK`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/perf_event.h#L119) with user APIs. Luckily, eBPF programs can be attached to those events.
 
@@ -103,9 +103,11 @@ func loadAndAttach(probe []byte) error {
 
 > In this example we're using the [libbpfgo](https://github.com/aquasecurity/libbpfgo) library.
 
-The eBPF program needs to collect an histogram that contains the information about how many samples have been taken for a specific function, and in order to do it it needs to know which function is running when the sample is taken.
+## Kernel space
 
-As we need to exchange this information with userspace where calculations are done, we'll use a `BPF_MAP_TYPE_HASH` hash eBPF map for the histogram:
+The eBPF program needs to collect an histogram that contains the information about how many samples have been taken for a specific function.
+
+Because this information must be shared with userspace, which is where calculations are done, to store the histogram we'll use a `BPF_MAP_TYPE_HASH` eBPF hash map:
 
 ```c
 struct {
@@ -116,7 +118,7 @@ struct {
 } histogram SEC(".maps");
 ```
 
-of which the key type is a structure that contains:
+The key type of this map represents the single stack trace and it's a structure that contains:
 - PID;
 - kernel stack ID;
 - user stack ID:
@@ -129,22 +131,22 @@ typedef struct histogram_key {
 } histogram_key_t;
 ```
 
-and the value type is a structure that contains:
-- sample count;
-- the binary pathname (we'll see it later):
+The value type of this map is a structure that contains mainly the sample count.
 
 ```c
 typedef struct histogram_value {
 	u64 count;
-	const char *exe_path; /* We'll see it later on */
+	const char *exe_path;
 } histogram_value_t;
 ```
 
-The stack traces and their IDs can be retrieved using the `bpf_get_stackid` eBPF helper.
+> It also contains the program executable path. We'll see later on why. 
+
+To get the information about the running function and the stack trace we can use the `bpf_get_stackid` eBPF helper.
 
 eBPF helpers are functions that, as you might have guessed, simplify work. The [`bpf_get_stackid`](https://elixir.bootlin.com/linux/v6.8.5/source/kernel/bpf/stackmap.c#L283) helper collects user and kernel stack frames by walking the user and kernel stacks and returns the stack ID, for the program that is running at the moment of the eBPF program execution in the process's context.
 
-So, one of the most complex work of stack unwinding is abstracted away thanks to this helper.
+So, one of the most complex works of stack unwinding is abstracted away thanks to this helper.
 
 More precisely from the [eBPF Docs](https://ebpf-docs.dylanreimerink.nl/linux/helper-function/bpf_get_stackid/):
 
@@ -172,7 +174,7 @@ int sample_stack_trace(struct bpf_perf_event_data* ctx)
 }
 ```
 
-and for the specific stack (which is, the key in our histogram), we need to update its sample count:
+and for the specific stack trace (which is, the key in our histogram), we need to update the sample count:
 
 ```c
 SEC("perf_event")
@@ -196,7 +198,7 @@ int sample_stack_trace(struct bpf_perf_event_data* ctx)
 }
 ```
 
-Besides the stack sample count we need to retrieve the stack trace, which is a list of instruction pointers. Thanks to the [`BPF_MAP_TYPE_STACK_TRACE`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/bpf.h#L914) eBPF map: 
+Besides the stack trace sample count we need to retrieve the stack trace, which is a list of instruction pointers. Also this information, thanks to the [`BPF_MAP_TYPE_STACK_TRACE`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/bpf.h#L914) eBPF map: 
 
 ```c
 struct {
@@ -207,9 +209,9 @@ struct {
 } stack_traces SEC(".maps");
 ```
 
-also this information is abstracted away for us and available directly from userspace.
+is abstracted away for us and is available directly to userspace.
 
-This is mostly the needed work in kernel space, which is pretty simple, thanks to the available kernel instrumentation.
+This is mostly the needed work in kernel space, which is pretty simplified thanks to the Linux kernel instrumentation.
 
 Let's see how we can use this data from userspace.
 
