@@ -6,82 +6,7 @@ In order to limit the overhead, we can use the Linux kernel instrumentation, and
 In this blog, we&rsquo;ll see practically how we can build a simple profiler that samples stack traces to calculate statistics of the program&rsquo;s subroutines.
 In order to limit the overhead, we can use the Linux kernel instrumentation, and thanks to eBPF we&rsquo;re able to dynamically load and attach the profiler program to specific kernel entry points, without the need to build and load modules."><meta itemprop=wordCount content="1897"><meta itemprop=keywords content><meta name=twitter:card content="summary"><meta name=twitter:title content="Unleashing the power of frame pointers for profiling pt.2 - Writing a simple profiler"><meta name=twitter:description content="In the previous blog about the program execution environment, we introduced the concept of stack unwinding with frame pointers as one of the techniques leveraged for profiling a program.
 In this blog, we&rsquo;ll see practically how we can build a simple profiler that samples stack traces to calculate statistics of the program&rsquo;s subroutines.
-In order to limit the overhead, we can use the Linux kernel instrumentation, and thanks to eBPF we&rsquo;re able to dynamically load and attach the profiler program to specific kernel entry points, without the need to build and load modules."></head><body class=not-ready data-menu=false><header class=header><p class=logo><a class=site-name href=https://notes.maxgio.me/>maxgio's notes</a><a class=btn-dark></a></p><script>let bodyClx=document.body.classList;let btnDark=document.querySelector('.btn-dark');let sysDark=window.matchMedia('(prefers-color-scheme: dark)');let darkVal=localStorage.getItem('dark');let setDark=(isDark)=>{bodyClx[isDark?'add':'remove']('dark');localStorage.setItem('dark',isDark?'yes':'no');};setDark(darkVal?darkVal==='yes':sysDark.matches);requestAnimationFrame(()=>bodyClx.remove('not-ready'));btnDark.addEventListener('click',()=>setDark(!bodyClx.contains('dark')));sysDark.addEventListener('change',(event)=>setDark(event.matches));</script></header><main class=main><article class=post-single><header class=post-title><p></p><h1>Unleashing the power of frame pointers for profiling pt.2 - Writing a simple profiler</h1></header><section class=post-content><p>In the previous blog about the program execution environment, we introduced the concept of stack unwinding with frame pointers as one of the techniques leveraged for profiling a program.</p><p>In this blog, we&rsquo;ll see practically how we can build a simple profiler that samples stack traces to calculate statistics of the program&rsquo;s subroutines.</p><p>In order to limit the overhead, we can use the Linux kernel instrumentation, and thanks to eBPF we&rsquo;re able to dynamically load and attach the profiler program to specific kernel entry points, without the need to build and load modules. Moreover, we don&rsquo;t need traced programs to be instrumented.</p><p>To summarize the main actors and responsibilities:</p><ul><li>in kernel space: an eBPF sampler program samples with fixed frequency stack traces for a specific process;</li><li>in userspace: a program collects the samples, calculates the statistics, and resolves the subroutine&rsquo;s symbols.</li></ul><h2 id=ebpf-program-loading-and-attaching>eBPF Program loading and attaching</h2><p>To run the eBPF program with a fixed frequency the perf subsystem exposes a kernel software event of type CPU clock (<a href=https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/perf_event.h#L119><code>PERF_COUNT_SW_CPU_CLOCK</code></a> with user APIs. Luckily, eBPF programs can be attached to those events.</p><p>So, after the program is loaded:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#f92672>import</span> (
-	<span style=color:#a6e22e>bpf</span> <span style=color:#e6db74>&#34;github.com/aquasecurity/libbpfgo&#34;</span>
-	<span style=color:#e6db74>&#34;github.com/pkg/errors&#34;</span>
-	<span style=color:#e6db74>&#34;golang.org/x/sys/unix&#34;</span>
-)
-
-<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>loadAndAttach</span>(<span style=color:#a6e22e>probe</span> []<span style=color:#66d9ef>byte</span>) <span style=color:#66d9ef>error</span> {
-	<span style=color:#a6e22e>bpfModule</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>bpf</span>.<span style=color:#a6e22e>NewModuleFromBuffer</span>(<span style=color:#a6e22e>probe</span>, <span style=color:#e6db74>&#34;sample_stack_trace&#34;</span>)
-	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
-		<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>Wrap</span>(<span style=color:#a6e22e>err</span>, <span style=color:#e6db74>&#34;error creating the BPF module object&#34;</span>)
-	}
-	<span style=color:#66d9ef>defer</span> <span style=color:#a6e22e>bpfModule</span>.<span style=color:#a6e22e>Close</span>()
-
-	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>bpfModule</span>.<span style=color:#a6e22e>BPFLoadObject</span>(); <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
-		<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>Wrap</span>(<span style=color:#a6e22e>err</span>, <span style=color:#e6db74>&#34;error loading the BPF program&#34;</span>)
-	}
-
-	<span style=color:#a6e22e>prog</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>bpfModule</span>.<span style=color:#a6e22e>GetProgram</span>(<span style=color:#e6db74>&#34;sample_stack_trace&#34;</span>)
-	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
-		<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>Wrap</span>(<span style=color:#a6e22e>err</span>, <span style=color:#e6db74>&#34;error getting the BPF program object&#34;</span>)
-	}
-
-	<span style=color:#75715e>// ...
-</span><span style=color:#75715e></span>}
-</code></pre></div><p>we&rsquo;ll leverage a software CPU clock Perf event just to be able to probe every x nanoseconds. As perf exposes user APIs, the userspace program can prepare the clock software events for all the CPUs and attach the eBPF program to them:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#f92672>import</span> (
-	<span style=color:#a6e22e>bpf</span> <span style=color:#e6db74>&#34;github.com/aquasecurity/libbpfgo&#34;</span>
-	<span style=color:#e6db74>&#34;github.com/pkg/errors&#34;</span>
-	<span style=color:#e6db74>&#34;golang.org/x/sys/unix&#34;</span>
-)
-
-<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>loadAndAttach</span>(<span style=color:#a6e22e>probe</span> []<span style=color:#66d9ef>byte</span>) <span style=color:#66d9ef>error</span> {
-	<span style=color:#75715e>// Load the program...
-</span><span style=color:#75715e></span>
-	<span style=color:#a6e22e>cpus</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>runtime</span>.<span style=color:#a6e22e>NumCPU</span>()
-
-	<span style=color:#66d9ef>for</span> <span style=color:#a6e22e>i</span> <span style=color:#f92672>:=</span> <span style=color:#ae81ff>0</span>; <span style=color:#a6e22e>i</span> &lt; <span style=color:#a6e22e>cpus</span>; <span style=color:#a6e22e>i</span><span style=color:#f92672>++</span> {
-		<span style=color:#a6e22e>attr</span> <span style=color:#f92672>:=</span> <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>unix</span>.<span style=color:#a6e22e>PerfEventAttr</span>{
-			<span style=color:#a6e22e>Type</span>: <span style=color:#a6e22e>unix</span>.<span style=color:#a6e22e>PERF_TYPE_SOFTWARE</span>,		<span style=color:#75715e>// If type is PERF_TYPE_SOFTWARE, we are measuring software events provided by the kernel.
-</span><span style=color:#75715e></span>			<span style=color:#a6e22e>Config</span>: <span style=color:#a6e22e>unix</span>.<span style=color:#a6e22e>PERF_COUNT_SW_CPU_CLOCK</span>,	<span style=color:#75715e>// This reports the CPU clock, a high-resolution per-CPU timer.
-</span><span style=color:#75715e></span>			
-			<span style=color:#75715e>// A &#34;sampling&#34; event is one that generates an overflow notification every N events,
-</span><span style=color:#75715e></span>			<span style=color:#75715e>// where N is given by sample_period.
-</span><span style=color:#75715e></span>			<span style=color:#75715e>// sample_freq can be used if you wish to use frequency rather than period.
-</span><span style=color:#75715e></span>			<span style=color:#75715e>// sample_period and sample_freq are mutually exclusive.
-</span><span style=color:#75715e></span>			<span style=color:#75715e>// The kernel will adjust the sampling period to try and achieve the desired rate.
-</span><span style=color:#75715e></span>			<span style=color:#a6e22e>Sample</span>: <span style=color:#ae81ff>10</span> <span style=color:#f92672>*</span> <span style=color:#ae81ff>1000</span> <span style=color:#f92672>*</span> <span style=color:#ae81ff>1000</span>,
-		}
-		
-		<span style=color:#75715e>// Create the perf event file descriptor that corresponds to one event that is measured.
-</span><span style=color:#75715e></span>		<span style=color:#75715e>// We&#39;re measuring a clock timer software event just to run the program on a periodic schedule.
-</span><span style=color:#75715e></span>		<span style=color:#75715e>// When a specified number of clock samples occur, the kernel will trigger the program.
-</span><span style=color:#75715e></span>		<span style=color:#a6e22e>evt</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>unix</span>.<span style=color:#a6e22e>PerfEventOpen</span>(
-			<span style=color:#a6e22e>attr</span>,	<span style=color:#75715e>// The attribute set.
-</span><span style=color:#75715e></span>			<span style=color:#f92672>-</span><span style=color:#ae81ff>1</span>,	<span style=color:#75715e>// All the tasks.
-</span><span style=color:#75715e></span>			<span style=color:#a6e22e>i</span>,	<span style=color:#75715e>// on the Nth CPU.
-</span><span style=color:#75715e></span>			<span style=color:#f92672>-</span><span style=color:#ae81ff>1</span>,	<span style=color:#75715e>// The group_fd argument allows event groups to be created.
-</span><span style=color:#75715e></span>			<span style=color:#ae81ff>0</span>,	<span style=color:#75715e>// The flags.
-</span><span style=color:#75715e></span>		)
-		<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
-			<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>Wrap</span>(<span style=color:#a6e22e>err</span>, <span style=color:#e6db74>&#34;error creating the perf event&#34;</span>)
-		}
-		<span style=color:#66d9ef>defer</span> <span style=color:#66d9ef>func</span>() {
-			<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>unix</span>.<span style=color:#a6e22e>Close</span>(<span style=color:#a6e22e>evt</span>); <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
-				<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>Wrap</span>(<span style=color:#a6e22e>err</span>, <span style=color:#e6db74>&#34;failed to close perf event&#34;</span>)
-			}
-		}()
-		
-		<span style=color:#75715e>// Attach the BPF program to the sampling perf event.
-</span><span style=color:#75715e></span>		<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>err</span> = <span style=color:#a6e22e>prog</span>.<span style=color:#a6e22e>AttachPerfEvent</span>(<span style=color:#a6e22e>evt</span>); <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
-			<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>Wrap</span>(<span style=color:#a6e22e>err</span>, <span style=color:#e6db74>&#34;error attaching the BPF probe to the sampling perf event&#34;</span>)
-		}
-	}
-
-	<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>nil</span>
-}
-</code></pre></div><blockquote><p>In this example we&rsquo;re using the <a href=https://github.com/aquasecurity/libbpfgo>libbpfgo</a> library.</p></blockquote><h2 id=kernel-space>Kernel space</h2><p>The eBPF program needs to collect a histogram that contains information about how many samples have been taken for a specific function.</p><p>Because this information must be shared with userspace, which is where calculations are done, to store the histogram we&rsquo;ll use a <code>BPF_MAP_TYPE_HASH</code> eBPF hash map:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=color:#66d9ef>struct</span> {
+In order to limit the overhead, we can use the Linux kernel instrumentation, and thanks to eBPF we&rsquo;re able to dynamically load and attach the profiler program to specific kernel entry points, without the need to build and load modules."></head><body class=not-ready data-menu=false><header class=header><p class=logo><a class=site-name href=https://notes.maxgio.me/>maxgio's notes</a><a class=btn-dark></a></p><script>let bodyClx=document.body.classList;let btnDark=document.querySelector('.btn-dark');let sysDark=window.matchMedia('(prefers-color-scheme: dark)');let darkVal=localStorage.getItem('dark');let setDark=(isDark)=>{bodyClx[isDark?'add':'remove']('dark');localStorage.setItem('dark',isDark?'yes':'no');};setDark(darkVal?darkVal==='yes':sysDark.matches);requestAnimationFrame(()=>bodyClx.remove('not-ready'));btnDark.addEventListener('click',()=>setDark(!bodyClx.contains('dark')));sysDark.addEventListener('change',(event)=>setDark(event.matches));</script></header><main class=main><article class=post-single><header class=post-title><p></p><h1>Unleashing the power of frame pointers for profiling pt.2 - Writing a simple profiler</h1></header><section class=post-content><p>In the previous blog about the program execution environment, we introduced the concept of stack unwinding with frame pointers as one of the techniques leveraged for profiling a program.</p><p>In this blog, we&rsquo;ll see practically how we can build a simple profiler that samples stack traces to calculate statistics of the program&rsquo;s subroutines.</p><p>In order to limit the overhead, we can use the Linux kernel instrumentation, and thanks to eBPF we&rsquo;re able to dynamically load and attach the profiler program to specific kernel entry points, without the need to build and load modules. Moreover, we don&rsquo;t need traced programs to be instrumented.</p><p>To summarize the main actors and responsibilities:</p><ul><li>in kernel space: an eBPF sampler program samples with fixed frequency stack traces for a specific process;</li><li>in userspace: a program collects the samples, calculates the statistics, and resolves the subroutine&rsquo;s symbols.</li></ul><h2 id=kernel-space>Kernel space</h2><p>The eBPF program needs to collect a histogram that contains information about how many samples have been taken for a specific function.</p><p>Because this information must be shared with userspace, which is where calculations are done, to store the histogram we&rsquo;ll use a <code>BPF_MAP_TYPE_HASH</code> eBPF hash map:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=color:#66d9ef>struct</span> {
 	__uint(type, BPF_MAP_TYPE_HASH);
 	__type(key, histogram_key_t);
 	__type(value, histogram_value_t);
@@ -264,7 +189,82 @@ SEC(<span style=color:#e6db74>&#34;perf_event&#34;</span>)
 	size_t buf_off <span style=color:#f92672>=</span> get_pathname_from_path(<span style=color:#f92672>&amp;</span>path, string_buf);
 	<span style=color:#66d9ef>return</span> <span style=color:#f92672>&amp;</span>string_buf<span style=color:#f92672>-&gt;</span>data[buf_off];
 }
-</code></pre></div><p>To retrieve the pathname from the <code>path</code> <code>struct</code> we need to walk the directory hierarchy until reaching the root directory of the same mount. For sake of simplicity we skip this part.</p><h2 id=wrapping-up>Wrapping up</h2><p>The program loads the eBPF program, attaches it to the perf event created, and reads stack IDs which accesses stack traces. With traces' instruction pointers it resolves symbols and on exit, it calculates the statistics as explained before. For example:</p><pre><code>80% main; foo; bar;
+</code></pre></div><p>To retrieve the pathname from the <code>path</code> <code>struct</code> we need to walk the directory hierarchy until reaching the root directory of the same mount. For sake of simplicity we skip this part.</p><h2 id=ebpf-program-loading-and-attaching>eBPF Program loading and attaching</h2><p>To run the eBPF program with a fixed frequency the perf subsystem exposes a kernel software event of type CPU clock (<a href=https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/perf_event.h#L119><code>PERF_COUNT_SW_CPU_CLOCK</code></a> with user APIs. Luckily, eBPF programs can be attached to those events.</p><p>So, after the program is loaded:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#f92672>import</span> (
+	<span style=color:#a6e22e>bpf</span> <span style=color:#e6db74>&#34;github.com/aquasecurity/libbpfgo&#34;</span>
+	<span style=color:#e6db74>&#34;github.com/pkg/errors&#34;</span>
+	<span style=color:#e6db74>&#34;golang.org/x/sys/unix&#34;</span>
+)
+
+<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>loadAndAttach</span>(<span style=color:#a6e22e>probe</span> []<span style=color:#66d9ef>byte</span>) <span style=color:#66d9ef>error</span> {
+	<span style=color:#a6e22e>bpfModule</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>bpf</span>.<span style=color:#a6e22e>NewModuleFromBuffer</span>(<span style=color:#a6e22e>probe</span>, <span style=color:#e6db74>&#34;sample_stack_trace&#34;</span>)
+	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+		<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>Wrap</span>(<span style=color:#a6e22e>err</span>, <span style=color:#e6db74>&#34;error creating the BPF module object&#34;</span>)
+	}
+	<span style=color:#66d9ef>defer</span> <span style=color:#a6e22e>bpfModule</span>.<span style=color:#a6e22e>Close</span>()
+
+	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>bpfModule</span>.<span style=color:#a6e22e>BPFLoadObject</span>(); <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+		<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>Wrap</span>(<span style=color:#a6e22e>err</span>, <span style=color:#e6db74>&#34;error loading the BPF program&#34;</span>)
+	}
+
+	<span style=color:#a6e22e>prog</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>bpfModule</span>.<span style=color:#a6e22e>GetProgram</span>(<span style=color:#e6db74>&#34;sample_stack_trace&#34;</span>)
+	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+		<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>Wrap</span>(<span style=color:#a6e22e>err</span>, <span style=color:#e6db74>&#34;error getting the BPF program object&#34;</span>)
+	}
+
+	<span style=color:#75715e>// ...
+</span><span style=color:#75715e></span>}
+</code></pre></div><p>we&rsquo;ll leverage a software CPU clock Perf event just to be able to probe every x nanoseconds. As perf exposes user APIs, the userspace program can prepare the clock software events for all the CPUs and attach the eBPF program to them:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#f92672>import</span> (
+	<span style=color:#a6e22e>bpf</span> <span style=color:#e6db74>&#34;github.com/aquasecurity/libbpfgo&#34;</span>
+	<span style=color:#e6db74>&#34;github.com/pkg/errors&#34;</span>
+	<span style=color:#e6db74>&#34;golang.org/x/sys/unix&#34;</span>
+)
+
+<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>loadAndAttach</span>(<span style=color:#a6e22e>probe</span> []<span style=color:#66d9ef>byte</span>) <span style=color:#66d9ef>error</span> {
+	<span style=color:#75715e>// Load the program...
+</span><span style=color:#75715e></span>
+	<span style=color:#a6e22e>cpus</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>runtime</span>.<span style=color:#a6e22e>NumCPU</span>()
+
+	<span style=color:#66d9ef>for</span> <span style=color:#a6e22e>i</span> <span style=color:#f92672>:=</span> <span style=color:#ae81ff>0</span>; <span style=color:#a6e22e>i</span> &lt; <span style=color:#a6e22e>cpus</span>; <span style=color:#a6e22e>i</span><span style=color:#f92672>++</span> {
+		<span style=color:#a6e22e>attr</span> <span style=color:#f92672>:=</span> <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>unix</span>.<span style=color:#a6e22e>PerfEventAttr</span>{
+			<span style=color:#a6e22e>Type</span>: <span style=color:#a6e22e>unix</span>.<span style=color:#a6e22e>PERF_TYPE_SOFTWARE</span>,		<span style=color:#75715e>// If type is PERF_TYPE_SOFTWARE, we are measuring software events provided by the kernel.
+</span><span style=color:#75715e></span>			<span style=color:#a6e22e>Config</span>: <span style=color:#a6e22e>unix</span>.<span style=color:#a6e22e>PERF_COUNT_SW_CPU_CLOCK</span>,	<span style=color:#75715e>// This reports the CPU clock, a high-resolution per-CPU timer.
+</span><span style=color:#75715e></span>			
+			<span style=color:#75715e>// A &#34;sampling&#34; event is one that generates an overflow notification every N events,
+</span><span style=color:#75715e></span>			<span style=color:#75715e>// where N is given by sample_period.
+</span><span style=color:#75715e></span>			<span style=color:#75715e>// sample_freq can be used if you wish to use frequency rather than period.
+</span><span style=color:#75715e></span>			<span style=color:#75715e>// sample_period and sample_freq are mutually exclusive.
+</span><span style=color:#75715e></span>			<span style=color:#75715e>// The kernel will adjust the sampling period to try and achieve the desired rate.
+</span><span style=color:#75715e></span>			<span style=color:#a6e22e>Sample</span>: <span style=color:#ae81ff>10</span> <span style=color:#f92672>*</span> <span style=color:#ae81ff>1000</span> <span style=color:#f92672>*</span> <span style=color:#ae81ff>1000</span>,
+		}
+		
+		<span style=color:#75715e>// Create the perf event file descriptor that corresponds to one event that is measured.
+</span><span style=color:#75715e></span>		<span style=color:#75715e>// We&#39;re measuring a clock timer software event just to run the program on a periodic schedule.
+</span><span style=color:#75715e></span>		<span style=color:#75715e>// When a specified number of clock samples occur, the kernel will trigger the program.
+</span><span style=color:#75715e></span>		<span style=color:#a6e22e>evt</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>unix</span>.<span style=color:#a6e22e>PerfEventOpen</span>(
+			<span style=color:#a6e22e>attr</span>,	<span style=color:#75715e>// The attribute set.
+</span><span style=color:#75715e></span>			<span style=color:#f92672>-</span><span style=color:#ae81ff>1</span>,	<span style=color:#75715e>// All the tasks.
+</span><span style=color:#75715e></span>			<span style=color:#a6e22e>i</span>,	<span style=color:#75715e>// on the Nth CPU.
+</span><span style=color:#75715e></span>			<span style=color:#f92672>-</span><span style=color:#ae81ff>1</span>,	<span style=color:#75715e>// The group_fd argument allows event groups to be created.
+</span><span style=color:#75715e></span>			<span style=color:#ae81ff>0</span>,	<span style=color:#75715e>// The flags.
+</span><span style=color:#75715e></span>		)
+		<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+			<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>Wrap</span>(<span style=color:#a6e22e>err</span>, <span style=color:#e6db74>&#34;error creating the perf event&#34;</span>)
+		}
+		<span style=color:#66d9ef>defer</span> <span style=color:#66d9ef>func</span>() {
+			<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>unix</span>.<span style=color:#a6e22e>Close</span>(<span style=color:#a6e22e>evt</span>); <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+				<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>Wrap</span>(<span style=color:#a6e22e>err</span>, <span style=color:#e6db74>&#34;failed to close perf event&#34;</span>)
+			}
+		}()
+		
+		<span style=color:#75715e>// Attach the BPF program to the sampling perf event.
+</span><span style=color:#75715e></span>		<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>err</span> = <span style=color:#a6e22e>prog</span>.<span style=color:#a6e22e>AttachPerfEvent</span>(<span style=color:#a6e22e>evt</span>); <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+			<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>Wrap</span>(<span style=color:#a6e22e>err</span>, <span style=color:#e6db74>&#34;error attaching the BPF probe to the sampling perf event&#34;</span>)
+		}
+	}
+
+	<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>nil</span>
+}
+</code></pre></div><blockquote><p>In this example we&rsquo;re using the <a href=https://github.com/aquasecurity/libbpfgo>libbpfgo</a> library.</p></blockquote><h2 id=wrapping-up>Wrapping up</h2><p>The program loads the eBPF program, attaches it to the perf event created, and reads stack IDs which accesses stack traces. With traces' instruction pointers it resolves symbols and on exit, it calculates the statistics as explained before. For example:</p><pre><code>80% main; foo; bar;
 20% main; foo; baz;
 </code></pre><p>You can see a full working example at <a href=https://github.com/maxgio92/yap,>https://github.com/maxgio92/yap,</a> which stands for Yet Another Profiler. YAP is a sampling-based, low overhead kernel-assisted profiler.</p><h2 id=thanks>Thanks</h2></section><nav class=post-nav><a class=prev href=https://notes.maxgio.me/notes/power-of-frame-pointers-pt1/><span>←</span><span>Unleashing the power of frame pointers for profiling pt.1 - The environment</span></a>
 <a class=next href=https://notes.maxgio.me/notes/stack-walking/><span>Walking the stack on x86 CPU</span><span>→</span></a></nav></article></main><footer class=footer><p>&copy; 2024 <a href=https://notes.maxgio.me/>maxgio's notes</a></p><p>Powered by <a href=https://gohugo.io/ rel=noopener target=_blank>Hugo️️</a>️</p><p><a href=https://github.com/nanxiaobei/hugo-paper rel=noopener target=_blank>Paper 5.1</a></p></footer></body></html>
