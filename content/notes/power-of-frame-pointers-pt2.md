@@ -112,7 +112,7 @@ int sample_stack_trace(struct bpf_perf_event_data* ctx)
 }
 ```
 
-Besides the stack trace sample count we need to retrieve the stack trace, which is a list of instruction pointers. Also this information, thanks to the [`BPF_MAP_TYPE_STACK_TRACE`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/bpf.h#L914) map is abstracted away for us and is available directly to userspace.
+Besides the stack trace sample count, we need to retrieve the stack trace, which is a list of instruction pointers. This information too is abstracted away thanks to the [`BPF_MAP_TYPE_STACK_TRACE`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/bpf.h#L914) map, and available to userspace.
 
 ```c
 struct {
@@ -129,7 +129,7 @@ Let's see how we can use this data in userspace.
 
 ## Userspace
 
-Besides loading and attaching the eBPF sampler probe, in userspace we collect the stack traces from `stack_traces` map. This map is accessible by stack IDs, which are available from the `histogram` map.
+Besides loading and attaching the eBPF sampler probe, in userspace, we collect the stack traces from the `stack_traces` map. This map is accessible by stack IDs, which are available from the `histogram` map.
 
 You can see below an example, using [libbpfgo](https://github.com/aquasecurity/libbpfgo) APIs:
 
