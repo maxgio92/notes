@@ -18,7 +18,7 @@ A possible implementation can be summarized with the following responsibilities:
 
 These responsibilities can be assigned to two main components:
 - in kernel space, an eBPF program samples periodically stack traces for a specific process;
-- in userspace, a program loads and attaches the eBPF programs, collects the samples, calculates the statistics, and resolves the subroutine's symbols.
+- in userspace, a program loads and attaches the eBPF program to a periodic trigger, collects the samples, calculates the statistics, and resolves the subroutine's symbols.
 
 ## Kernel space
 
