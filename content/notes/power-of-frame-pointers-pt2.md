@@ -17,7 +17,7 @@ A possible implementation can be summarized with the following responsibilities:
 - to resolve instruction pointer to symbols
 
 These responsibilities can be assigned to two main components:
-- in kernel space, an eBPF program samples periodically stack traces for a specific process;
+- in kernel space, an eBPF program periodically samples stack traces for a specific process;
 - in userspace, a program loads and attaches the eBPF program to a periodic trigger, collects the samples, calculates the statistics, and resolves the subroutine's symbols.
 
 ## Kernel space
