@@ -6,11 +6,19 @@ In the previous blog about the program execution environment, we introduced the 
 
 In this blog, we'll see practically how we can build a simple sampling-based continuous profiler.
 
-Because we don't require the application to be instrumented, we can use the Linux kernel instrumentation, and thanks to eBPF we're able to dynamically load and attach the profiler program to specific kernel entry points, limiting the overhead by exchanging data with userspace through eBPF maps. 
+Because we don't want to require the application to be instrumented, we can use the Linux kernel instrumentation, and thanks to eBPF we're able to dynamically load and attach the profiler program to specific kernel entry points, limiting the introduced overhead by exchanging data with userspace through eBPF maps. 
 
-To summarize the main actors and responsibilities:
-- in kernel space: an eBPF sampler program samples periodically stack traces for a specific process;
-- in userspace: a program collects the samples, calculates the statistics, and resolves the subroutine's symbols.
+The goal is to calculate statistics about the time spent by a program on specific code paths.
+
+A possible implementation can be summarized with the following responsibilities:
+- to periodically sample stack traces
+- to collect samples
+- to calculate statistics with the samples
+- to resolve instruction pointer to symbols
+
+These responsibilities can be assigned to two main components:
+- in kernel space, an eBPF program samples periodically stack traces for a specific process;
+- in userspace, a program loads and attaches the eBPF programs, collects the samples, calculates the statistics, and resolves the subroutine's symbols.
 
 ## Kernel space
 
