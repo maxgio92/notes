@@ -14,7 +14,7 @@ To summarize the main actors and responsibilities:
 
 ## Kernel space
 
-### Stack trace samples
+### Sample count
 
 The eBPF program needs to collect a histogram of the number of samples taken for a specific code path. We'll store this data in a `BPF_MAP_TYPE_HASH` eBPF hash map:
 
