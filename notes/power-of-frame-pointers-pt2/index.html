@@ -81,9 +81,9 @@ SEC(<span style=color:#e6db74>&#34;perf_event&#34;</span>)
 	<span style=color:#75715e>/* Upsert stack trace histogram */</span>
 	count <span style=color:#f92672>=</span> (u64<span style=color:#f92672>*</span>)bpf_map_lookup_elem(<span style=color:#f92672>&amp;</span>histogram, <span style=color:#f92672>&amp;</span>key);
 	<span style=color:#66d9ef>if</span> (count) {
-	  (<span style=color:#f92672>*</span>count)<span style=color:#f92672>++</span>;
+		(<span style=color:#f92672>*</span>count)<span style=color:#f92672>++</span>;
 	} <span style=color:#66d9ef>else</span> {
-	  bpf_map_update_elem(<span style=color:#f92672>&amp;</span>histogram, <span style=color:#f92672>&amp;</span>key, <span style=color:#f92672>&amp;</span>one, BPF_NOEXIST);
+		bpf_map_update_elem(<span style=color:#f92672>&amp;</span>histogram, <span style=color:#f92672>&amp;</span>key, <span style=color:#f92672>&amp;</span>one, BPF_NOEXIST);
 	}
 }
 </code></pre></div><p>Besides the stack sample count we need to retrieve the stack trace, which is a list of instruction pointers. Thanks to the <a href=https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/bpf.h#L914><code>BPF_MAP_TYPE_STACK_TRACE</code></a> eBPF map:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=color:#66d9ef>struct</span> {
