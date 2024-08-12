@@ -22,9 +22,11 @@ These responsibilities can be assigned to two main components:
 
 ## Kernel space
 
-### Sample count
+The main responsibility of the eBPF program count how often a specific code path is executed and create a histogram of the results. Also, it gathers the stack traces to be accessed from userspace.
 
-The eBPF program needs to collect a histogram of the number of samples taken for a specific code path. We'll store this data in a `BPF_MAP_TYPE_HASH` eBPF hash map:
+### Histogram
+
+We'll store the histogram of sample counts for a particular code path in a `BPF_MAP_TYPE_HASH` eBPF hash map:
 
 ```c
 struct {
@@ -35,7 +37,7 @@ struct {
 } histogram SEC(".maps");
 ```
 
-The key of this map which represents the single stack trace it's a structure that contains:
+The key of this map represents the identifier for a particular state-in-point of the stack and is a structure that contains:
 - PID;
 - kernel stack ID;
 - user stack ID:
@@ -48,30 +50,30 @@ typedef struct histogram_key {
 } histogram_key_t;
 ```
 
-The value of this map is a structure that contains mainly the sample count.
+The value of this map is a structure that mainly contains the collected sample count:
 
 ```c
 typedef struct histogram_value {
 	u64 count;
 	const char *exe_path;
-} histogram_value_t;
+} histogram_value_t; sample stack traces.
 ```
 
 > It also contains the program executable path. We'll see later on why. 
 
-### Stack trace
+### Stack traces
 
-To get the information about the running code path and the stack trace we can use the `bpf_get_stackid` eBPF helper.
+To get the information about the running code path we can use the `bpf_get_stackid` eBPF helper.
 
-eBPF helpers are functions that, as you might have guessed, simplify work. The [`bpf_get_stackid`](https://elixir.bootlin.com/linux/v6.8.5/source/kernel/bpf/stackmap.c#L283) helper collects user and kernel stack frames by walking the user and kernel stacks and returns the ID of the state of the stack at a specific point in time.
+eBPF helpers are functions that, as you might have gue sample stack traces.ssed, simplify work. The [`bpf_get_stackid`](https://elixir.bootlin.com/linux/v6.8.5/source/kernel/bpf/stackmap.c#L283) helper collects user and kernel stack frames by walking the user and kernel stacks and returns the ID of the state of the stack at a specific point in time.
 
 More precisely from the [eBPF Docs](https://ebpf-docs.dylanreimerink.nl/linux/helper-function/bpf_get_stackid/):
 
 > Walk a user or a kernel stack and return its `id`. To achieve this, the helper needs `ctx`, which is a pointer to the context on which the tracing program is executed, and a pointer to a map of type `BPF_MAP_TYPE_STACK_TRACE`.
 
-So, one of the most complex works of stack unwinding is abstracted away thanks to this helper.
+So, one of the most complex works that is the stack unwinding is abstracted away thanks to this helper.
 
-For example, we declare the `stack_traces` map, we prepare the `histogram` key:
+For example, we declare the `stack_traces` map, and we prepare the `histogram` key:
 
 ```c
 struct {
@@ -120,7 +122,7 @@ int sample_stack_trace(struct bpf_perf_event_data* ctx)
 }
 ```
 
-Besides the stack trace sample count, we need to retrieve the stack trace, which is a list of instruction pointers. This information too is abstracted away thanks to the [`BPF_MAP_TYPE_STACK_TRACE`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/bpf.h#L914) map, and available to userspace.
+We also need to retrieve the stack trace, which is a list of instruction pointers. This information too is abstracted away thanks to the [`BPF_MAP_TYPE_STACK_TRACE`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/bpf.h#L914) map, and available to userspace.
 
 ```c
 struct {
@@ -133,13 +135,15 @@ struct {
 
 This is mostly the needed work in kernel space, which is pretty simplified thanks to the Linux kernel instrumentation.
 
-Let's see how we can use this data in userspace.
+Let's see how we can consume this data in userspace.
 
 ## Userspace
 
 Besides loading and attaching the eBPF sampler probe, in userspace, we collect the stack traces from the `stack_traces` map. This map is accessible by stack IDs, which are available from the `histogram` map.
 
-You can see below an example, using [libbpfgo](https://github.com/aquasecurity/libbpfgo) APIs:
+### Collecting stack traces
+
+Using the [libbpfgo](https://github.com/aquasecurity/libbpfgo) library it can be achieved like that:
 
 ```go
 import (
@@ -167,10 +171,7 @@ func Run(ctx context.Context) error {
 	for it := histogram.Iterator(); it.Next(); {
 		k := it.Key()
 
-		// Get count for the specific sampled stack trace.
-		countB, err := histogram.GetValue(unsafe.Pointer(&k[0]))
 		// ...
-		count := int(binary.LittleEndian.Uint64(countB))
 		
 		var key HistogramKey
 		if err = binary.Read(bytes.NewBuffer(k), binary.LittleEndian, &key); err != nil {
@@ -201,6 +202,8 @@ func getStackTrace(stackTraces *bpf.BPFMap, id uint32) (*StackTrace, error) {
 }
 ```
 
+### Calculating statistics
+
 Once the sampling is completed, we're able to calculate the program's residency fraction for each subroutine, that is, how much a specific subroutine has been run within a time frame:
 
 ```
@@ -218,8 +221,17 @@ func calculateStats() (map[string]float64, error) {
 	
 	// Iterate over the stack profile counts histogram map.
 	for it := histogram.Iterator(); it.Next(); {
+		k := it.Key()
+
 		// ...
-	
+
+		// Get count for the specific sampled stack trace.
+		countB, err := histogram.GetValue(unsafe.Pointer(&k[0]))
+		// ...
+		count := int(binary.LittleEndian.Uint64(countB))
+
+		// ...
+		
 		// Increment the traceSampleCounts map value for the stack trace symbol string (e.g. "main;subfunc;")
 		totalSampleCount += count
 		traceSampleCounts[trace] += count
@@ -235,7 +247,7 @@ func calculateStats() (map[string]float64, error) {
 }
 ```
 
-Finally, because traces are an array of instruction pointers that are pushed to the stack, we need to translate addresses to symbols.
+Finally, because traces are arrays of instruction pointers, we need to translate addresses to symbols.
 
 ### Symbolization
 
@@ -270,7 +282,7 @@ func loadSymbols() ([]string, error) {
 }
 ```
 
-## Program executable path
+#### Program executable path
 
 To access the ELF binary we need the process's binary pathname. The pathname can be retrieved in kernel space from the `task_struct`'s user space memory mapping descriptor ([`task_struct`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/sched.h#L748)->[`mm_struct`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/mm_types.h#L734)->[`exe_file`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/mm_types.h#L905)->[`f_path`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/fs.h#L1016)) that we can pass through an eBPF map to userspace.
 
