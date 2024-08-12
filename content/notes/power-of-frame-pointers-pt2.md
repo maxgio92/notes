@@ -343,7 +343,7 @@ func loadAndAttach(probe []byte) error {
 }
 ```
 
-this Perf event can be leveraged to be able to sample stack traces every x nanoseconds. Because Perf exposes user APIs, the userspace program can prepare the clock software events for all the CPUs and attach the eBPF program to them:
+this Perf event can be leveraged to be able to trigger the sampler every x nanoseconds. Because Perf exposes user APIs, the userspace program can prepare the clock software events for all the CPUs and attach the eBPF program to them:
 
 ```go
 import (
