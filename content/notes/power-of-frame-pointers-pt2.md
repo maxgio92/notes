@@ -55,7 +55,7 @@ typedef struct histogram_value {
 
 To get the information about the running code path and the stack trace we can use the `bpf_get_stackid` eBPF helper.
 
-eBPF helpers are functions that, as you might have guessed, simplify work. The [`bpf_get_stackid`](https://elixir.bootlin.com/linux/v6.8.5/source/kernel/bpf/stackmap.c#L283) helper collects user and kernel stack frames by walking the user and kernel stacks and returns the stack ID.
+eBPF helpers are functions that, as you might have guessed, simplify work. The [`bpf_get_stackid`](https://elixir.bootlin.com/linux/v6.8.5/source/kernel/bpf/stackmap.c#L283) helper collects user and kernel stack frames by walking the user and kernel stacks and returns the ID of the state of the stack at a specific point in time.
 
 More precisely from the [eBPF Docs](https://ebpf-docs.dylanreimerink.nl/linux/helper-function/bpf_get_stackid/):
 
