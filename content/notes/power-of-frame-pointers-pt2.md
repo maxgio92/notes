@@ -1,19 +1,16 @@
 ---
-Title: Unleashing the power of frame pointers for profiling pt.1 - Writing a simple profiler
+Title: Unleashing the power of frame pointers for profiling pt.2 - Writing a simple profiler
 ---
 
-In the previous blog, I introduced the program execution environment and I have introduced the concepts of stack unwinding with frame pointers as one of the techniques leveraged for profiling a program.
+In the previous blog about the program execution environment I introduced the concepts of stack unwinding with frame pointers as one of the techniques leveraged for profiling a program.
 
-In this blog, we'll see practically how we can build a simple profiler that leverages frame pointers by sampling stack traces.
+In this blog, we'll see practically how we can build a simple profiler that leverages frame pointers sampling stack traces to calculate statistics of program's subroutines.
 
-In order to limit the overhead a profiler can work with the help of the Linux kernel, and more precisely eBPF allows it to run at specific kernel paths programs, which is in our case the sampler, without the need to load modules.
-This way the analysed program doesn't need to be instrumented.
-
-The sampler needs to collect stack traces with a fixed frequency. With the samples in user space calculate the statistics.
+In order to limit the overhead, the Linux kernel instrumentation can help the profiler with that work, and more precisely eBPF allows it to dynamically run at specific kernel paths programs, which in our case it's a stack trace sampler, without the need to build and load modules. This way the analysed program doesn't need to be instrumented.
 
 To summarize:
-- kernel space: sample stack traces for a specific process with a fixed frequency;
-- userspace: collect samples, calculate the statistics, and resolve subroutine symbols.
+- in kernel space: an eBPF sampler program samples with a fixed frequency stack traces for a specific process;
+- in userspace: a program collect the samples, calculates the statistics, and resolves subroutine's symbols.
 
 ## Kernel space
 
