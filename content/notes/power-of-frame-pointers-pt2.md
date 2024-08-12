@@ -335,6 +335,8 @@ To retrieve the pathname from the [`path`](https://elixir.bootlin.com/linux/v6.8
 
 To run the eBPF program with a fixed frequency the [Perf](https://perf.wiki.kernel.org/index.php/Main_Page) subsystem exposes a kernel software event of type CPU clock ([`PERF_COUNT_SW_CPU_CLOCK`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/perf_event.h#L119)) with user APIs. Luckily, eBPF programs can be attached to those events.
 
+![image](https://blog.px.dev/static/7b13192052f268bfd22577215d0c9f01/sample-stack-trace-function.png)
+
 So, after the program is loaded:
 
 ```go
@@ -362,7 +364,7 @@ func loadAndAttach(probe []byte) error {
 }
 ```
 
-this Perf event can be leveraged to be able to trigger the sampler every x nanoseconds. Because Perf exposes user APIs, the userspace program can prepare the clock software events for all the CPUs and attach the eBPF program to them:
+this Perf event can be leveraged to be able to run the sampler by interrupting the CPUs every x milliseconds independently of the process running. Because Perf exposes user APIs, the userspace program can prepare the clock software events and attach the eBPF program to them:
 
 ```go
 import (
@@ -400,7 +402,7 @@ func loadAndAttach(probe []byte) error {
 			0,	// The flags.
 		)
 		// ...
-		
+		https://blog.px.dev/static/7b13192052f268bfd22577215d0c9f01/sample-stack-trace-function.png
 		// Attach the BPF program to the sampling perf event.
 		if _, err = prog.AttachPerfEvent(evt); err != nil {
 			return errors.Wrap(err, "error attaching the BPF probe to the sampling perf event")
