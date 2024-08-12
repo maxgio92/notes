@@ -9,7 +9,7 @@ In this blog, we'll see practically how we can build a simple sampling-based con
 Because we don't require the application to be instrumented, we can use the Linux kernel instrumentation, and thanks to eBPF we're able to dynamically load and attach the profiler program to specific kernel entry points, limiting the overhead by exchanging data with userspace through eBPF maps. 
 
 To summarize the main actors and responsibilities:
-- in kernel space: an eBPF sampler program samples with fixed frequency stack traces for a specific process;
+- in kernel space: an eBPF sampler program samples periodically stack traces for a specific process;
 - in userspace: a program collects the samples, calculates the statistics, and resolves the subroutine's symbols.
 
 ## Kernel space
@@ -389,7 +389,7 @@ func loadAndAttach(probe []byte) error {
 
 ## Wrapping up
 
-The user program loads the eBPF program, attaches it to the Perf event in order to be triggered with a fixed frequency, and samples stack traces. Trace instruction pointers are resolved into symbols and before returning, the statistics about residency fraction are calculated with data stored in the histogram.
+The user program loads the eBPF program, attaches it to the Perf event in order to be triggered periodically, and samples stack traces. Trace instruction pointers are resolved into symbols and before returning, the statistics about residency fraction are calculated with data stored in the histogram.
 
 The statistics are finally printed out like below:
 
