@@ -14,7 +14,7 @@ To summarize the main actors and responsibilities:
 
 ## Kernel space
 
-The eBPF program needs to collect a histogram that contains information about how many samples have been taken for a specific function.
+The eBPF program needs to collect a histogram that contains information about how many samples have been taken for a specific subroutine.
 
 Because this information must be shared with userspace, which is where calculations are done, to store the histogram we'll use a `BPF_MAP_TYPE_HASH` eBPF hash map:
 
