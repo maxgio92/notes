@@ -2,58 +2,110 @@
 Title: Unleashing the power of frame pointers for profiling pt.2 - Writing a simple profiler
 ---
 
-In the previous blog about the program execution environment, we introduced the concepts of stack unwinding with frame pointers as one of the techniques leveraged for profiling a program.
+In the previous blog about the program execution environment, we introduced the concept of stack unwinding with frame pointers as one of the techniques leveraged for profiling a program.
 
-In this blog, we'll see practically how we can build a simple profiler that leverages frame pointers sampling stack traces to calculate statistics of the program's subroutines.
+In this blog, we'll see practically how we can build a simple profiler that samples stack traces to calculate statistics of the program's subroutines.
 
-In order to limit the overhead, we can leverage the Linux kernel instrumentation and thanks to eBPF we're able to dynamically load and attach the profiler program to specific kernel entry points, without the need to build and load modules. Moreover, we don't need traced programs to be instrumented.
+In order to limit the overhead, we can use the Linux kernel instrumentation, and thanks to eBPF we're able to dynamically load and attach the profiler program to specific kernel entry points, without the need to build and load modules. Moreover, we don't need traced programs to be instrumented.
 
-To summarize:
-- in kernel space: an eBPF sampler program samples with a fixed frequency stack traces for a specific process;
-- in userspace: a program collect the samples, calculates the statistics, and resolves subroutine's symbols.
+To summarize the main actors and responsibilities:
+- in kernel space: an eBPF sampler program samples with fixed frequency stack traces for a specific process;
+- in userspace: a program collects the samples, calculates the statistics, and resolves the subroutine's symbols.
 
 ## Kernel space
 
-To run the program with a fixed frequency the perf subsystem exposes us a kernel software event of type CPU clock ([`PERF_COUNT_SW_CPU_CLOCK`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/perf_event.h#L119). Luckily, eBPF programs can be attached to those events.
+To run the eBPF program with a fixed frequency the perf subsystem exposes a kernel software event of type CPU clock ([`PERF_COUNT_SW_CPU_CLOCK`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/perf_event.h#L119) with user APIs. Luckily, eBPF programs can be attached to those events.
 
-So we'll leverage a software CPU clock Perf event just to be able to probe every x nanoseconds. As perf exposes user APIs, the userspace program can prepare the clock software events for all the CPUs and attach the eBPF program to them:
+So, after the program is loaded:
 
 ```go
-attr := &unix.PerfEventAttr{
-	Type: unix.PERF_TYPE_SOFTWARE,		// If type is PERF_TYPE_SOFTWARE, we are measuring software events provided by the kernel.
-	Config: unix.PERF_COUNT_SW_CPU_CLOCK,	// This reports the CPU clock, a high-resolution per-CPU timer.
-	
-	// A "sampling" event is one that generates an overflow notification every N events,
-	// where N is given by sample_period.
-	// sample_freq can be used if you wish to use frequency rather than period.
-	// sample_period and sample_freq are mutually exclusive.
-	// The kernel will adjust the sampling period to try and achieve the desired rate.
-	Sample: t.samplingPeriodMillis * 1000 * 1000,
-}
-
-// Create the perf event file descriptor that corresponds to one event that is measured.
-// We're measuring a clock timer software event just to run the program on a periodic schedule.
-// When a specified number of clock samples occur, the kernel will trigger the program.
-evt, err := unix.PerfEventOpen(
-	attr,	// The attribute set.
-	t.pid,	// The specified task.
-	i,	// on the Nth CPU.
-	-1,	// The group_fd argument allows event groups to be created.
-	0,	// The flags.
+import (
+	bpf "github.com/aquasecurity/libbpfgo"
+	"github.com/pkg/errors"
+	"golang.org/x/sys/unix"
 )
 
-// ...
+func loadAndAttach(probe []byte) error {
+	bpfModule, err := bpf.NewModuleFromBuffer(probe, "sample_stack_trace")
+	if err != nil {
+		return errors.Wrap(err, "error creating the BPF module object")
+	}
+	defer bpfModule.Close()
 
-// Attach the BPF program to the sampling perf event.
-if _, err = prog.AttachPerfEvent(evt); err != nil {
-	return nil, errors.Wrap(err, "error attaching the BPF probe to the sampling perf event")
+	if err := bpfModule.BPFLoadObject(); err != nil {
+		return errors.Wrap(err, "error loading the BPF program")
+	}
+
+	prog, err := bpfModule.GetProgram("sample_stack_trace")
+	if err != nil {
+		return errors.Wrap(err, "error getting the BPF program object")
+	}
+
+	// ...
 }
 ```
 
+we'll leverage a software CPU clock Perf event just to be able to probe every x nanoseconds. As perf exposes user APIs, the userspace program can prepare the clock software events for all the CPUs and attach the eBPF program to them:
+
+```go
+import (
+	bpf "github.com/aquasecurity/libbpfgo"
+	"github.com/pkg/errors"
+	"golang.org/x/sys/unix"
+)
+
+func loadAndAttach(probe []byte) error {
+	// Load the program...
+
+	cpus := runtime.NumCPU()
+
+	for i := 0; i < cpus; i++ {
+		attr := &unix.PerfEventAttr{
+			Type: unix.PERF_TYPE_SOFTWARE,		// If type is PERF_TYPE_SOFTWARE, we are measuring software events provided by the kernel.
+			Config: unix.PERF_COUNT_SW_CPU_CLOCK,	// This reports the CPU clock, a high-resolution per-CPU timer.
+			
+			// A "sampling" event is one that generates an overflow notification every N events,
+			// where N is given by sample_period.
+			// sample_freq can be used if you wish to use frequency rather than period.
+			// sample_period and sample_freq are mutually exclusive.
+			// The kernel will adjust the sampling period to try and achieve the desired rate.
+			Sample: t.samplingPeriodMillis * 1000 * 1000,
+		}
+		
+		// Create the perf event file descriptor that corresponds to one event that is measured.
+		// We're measuring a clock timer software event just to run the program on a periodic schedule.
+		// When a specified number of clock samples occur, the kernel will trigger the program.
+		evt, err := unix.PerfEventOpen(
+			attr,	// The attribute set.
+			-1,	// All the tasks.
+			i,	// on the Nth CPU.
+			-1,	// The group_fd argument allows event groups to be created.
+			0,	// The flags.
+		)
+		if err != nil {
+			return errors.Wrap(err, "error creating the perf event")
+		}
+		defer func() {
+			if err := unix.Close(evt); err != nil {
+				return errors.Wrap(err, "failed to close perf event")
+			}
+		}()
+		
+		// Attach the BPF program to the sampling perf event.
+		if _, err = prog.AttachPerfEvent(evt); err != nil {
+			return errors.Wrap(err, "error attaching the BPF probe to the sampling perf event")
+		}
+	}
+
+	return nil
+}
+```
+
+> In this example we're using the [libbpfgo](https://github.com/aquasecurity/libbpfgo) library.
 
 The eBPF program needs to collect an histogram that contains the information about how many samples have been taken for a specific function, and in order to do it it needs to know which function is running when the sample is taken.
 
-As we need ot exchange this information we'll use a `BPF_MAP_TYPE_HASH` hash eBPF map for the histogram:
+As we need to exchange this information with userspace where calculations are done, we'll use a `BPF_MAP_TYPE_HASH` hash eBPF map for the histogram:
 
 ```c
 struct {
@@ -64,7 +116,7 @@ struct {
 } histogram SEC(".maps");
 ```
 
-of which the key type is declared as a structure that contains:
+of which the key type is a structure that contains:
 - PID;
 - kernel stack ID;
 - user stack ID:
@@ -77,7 +129,7 @@ typedef struct histogram_key {
 } histogram_key_t;
 ```
 
-and the value type is declared as a structure that contains:
+and the value type is a structure that contains:
 - sample count;
 - the binary pathname (we'll see it later):
 
@@ -91,6 +143,8 @@ typedef struct histogram_value {
 The stack traces and their IDs can be retrieved using the `bpf_get_stackid` eBPF helper.
 
 eBPF helpers are functions that, as you might have guessed, simplify work. The [`bpf_get_stackid`](https://elixir.bootlin.com/linux/v6.8.5/source/kernel/bpf/stackmap.c#L283) helper collects user and kernel stack frames by walking the user and kernel stacks and returns the stack ID, for the program that is running at the moment of the eBPF program execution in the process's context.
+
+So, one of the most complex work of stack unwinding is abstracted away thanks to this helper.
 
 More precisely from the [eBPF Docs](https://ebpf-docs.dylanreimerink.nl/linux/helper-function/bpf_get_stackid/):
 
@@ -118,7 +172,7 @@ int sample_stack_trace(struct bpf_perf_event_data* ctx)
 }
 ```
 
-and for the specific stack (which is, the key in our histogram), we need to update is sample count:
+and for the specific stack (which is, the key in our histogram), we need to update its sample count:
 
 ```c
 SEC("perf_event")
@@ -153,6 +207,8 @@ struct {
 } stack_traces SEC(".maps");
 ```
 
+also this information is abstracted away for us and available directly from userspace.
+
 This is mostly the needed work in kernel space, which is pretty simple, thanks to the available kernel instrumentation.
 
 Let's see how we can use this data from userspace.
@@ -161,7 +217,7 @@ Let's see how we can use this data from userspace.
 
 The sample stack traces can be collected in userspace from the stack traces `BPF_MAP_TYPE_STACK_TRACE` map by stack ID, which is available from the histogram `BPF_MAP_TYPE_HASH` map.
 
-You can see below an example with [libbpf-go](https://github.com/aquasecurity/libbpfgo):
+You can see below an example with [libbpfgo](https://github.com/aquasecurity/libbpfgo):
 
 ```go
 
