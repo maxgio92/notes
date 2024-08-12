@@ -196,7 +196,7 @@ func (t *Profile) RunProfile(ctx context.Context) error {
 		
 		var key HistogramKey
 		if err = binary.Read(bytes.NewBuffer(k), binary.LittleEndian, &key); err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error reading the stack profile count key %v", k))
+			return errors.Wrap(err, "error reading the stack profile count")
 		}
 		// ...
 		var symbols string
