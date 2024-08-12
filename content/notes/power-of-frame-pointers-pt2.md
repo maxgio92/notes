@@ -394,8 +394,8 @@ The user program loads the eBPF program, attaches it to the Perf event in order 
 The statistics are finally printed out like below:
 
 ```
-80% main->foo->bar;
-20% main->foo->baz;
+80% main()->foo()->bar()
+20% main()->foo()->baz()
 ```
 
 You can see a full working example at [github.com/maxgio92/yap](https://github.com/maxgio92/yap). YAP is a sampling-based, low overhead kernel-assisted profiler.
