@@ -258,11 +258,11 @@ if err != nil {
 	return err
 }
 for _, s := range syms {
-  // The symbol is correct if the trace instruction pointer address
-  // is within the symbol address range.
-  if ip >= s.Value && ip < (s.Value+s.Size) {
-    sym = s.Name
-  }
+	// The symbol is correct if the trace instruction pointer address
+	// is within the symbol address range.
+	if ip >= s.Value && ip < (s.Value+s.Size) {
+		sym = s.Name
+	}
 }
 ```
 
@@ -275,7 +275,7 @@ struct path path = BPF_CORE_READ(task, mm, exe_file, f_path);
 
 buffer_t *string_buf = get_buffer(0);
 if (string_buf == NULL) {
-  return NULL;
+	return NULL;
 }
 /* Write path string from path struct to the buffer */
 size_t buf_off = get_pathname_from_path(&path, string_buf);
