@@ -268,27 +268,6 @@ As the user space program is written in Go, we can leverage the `debug/elf` pack
 The correct symbol for an instruction pointer is the one of which the start and end instruction addresses are minor or equal, and major or equal respectively to the instruction pointer address:
 
 ```go
-func loadSymbol() (string, error) {
-	file, err := elf.Open(pathname)
-	// ...
-	
-	// Read symbols from the .symtab section.
-	syms, err := file.Symbols()
-	// ...
-
-	for _, sym := range syms {
-		// The symbol is correct if the trace instruction pointer address
-		// is within the symbol address range.
-		if ip >= sym.Value && ip < (sym.Value+s.Size) {
-			sym = s.Name
-		}
-	}
-
-	return sym, nil
-}
-```
-
-```go
 // LoadELF loads from the underlying filesystem the ELF file
 // with debug/elf.Open and stores it in the ELFSymTab struct.
 func LoadELF(pathname string) error {
