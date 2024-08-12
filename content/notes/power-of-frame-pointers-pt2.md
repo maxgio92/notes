@@ -217,9 +217,9 @@ Let's see how we can use this data from userspace.
 
 ## Userspace
 
-Of course besides the responsibility of loading and attaching the eBPF sampler probe, the sample stack traces need to be collected in userspace from the stack traces `BPF_MAP_TYPE_STACK_TRACE` map.
+Besides loading and attaching the eBPF sampler probe, the userspace program of the profiler collects the sample stack traces from the stack traces `BPF_MAP_TYPE_STACK_TRACE` map.
 
-This map needs to be accessed by stack ID, which is available from the histogram `BPF_MAP_TYPE_HASH` map.
+This map is accessible by stack ID, which is available from the histogram `BPF_MAP_TYPE_HASH` map.
 
 You can see below an example, using [libbpfgo](https://github.com/aquasecurity/libbpfgo) APIs:
 
@@ -285,10 +285,26 @@ residencyFraction = nStackSamples / nTotalSamples * 100.
 ```
 
 ```go
-fractionTable := make(map[string]float64, len(countTable))
-for trace, count := range countTable {
-	residencyFraction := float64(count) / float64(sampleCount)
-	fractionTable[trace] = residencyFraction
+func calculateStats() {
+	// ...
+
+	traceSampleCounts := make(map[string]int, 0)
+	totalSampleCount := 0
+	
+	// Iterate over the stack profile counts histogram map.
+	for it := histogram.Iterator(); it.Next(); {
+		// ...
+	
+		// Increment the traceSampleCounts map value for the stack trace symbol string (e.g. "main;subfunc;")
+		totalSampleCount += count
+		traceSampleCounts[trace] += count
+	}
+	
+	fractionTable := make(map[string]float64, len(traceSampleCounts))
+	for trace, count := range traceSampleCounts {
+		residencyFraction := float64(count) / float64(totalSampleCount)
+		fractionTable[trace] = residencyFraction
+	}
 }
 ```
 
@@ -300,7 +316,7 @@ There are different ways to resolve symbols based on the binary format and the w
 
 Because this is a demonstration and the profiler is simple we'll consider just ELF binaries that are not stripped.
 
-The ELF structure contains a symbol table (`symtab` section) that holds information needed to locate and relocate a program's symbolic definitions and references. With that information, we're able to, if this table is not missing as in the case of stripped binaries, associate instruction addresses with subroutine names.
+The ELF structure contains a symbol table in the `.symtab` section that holds information needed to locate and relocate a program's symbolic definitions and references. With that information, we're able to associate instruction addresses with subroutine names.
 
 As the user space program is written in Go, we can leverage the `debug/elf` from the standard library to access that information with:
 
@@ -325,20 +341,33 @@ for _, s := range syms {
 }
 ```
 
-## Binary path
+## Program executable path
 
-To access the ELF binary we need the process's binary pathname. The path can be accessed from the task's user space memory mapping descriptor ([`mm_struct`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/mm_types.h#L734)`->exe_file->f_path`) that we can pass it through an eBPF map to userspace to read from the ELF `.symtab` section.
+To access the ELF binary we need the process's binary pathname. The path can be accessed in kernel space from the `task_struct`'s user space memory mapping descriptor ([`task_struct`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/sched.h#L748)->[`mm_struct`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/mm_types.h#L734)->[`exe_file`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/mm_types.h#L905)->[`f_path`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/fs.h#L1016)) that we can pass it through an eBPF map to userspace to read from the ELF `.symtab` section.
 
 ```c
-struct path path = BPF_CORE_READ(task, mm, exe_file, f_path);
+/*
+ * get_task_exe_pathname returns the task exe_file pathname.
+ * This does not apply to kernel threads as they share the same memory-mapped address space,
+ * as opposed to user address space.
+ */
+static __always_inline void *get_task_exe_pathname(struct task_struct *task)
+{
+	/*
+	 * Get ref file path from the task's user space memory mapping descriptor.
+	 * exe_file->f_path could also be accessed from current task's binprm struct 
+	 * (ctx->args[2]->file->f_path)
+	 */
+	struct path path = BPF_CORE_READ(task, mm, exe_file, f_path);
 
-buffer_t *string_buf = get_buffer(0);
-if (string_buf == NULL) {
-	return NULL;
+	buffer_t *string_buf = get_buffer(0);
+	if (string_buf == NULL) {
+		return NULL;
+	}
+	/* Write path string from path struct to the buffer */
+	size_t buf_off = get_pathname_from_path(&path, string_buf);
+	return &string_buf->data[buf_off];
 }
-/* Write path string from path struct to the buffer */
-size_t buf_off = get_pathname_from_path(&path, string_buf);
-return &string_buf->data[buf_off];
 ```
 
 To retrieve the pathname from the `path` `struct` we need to walk the directory hierarchy until reaching the root directory of the same mount. For sake of simplicity we skip this part.
