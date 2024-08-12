@@ -416,7 +416,7 @@ You can see a full working example at [github.com/maxgio92/yap](https://github.c
 
 ## Next
 
-I personally would like to use the statistics to build graph structures, like [flamegraphs](https://github.com/brendangregg/FlameGraph).
+I personally would like to use statistics to build graph structures, like [flamegraphs](https://github.com/brendangregg/FlameGraph).
 
 ## Thanks
 
