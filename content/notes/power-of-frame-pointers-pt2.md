@@ -12,97 +12,6 @@ To summarize the main actors and responsibilities:
 - in kernel space: an eBPF sampler program samples with fixed frequency stack traces for a specific process;
 - in userspace: a program collects the samples, calculates the statistics, and resolves the subroutine's symbols.
 
-## eBPF Program loading and attaching
-
-To run the eBPF program with a fixed frequency the perf subsystem exposes a kernel software event of type CPU clock ([`PERF_COUNT_SW_CPU_CLOCK`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/perf_event.h#L119) with user APIs. Luckily, eBPF programs can be attached to those events.
-
-So, after the program is loaded:
-
-```go
-import (
-	bpf "github.com/aquasecurity/libbpfgo"
-	"github.com/pkg/errors"
-	"golang.org/x/sys/unix"
-)
-
-func loadAndAttach(probe []byte) error {
-	bpfModule, err := bpf.NewModuleFromBuffer(probe, "sample_stack_trace")
-	if err != nil {
-		return errors.Wrap(err, "error creating the BPF module object")
-	}
-	defer bpfModule.Close()
-
-	if err := bpfModule.BPFLoadObject(); err != nil {
-		return errors.Wrap(err, "error loading the BPF program")
-	}
-
-	prog, err := bpfModule.GetProgram("sample_stack_trace")
-	if err != nil {
-		return errors.Wrap(err, "error getting the BPF program object")
-	}
-
-	// ...
-}
-```
-
-we'll leverage a software CPU clock Perf event just to be able to probe every x nanoseconds. As perf exposes user APIs, the userspace program can prepare the clock software events for all the CPUs and attach the eBPF program to them:
-
-```go
-import (
-	bpf "github.com/aquasecurity/libbpfgo"
-	"github.com/pkg/errors"
-	"golang.org/x/sys/unix"
-)
-
-func loadAndAttach(probe []byte) error {
-	// Load the program...
-
-	cpus := runtime.NumCPU()
-
-	for i := 0; i < cpus; i++ {
-		attr := &unix.PerfEventAttr{
-			Type: unix.PERF_TYPE_SOFTWARE,		// If type is PERF_TYPE_SOFTWARE, we are measuring software events provided by the kernel.
-			Config: unix.PERF_COUNT_SW_CPU_CLOCK,	// This reports the CPU clock, a high-resolution per-CPU timer.
-			
-			// A "sampling" event is one that generates an overflow notification every N events,
-			// where N is given by sample_period.
-			// sample_freq can be used if you wish to use frequency rather than period.
-			// sample_period and sample_freq are mutually exclusive.
-			// The kernel will adjust the sampling period to try and achieve the desired rate.
-			Sample: 10 * 1000 * 1000,
-		}
-		
-		// Create the perf event file descriptor that corresponds to one event that is measured.
-		// We're measuring a clock timer software event just to run the program on a periodic schedule.
-		// When a specified number of clock samples occur, the kernel will trigger the program.
-		evt, err := unix.PerfEventOpen(
-			attr,	// The attribute set.
-			-1,	// All the tasks.
-			i,	// on the Nth CPU.
-			-1,	// The group_fd argument allows event groups to be created.
-			0,	// The flags.
-		)
-		if err != nil {
-			return errors.Wrap(err, "error creating the perf event")
-		}
-		defer func() {
-			if err := unix.Close(evt); err != nil {
-				return errors.Wrap(err, "failed to close perf event")
-			}
-		}()
-		
-		// Attach the BPF program to the sampling perf event.
-		if _, err = prog.AttachPerfEvent(evt); err != nil {
-			return errors.Wrap(err, "error attaching the BPF probe to the sampling perf event")
-		}
-	}
-
-	return nil
-}
-```
-
-> In this example we're using the [libbpfgo](https://github.com/aquasecurity/libbpfgo) library.
-
 ## Kernel space
 
 The eBPF program needs to collect a histogram that contains information about how many samples have been taken for a specific function.
@@ -383,6 +292,97 @@ static __always_inline void *get_task_exe_pathname(struct task_struct *task)
 ```
 
 To retrieve the pathname from the `path` `struct` we need to walk the directory hierarchy until reaching the root directory of the same mount. For sake of simplicity we skip this part.
+
+## eBPF Program loading and attaching
+
+To run the eBPF program with a fixed frequency the perf subsystem exposes a kernel software event of type CPU clock ([`PERF_COUNT_SW_CPU_CLOCK`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/perf_event.h#L119) with user APIs. Luckily, eBPF programs can be attached to those events.
+
+So, after the program is loaded:
+
+```go
+import (
+	bpf "github.com/aquasecurity/libbpfgo"
+	"github.com/pkg/errors"
+	"golang.org/x/sys/unix"
+)
+
+func loadAndAttach(probe []byte) error {
+	bpfModule, err := bpf.NewModuleFromBuffer(probe, "sample_stack_trace")
+	if err != nil {
+		return errors.Wrap(err, "error creating the BPF module object")
+	}
+	defer bpfModule.Close()
+
+	if err := bpfModule.BPFLoadObject(); err != nil {
+		return errors.Wrap(err, "error loading the BPF program")
+	}
+
+	prog, err := bpfModule.GetProgram("sample_stack_trace")
+	if err != nil {
+		return errors.Wrap(err, "error getting the BPF program object")
+	}
+
+	// ...
+}
+```
+
+we'll leverage a software CPU clock Perf event just to be able to probe every x nanoseconds. As perf exposes user APIs, the userspace program can prepare the clock software events for all the CPUs and attach the eBPF program to them:
+
+```go
+import (
+	bpf "github.com/aquasecurity/libbpfgo"
+	"github.com/pkg/errors"
+	"golang.org/x/sys/unix"
+)
+
+func loadAndAttach(probe []byte) error {
+	// Load the program...
+
+	cpus := runtime.NumCPU()
+
+	for i := 0; i < cpus; i++ {
+		attr := &unix.PerfEventAttr{
+			Type: unix.PERF_TYPE_SOFTWARE,		// If type is PERF_TYPE_SOFTWARE, we are measuring software events provided by the kernel.
+			Config: unix.PERF_COUNT_SW_CPU_CLOCK,	// This reports the CPU clock, a high-resolution per-CPU timer.
+			
+			// A "sampling" event is one that generates an overflow notification every N events,
+			// where N is given by sample_period.
+			// sample_freq can be used if you wish to use frequency rather than period.
+			// sample_period and sample_freq are mutually exclusive.
+			// The kernel will adjust the sampling period to try and achieve the desired rate.
+			Sample: 10 * 1000 * 1000,
+		}
+		
+		// Create the perf event file descriptor that corresponds to one event that is measured.
+		// We're measuring a clock timer software event just to run the program on a periodic schedule.
+		// When a specified number of clock samples occur, the kernel will trigger the program.
+		evt, err := unix.PerfEventOpen(
+			attr,	// The attribute set.
+			-1,	// All the tasks.
+			i,	// on the Nth CPU.
+			-1,	// The group_fd argument allows event groups to be created.
+			0,	// The flags.
+		)
+		if err != nil {
+			return errors.Wrap(err, "error creating the perf event")
+		}
+		defer func() {
+			if err := unix.Close(evt); err != nil {
+				return errors.Wrap(err, "failed to close perf event")
+			}
+		}()
+		
+		// Attach the BPF program to the sampling perf event.
+		if _, err = prog.AttachPerfEvent(evt); err != nil {
+			return errors.Wrap(err, "error attaching the BPF probe to the sampling perf event")
+		}
+	}
+
+	return nil
+}
+```
+
+> In this example we're using the [libbpfgo](https://github.com/aquasecurity/libbpfgo) library.
 
 ## Wrapping up
 
