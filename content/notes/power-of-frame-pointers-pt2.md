@@ -180,6 +180,7 @@ func Run(ctx context.Context) error {
 			trace, err := getStackTrace(stackTraces, key.KernelStackId)
 			// ...
 		}
+		// ...
 }
 
 func getStackTrace(stackTraces *bpf.BPFMap, id uint32) (*StackTrace, error) {
