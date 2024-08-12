@@ -403,7 +403,7 @@ func loadAndAttach(probe []byte) error {
 
 ## Wrapping up
 
-The user program loads the eBPF program, attaches it to the Perf event in order to be triggered with a fixed frequency, and samples stack traces. Trace instruction pointers are resolved into symbols and before returning, the statistics about residency fraction are calculated.
+The user program loads the eBPF program, attaches it to the Perf event in order to be triggered with a fixed frequency, and samples stack traces. Trace instruction pointers are resolved into symbols and before returning, the statistics about residency fraction are calculated with data stored in the histogram.
 
 The statistics are finally printed out like below:
 
