@@ -14,58 +14,124 @@ To summarize:
 
 ## Kernel space
 
-To run the program with a fixed frequency the perf subsystem provides us a clock software event ([`PERF_COUNT_SW_CPU_CLOCK`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/perf_event.h#L119)) and luckily eBPF programs can be attached to perf events.
+To run the program with a fixed frequency the perf subsystem exposes us a kernel software event of type CPU clock ([`PERF_COUNT_SW_CPU_CLOCK`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/perf_event.h#L119). Luckily, eBPF programs can be attached to those events.
 
-So we'll leverage a software CPU clock Perf event just to be able to run the probe every x nanoseconds. The userspace loader prepares the Perf event to attach the program to it:
+So we'll leverage a software CPU clock Perf event just to be able to probe every x nanoseconds. As perf exposes user APIs, the userspace program can prepare the clock software events for all the CPUs and attach the eBPF program to them:
 
 ```go
 attr := &unix.PerfEventAttr{
-  Type: unix.PERF_TYPE_SOFTWARE, // If type is PERF_TYPE_SOFTWARE, we are measuring software events provided by the kernel.
-  Config: unix.PERF_COUNT_SW_CPU_CLOCK, // This reports the CPU clock, a high-resolution per-CPU timer.
-
-  // A "sampling" event is one that generates an overflow notification every N events,
-  // where N is given by sample_period.
-  // sample_freq can be used if you wish to use frequency rather than period.
-  // sample_period and sample_freq are mutually exclusive.
-  // The kernel will adjust the sampling period to try and achieve the desired rate.
-  Sample: t.samplingPeriodMillis * 1000 * 1000,
+	Type: unix.PERF_TYPE_SOFTWARE,		// If type is PERF_TYPE_SOFTWARE, we are measuring software events provided by the kernel.
+	Config: unix.PERF_COUNT_SW_CPU_CLOCK,	// This reports the CPU clock, a high-resolution per-CPU timer.
+	
+	// A "sampling" event is one that generates an overflow notification every N events,
+	// where N is given by sample_period.
+	// sample_freq can be used if you wish to use frequency rather than period.
+	// sample_period and sample_freq are mutually exclusive.
+	// The kernel will adjust the sampling period to try and achieve the desired rate.
+	Sample: t.samplingPeriodMillis * 1000 * 1000,
 }
 
 // Create the perf event file descriptor that corresponds to one event that is measured.
 // We're measuring a clock timer software event just to run the program on a periodic schedule.
 // When a specified number of clock samples occur, the kernel will trigger the program.
 evt, err := unix.PerfEventOpen(
-  attr, // The attribute set.
-  t.pid, // The specified task.
-  i, // on the Nth CPU.
-  -1, // The group_fd argument allows event groups to be created.
-  0, // The flags.
+	attr,	// The attribute set.
+	t.pid,	// The specified task.
+	i,	// on the Nth CPU.
+	-1,	// The group_fd argument allows event groups to be created.
+	0,	// The flags.
 )
+
+// ...
+
+// Attach the BPF program to the sampling perf event.
+if _, err = prog.AttachPerfEvent(evt); err != nil {
+	return nil, errors.Wrap(err, "error attaching the BPF probe to the sampling perf event")
+}
 ```
 
-eBPF helpers are functions that, as you might have guessed, simplify work. The [`bpf_get_stackid`](https://elixir.bootlin.com/linux/v6.8.5/source/kernel/bpf/stackmap.c#L283) helper returns the stack id of the program that is currently running, at the moment of the eBPF program execution in the very process context.
 
-```c
-key.kernel_stack_id = bpf_get_stackid(ctx, &stack_traces, 0 | BPF_F_FAST_STACK_CMP);
-key.user_stack_id = bpf_get_stackid(ctx, &stack_traces, 0 | BPF_F_FAST_STACK_CMP | BPF_F_USER_STACK);
-```
+The eBPF program needs to collect an histogram that contains the information about how many samples have been taken for a specific function, and in order to do it it needs to know which function is running when the sample is taken.
 
-eBPF maps are ways to exchange data, often useful with programs running in user space. There are different types of maps. We use an hash map (`BPF_MAP_TYPE_HASH`) to exchange the histogram with the stack IDs:
+As we need ot exchange this information we'll use a `BPF_MAP_TYPE_HASH` hash eBPF map for the histogram:
 
 ```c
 struct {
 	__uint(type, BPF_MAP_TYPE_HASH);
-	__type(key, histogram_key_t);		/* per-process stack trace key */
-	__type(value, u64);			/* sample count */
+	__type(key, histogram_key_t);
+	__type(value, histogram_value_t);
 	__uint(max_entries, K_NUM_MAP_ENTRIES);
 } histogram SEC(".maps");
-...
+```
+
+of which the key type is declared as a structure that contains:
+- PID;
+- kernel stack ID;
+- user stack ID:
+  
+```c
+typedef struct histogram_key {
+	u32 pid;
+	u32 kernel_stack_id;
+	u32 user_stack_id;
+} histogram_key_t;
+```
+
+and the value type is declared as a structure that contains:
+- sample count;
+- the binary pathname (we'll see it later):
+
+```c
+typedef struct histogram_value {
+	u64 count;
+	const char *exe_path; /* We'll see it later on */
+} histogram_value_t;
+```
+
+The stack traces and their IDs can be retrieved using the `bpf_get_stackid` eBPF helper.
+
+eBPF helpers are functions that, as you might have guessed, simplify work. The [`bpf_get_stackid`](https://elixir.bootlin.com/linux/v6.8.5/source/kernel/bpf/stackmap.c#L283) helper collects user and kernel stack frames by walking the user and kernel stacks and returns the stack ID, for the program that is running at the moment of the eBPF program execution in the process's context.
+
+More precisely from the [eBPF Docs](https://ebpf-docs.dylanreimerink.nl/linux/helper-function/bpf_get_stackid/):
+
+> Walk a user or a kernel stack and return its id. To achieve this, the helper needs ctx, which is a pointer to the context on which the tracing program is executed, and a pointer to a map of type `BPF_MAP_TYPE_STACK_TRACE`.
+
+For example:
+
+```c
+struct {
+    __uint(type, BPF_MAP_TYPE_STACK_TRACE);
+    __uint(key_size, sizeof(u32));
+    __uint(value_size, PERF_MAX_STACK_DEPTH * sizeof(u64));
+    __uint(max_entries, 10000);
+} stack_traces SEC(".maps");
+
 SEC("perf_event")
 int sample_stack_trace(struct bpf_perf_event_data* ctx)
 {
-	...
+	histogram_key_t key;
+
+	/* Sample the user and kernel stack traces, and record in the stack_traces structure. */
+	key.pid = bpf_get_current_pid_tgid() >> 32;
+	key.kernel_stack_id = bpf_get_stackid(ctx, &stack_traces, 0);
+	key.user_stack_id = bpf_get_stackid(ctx, &stack_traces, 0 | BPF_F_USER_STACK);
+}
+```
+
+and for the specific stack (which is, the key in our histogram), we need to update is sample count:
+
+```c
+SEC("perf_event")
+int sample_stack_trace(struct bpf_perf_event_data* ctx)
+{
+	histogram_key_t key;
 	u64 one = 1;
-	...
+
+	/* Sample the user and kernel stack traces, and record in the stack_traces structure. */
+	key.pid = bpf_get_current_pid_tgid() >> 32;
+	key.kernel_stack_id = bpf_get_stackid(ctx, &stack_traces, 0);
+	key.user_stack_id = bpf_get_stackid(ctx, &stack_traces, 0 | BPF_F_USER_STACK);
+
 	/* Upsert stack trace histogram */
 	count = (u64*)bpf_map_lookup_elem(&histogram, &key);
 	if (count) {
@@ -76,9 +142,7 @@ int sample_stack_trace(struct bpf_perf_event_data* ctx)
 }
 ```
 
-and the type [`BPF_MAP_TYPE_STACK_TRACE`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/bpf.h#L914):
-
-**eBPF**:
+Besides the stack sample count we need to retrieve the stack trace, which is a list of instruction pointers. Thanks to the [`BPF_MAP_TYPE_STACK_TRACE`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/bpf.h#L914) eBPF map: 
 
 ```c
 struct {
@@ -89,9 +153,7 @@ struct {
 } stack_traces SEC(".maps");
 ```
 
-that we can access directly in user space to retrieve the sampled stack's trace, by passing the sampled stack ID:
-
-**Userspace with libbpf-go**:
+this data can be accessed in user space by stack ID (that we just collected). You can read below an example with [libbpf-go](https://github.com/aquasecurity/libbpfgo):
 
 ```go
 
