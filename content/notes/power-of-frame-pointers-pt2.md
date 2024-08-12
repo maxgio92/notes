@@ -69,7 +69,7 @@ func loadAndAttach(probe []byte) error {
 			// sample_freq can be used if you wish to use frequency rather than period.
 			// sample_period and sample_freq are mutually exclusive.
 			// The kernel will adjust the sampling period to try and achieve the desired rate.
-			Sample: t.samplingPeriodMillis * 1000 * 1000,
+			Sample: 10 * 1000 * 1000,
 		}
 		
 		// Create the perf event file descriptor that corresponds to one event that is measured.
@@ -105,7 +105,7 @@ func loadAndAttach(probe []byte) error {
 
 ## Kernel space
 
-The eBPF program needs to collect an histogram that contains the information about how many samples have been taken for a specific function.
+The eBPF program needs to collect a histogram that contains information about how many samples have been taken for a specific function.
 
 Because this information must be shared with userspace, which is where calculations are done, to store the histogram we'll use a `BPF_MAP_TYPE_HASH` eBPF hash map:
 
@@ -150,7 +150,7 @@ So, one of the most complex works of stack unwinding is abstracted away thanks t
 
 More precisely from the [eBPF Docs](https://ebpf-docs.dylanreimerink.nl/linux/helper-function/bpf_get_stackid/):
 
-> Walk a user or a kernel stack and return its id. To achieve this, the helper needs ctx, which is a pointer to the context on which the tracing program is executed, and a pointer to a map of type `BPF_MAP_TYPE_STACK_TRACE`.
+> Walk a user or a kernel stack and return its `id`. To achieve this, the helper needs `ctx`, which is a pointer to the context on which the tracing program is executed, and a pointer to a map of type `BPF_MAP_TYPE_STACK_TRACE`.
 
 For example:
 
@@ -217,12 +217,13 @@ Let's see how we can use this data from userspace.
 
 ## Userspace
 
-The sample stack traces can be collected in userspace from the stack traces `BPF_MAP_TYPE_STACK_TRACE` map by stack ID, which is available from the histogram `BPF_MAP_TYPE_HASH` map.
+Of course besides the responsibility of loading and attaching the eBPF sampler probe, the sample stack traces need to be collected in userspace from the stack traces `BPF_MAP_TYPE_STACK_TRACE` map.
 
-You can see below an example with [libbpfgo](https://github.com/aquasecurity/libbpfgo):
+This map needs to be accessed by stack ID, which is available from the histogram `BPF_MAP_TYPE_HASH` map.
+
+You can see below an example, using [libbpfgo](https://github.com/aquasecurity/libbpfgo) APIs:
 
 ```go
-
 type HistogramKey struct {
 	Pid int32
 
@@ -237,7 +238,7 @@ type HistogramKey struct {
 // 127 is the size of the profile, as for the default PERF_MAX_STACK_DEPTH.
 type StackTrace [127]uint64
 
-func (t *Profile) RunProfile(ctx context.Context) error {
+func Run(ctx context.Context) error {
 	// ...
 	for it := histogram.Iterator(); it.Next(); {
 		k := it.Key()
@@ -247,28 +248,28 @@ func (t *Profile) RunProfile(ctx context.Context) error {
 		
 		var key HistogramKey
 		if err = binary.Read(bytes.NewBuffer(k), binary.LittleEndian, &key); err != nil {
-			return errors.Wrap(err, "error reading the stack profile count")
+			// ...
 		}
 
 		var symbols string
 		if int32(key.UserStackId) >= 0 {
-			trace, err := t.getStackTrace(stackTraces, key.UserStackId)
+			trace, err := getStackTrace(stackTraces, key.UserStackId)
 			// ...
 		}
 		if int32(key.KernelStackId) >= 0 {
-			trace, err := t.getStackTrace(stackTraces, key.KernelStackId)
+			trace, err := getStackTrace(stackTraces, key.KernelStackId)
 			// ...
 		}
 }
 
-func (t *Profile) getStackTrace(stackTraces *bpf.BPFMap, id uint32) (*StackTrace, error) {
-	stackBinary, err := stackTraces.GetValue(unsafe.Pointer(&id))
+func getStackTrace(stackTraces *bpf.BPFMap, id uint32) (*StackTrace, error) {
+	stackB, err := stackTraces.GetValue(unsafe.Pointer(&id))
 	if err != nil {
 		return nil, err
 	}
 
 	var stackTrace StackTrace
-	err = binary.Read(bytes.NewBuffer(stackBinary), binary.LittleEndian, &stackTrace)
+	err = binary.Read(bytes.NewBuffer(stackB), binary.LittleEndian, &stackTrace)
 	if err != nil {
 		return nil, err
 	}
@@ -277,7 +278,7 @@ func (t *Profile) getStackTrace(stackTraces *bpf.BPFMap, id uint32) (*StackTrace
 }
 ```
 
-Once the sampling completes, we're able to calculate the program's residency fraction for each subroutine, that is, how much a specific subroutine has been run within a time frame:
+Once the sampling is completed, we're able to calculate the program's residency fraction for each subroutine, that is, how much a specific subroutine has been run within a time frame:
 
 ```
 residencyFraction = nStackSamples / nTotalSamples * 100.
