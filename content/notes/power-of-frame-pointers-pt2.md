@@ -179,6 +179,30 @@ type HistogramKey struct {
 // 127 is the size of the profile, as for the default PERF_MAX_STACK_DEPTH.
 type StackTrace [127]uint64
 
+func (t *Profile) RunProfile(ctx context.Context) error {
+	// ...
+	for it := histogram.Iterator(); it.Next(); {
+		k := it.Key()
+
+		// Get count for the specific sampled stack trace.
+		count, err := histogram.GetValue(unsafe.Pointer(&k[0]))
+		
+		var key HistogramKey
+		if err = binary.Read(bytes.NewBuffer(k), binary.LittleEndian, &key); err != nil {
+			return errors.Wrap(err, "error reading the stack profile count")
+		}
+
+		var symbols string
+		if int32(key.UserStackId) >= 0 {
+			trace, err := t.getStackTrace(stackTraces, key.UserStackId)
+			// ...
+		}
+		if int32(key.KernelStackId) >= 0 {
+			trace, err := t.getStackTrace(stackTraces, key.KernelStackId)
+			// ...
+		}
+}
+
 func (t *Profile) getStackTrace(stackTraces *bpf.BPFMap, id uint32) (*StackTrace, error) {
 	stackBinary, err := stackTraces.GetValue(unsafe.Pointer(&id))
 	if err != nil {
@@ -192,30 +216,6 @@ func (t *Profile) getStackTrace(stackTraces *bpf.BPFMap, id uint32) (*StackTrace
 	}
 
 	return &stackTrace, nil
-}
-
-func (t *Profile) RunProfile(ctx context.Context) error {
-	// ...
-	for it := histogram.Iterator(); it.Next(); {
-		k := it.Key()
-
-		// Get count for the specific sampled stack trace.
-		countBinary, err := histogram.GetValue(unsafe.Pointer(&k[0]))
-		
-		var key HistogramKey
-		if err = binary.Read(bytes.NewBuffer(k), binary.LittleEndian, &key); err != nil {
-			return errors.Wrap(err, "error reading the stack profile count")
-		}
-		// ...
-		var symbols string
-		if int32(key.UserStackId) >= 0 {
-			trace, err := t.getStackTrace(stackTraces, key.UserStackId)
-			// ...
-		}
-		if int32(key.KernelStackId) >= 0 {
-			trace, err := t.getStackTrace(stackTraces, key.KernelStackId)
-			// ...
-		}
 }
 ```
 
