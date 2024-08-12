@@ -346,6 +346,18 @@ for _, s := range syms {
 To access the ELF binary we need the process's binary pathname. The path can be accessed in kernel space from the `task_struct`'s user space memory mapping descriptor ([`task_struct`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/sched.h#L748)->[`mm_struct`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/mm_types.h#L734)->[`exe_file`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/mm_types.h#L905)->[`f_path`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/fs.h#L1016)) that we can pass it through an eBPF map to userspace to read from the ELF `.symtab` section.
 
 ```c
+SEC("perf_event")
+int sample_stack_trace(struct bpf_perf_event_data* ctx)
+{
+	/* ... */
+
+	/* Get current task executable pathname */
+	task = (struct task_struct *)bpf_get_current_task(); /* Current task struct */
+	exe_path = get_task_exe_pathname(task);
+
+	/* ... */
+}
+
 /*
  * get_task_exe_pathname returns the task exe_file pathname.
  * This does not apply to kernel threads as they share the same memory-mapped address space,
