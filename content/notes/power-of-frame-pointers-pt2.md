@@ -135,9 +135,9 @@ int sample_stack_trace(struct bpf_perf_event_data* ctx)
 	/* Upsert stack trace histogram */
 	count = (u64*)bpf_map_lookup_elem(&histogram, &key);
 	if (count) {
-	  (*count)++;
+		(*count)++;
 	} else {
-	  bpf_map_update_elem(&histogram, &key, &one, BPF_NOEXIST);
+		bpf_map_update_elem(&histogram, &key, &one, BPF_NOEXIST);
 	}
 }
 ```
