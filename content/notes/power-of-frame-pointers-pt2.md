@@ -114,7 +114,7 @@ int sample_stack_trace(struct bpf_perf_event_data* ctx)
 }
 ```
 
-Besides the stack trace sample count we need to retrieve the stack trace, which is a list of instruction pointers. Also this information, thanks to the [`BPF_MAP_TYPE_STACK_TRACE`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/bpf.h#L914) map: 
+Besides the stack trace sample count we need to retrieve the stack trace, which is a list of instruction pointers. Also this information, thanks to the [`BPF_MAP_TYPE_STACK_TRACE`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/bpf.h#L914) map is abstracted away for us and is available directly to userspace.
 
 ```c
 struct {
@@ -124,8 +124,6 @@ struct {
 	__uint(max_entries, K_NUM_MAP_ENTRIES);
 } stack_traces SEC(".maps");
 ```
-
-is abstracted away for us and is available directly to userspace.
 
 This is mostly the needed work in kernel space, which is pretty simplified thanks to the Linux kernel instrumentation.
 
