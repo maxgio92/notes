@@ -226,7 +226,7 @@ SEC(<span style=color:#e6db74>&#34;perf_event&#34;</span>)
 
 	<span style=color:#75715e>// ...
 </span><span style=color:#75715e></span>}
-</code></pre></div><p>this Perf event can be leveraged to be able to sample stack traces every x nanoseconds. Because Perf exposes user APIs, the userspace program can prepare the clock software events for all the CPUs and attach the eBPF program to them:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#f92672>import</span> (
+</code></pre></div><p>this Perf event can be leveraged to be able to trigger the sampler every x nanoseconds. Because Perf exposes user APIs, the userspace program can prepare the clock software events for all the CPUs and attach the eBPF program to them:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#f92672>import</span> (
 	<span style=color:#a6e22e>bpf</span> <span style=color:#e6db74>&#34;github.com/aquasecurity/libbpfgo&#34;</span>
 	<span style=color:#e6db74>&#34;github.com/pkg/errors&#34;</span>
 	<span style=color:#e6db74>&#34;golang.org/x/sys/unix&#34;</span>
