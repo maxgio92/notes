@@ -274,13 +274,11 @@ The userspace program will then access its `.symtab` ELF section.
 SEC("perf_event")
 int sample_stack_trace(struct bpf_perf_event_data* ctx)
 {
-	/* ... */
-
+	// ...
 	/* Get current task executable pathname */
 	task = (struct task_struct *)bpf_get_current_task(); /* Current task struct */
 	exe_path = get_task_exe_pathname(task);
-
-	/* ... */
+	// ...
 }
 
 /*
