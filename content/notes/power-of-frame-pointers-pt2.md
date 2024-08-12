@@ -312,7 +312,7 @@ To retrieve the pathname from the [`path`](https://elixir.bootlin.com/linux/v6.8
 
 ## The eBPF program trigger
 
-To run the eBPF program with a fixed frequency the [Perf](https://perf.wiki.kernel.org/index.php/Main_Page) subsystem exposes a kernel software event of type CPU clock ([`PERF_COUNT_SW_CPU_CLOCK`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/perf_event.h#L119) with user APIs. Luckily, eBPF programs can be attached to those events.
+To run the eBPF program with a fixed frequency the [Perf](https://perf.wiki.kernel.org/index.php/Main_Page) subsystem exposes a kernel software event of type CPU clock ([`PERF_COUNT_SW_CPU_CLOCK`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/perf_event.h#L119)) with user APIs. Luckily, eBPF programs can be attached to those events.
 
 So, after the program is loaded:
 
