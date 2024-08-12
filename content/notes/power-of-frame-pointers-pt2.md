@@ -239,7 +239,7 @@ The ELF structure contains a symbol table in the `.symtab` section that holds in
 
 As the user space program is written in Go, we can leverage the `debug/elf` package from the standard library to access that information.
 
-The correct symbol for the instruction pointer is the one of which the start and end addresses are minor or equal, and major or equal respectively to the instruction pointer address:
+The correct symbol for an instruction pointer is the one of which the start and end instruction addresses are minor or equal, and major or equal respectively to the instruction pointer address:
 
 ```go
 func loadSymbols() ([]string, error) {
