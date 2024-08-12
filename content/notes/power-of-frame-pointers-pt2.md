@@ -78,6 +78,8 @@ int sample_stack_trace(struct bpf_perf_event_data* ctx)
 {
 	histogram_key_t key;
 
+	// ...
+
 	/* Sample the user and kernel stack traces, and record in the stack_traces structure. */
 	key.pid = bpf_get_current_pid_tgid() >> 32;
 	key.kernel_stack_id = bpf_get_stackid(ctx, &stack_traces, 0);
@@ -94,6 +96,8 @@ int sample_stack_trace(struct bpf_perf_event_data* ctx)
 {
 	histogram_key_t key;
 	u64 one = 1;
+
+	// ...
 
 	/* Sample the user and kernel stack traces, and record in the stack_traces structure. */
 	// ...
