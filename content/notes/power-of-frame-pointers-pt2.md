@@ -246,15 +246,20 @@ The ELF structure contains a symbol table (`symtab` section) that holds informat
 As the user space program is written in Go, we can leverage the `debug/elf` from the standard library to access that information with:
 
 ```go
-// Open the file
+// Open the file.
 file, err := elf.Open(pathname)
-...
-// Read symbols from the .symtab section
+if err != nil {
+	return err
+}
+
+// Read symbols from the .symtab section.
 syms, err := file.Symbols()
-...
+if err != nil {
+	return err
+}
 for _, s := range syms {
   // The symbol is correct if the trace instruction pointer address
-  // is within the symbol address range
+  // is within the symbol address range.
   if ip >= s.Value && ip < (s.Value+s.Size) {
     sym = s.Name
   }
