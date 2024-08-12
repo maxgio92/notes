@@ -153,7 +153,15 @@ struct {
 } stack_traces SEC(".maps");
 ```
 
-this data can be accessed in user space by stack ID (that we just collected). You can read below an example with [libbpf-go](https://github.com/aquasecurity/libbpfgo):
+This is mostly the needed work in kernel space, which is pretty simple, thanks to the available kernel instrumentation.
+
+Let's see how we can use this data from userspace.
+
+## Userspace
+
+The sample stack traces can be collected in userspace from the stack traces `BPF_MAP_TYPE_STACK_TRACE` map by stack ID, which is available from the histogram `BPF_MAP_TYPE_HASH` map.
+
+You can see below an example with [libbpf-go](https://github.com/aquasecurity/libbpfgo):
 
 ```go
 
@@ -211,15 +219,6 @@ func (t *Profile) RunProfile(ctx context.Context) error {
 }
 ```
 
-This is mostly the needed work in kernel space, which is pretty simple, thanks to the available kernel instrumentation.
-
-## User space
-
-In user space, we're able then to access:
-- the sampled stack IDs
-- the stack traces (keyed by their stack IDs)
-
-We access the histogram of the sampled stacks that contain their IDs, to collect the traces.
 Once the sampling completes, we're able to calculate the program's residency fraction for each subroutine, that is, how much a specific subroutine has been run within a time frame:
 
 ```
@@ -234,7 +233,7 @@ for trace, count := range countTable {
 }
 ```
 
-Finally, because traces are an array of pushed instruction pointers, we need to translate IPs to symbols.
+Finally, because traces are an array of instruction pointers that are pushed to the stack, we need to translate addresses to symbols.
 
 ### Symbolization
 
