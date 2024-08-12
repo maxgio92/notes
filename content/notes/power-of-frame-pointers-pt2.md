@@ -293,4 +293,6 @@ The program loads the eBPF program, attaches it to the perf event created, and r
 20% main; foo; baz;
 ```
 
+You can see a full working example at https://github.com/maxgio92/yap, which stands for Yet Another Profiler. YAP is a sampling-based, low overhead kernel-assisted profiler.
+
 ## Thanks
