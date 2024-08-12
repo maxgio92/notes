@@ -2,11 +2,11 @@
 Title: Unleashing the power of frame pointers for profiling pt.2 - Writing a simple profiler
 ---
 
-In the previous blog about the program execution environment I introduced the concepts of stack unwinding with frame pointers as one of the techniques leveraged for profiling a program.
+In the previous blog about the program execution environment, we introduced the concepts of stack unwinding with frame pointers as one of the techniques leveraged for profiling a program.
 
-In this blog, we'll see practically how we can build a simple profiler that leverages frame pointers sampling stack traces to calculate statistics of program's subroutines.
+In this blog, we'll see practically how we can build a simple profiler that leverages frame pointers sampling stack traces to calculate statistics of the program's subroutines.
 
-In order to limit the overhead, the Linux kernel instrumentation can help the profiler with that work, and more precisely eBPF allows it to dynamically run at specific kernel paths programs, which in our case it's a stack trace sampler, without the need to build and load modules. This way the analysed program doesn't need to be instrumented.
+In order to limit the overhead, we can leverage the Linux kernel instrumentation and thanks to eBPF we're able to dynamically load and attach the profiler program to specific kernel entry points, without the need to build and load modules. Moreover, we don't need traced programs to be instrumented.
 
 To summarize:
 - in kernel space: an eBPF sampler program samples with a fixed frequency stack traces for a specific process;
