@@ -246,9 +246,7 @@ The correct symbol for the instruction pointer is the one of which the start and
 ```go
 func loadSymbols() ([]string, error) {
 	file, err := elf.Open(pathname)
-	if err != nil {
-		return nil, err
-	}
+	// ...
 	
 	// Read symbols from the .symtab section.
 	syms, err := file.Symbols()
@@ -326,18 +324,16 @@ import (
 
 func loadAndAttach(probe []byte) error {
 	bpfModule, err := bpf.NewModuleFromBuffer(probe, "sample_stack_trace")
-	if err != nil {
-		return errors.Wrap(err, "error creating the BPF module object")
-	}
+	// ...
 	defer bpfModule.Close()
 
 	if err := bpfModule.BPFLoadObject(); err != nil {
-		return errors.Wrap(err, "error loading the BPF program")
+		// ...
 	}
 
 	prog, err := bpfModule.GetProgram("sample_stack_trace")
 	if err != nil {
-		return errors.Wrap(err, "error getting the BPF program object")
+		// ...
 	}
 
 	// ...
@@ -381,14 +377,7 @@ func loadAndAttach(probe []byte) error {
 			-1,	// The group_fd argument allows event groups to be created.
 			0,	// The flags.
 		)
-		if err != nil {
-			return errors.Wrap(err, "error creating the perf event")
-		}
-		defer func() {
-			if err := unix.Close(evt); err != nil {
-				return errors.Wrap(err, "failed to close perf event")
-			}
-		}()
+		// ...
 		
 		// Attach the BPF program to the sampling perf event.
 		if _, err = prog.AttachPerfEvent(evt); err != nil {
