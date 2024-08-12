@@ -77,7 +77,6 @@ SEC("perf_event")
 int sample_stack_trace(struct bpf_perf_event_data* ctx)
 {
 	histogram_key_t key;
-
 	// ...
 
 	/* Sample the user and kernel stack traces, and record in the stack_traces structure. */
@@ -96,7 +95,6 @@ int sample_stack_trace(struct bpf_perf_event_data* ctx)
 {
 	histogram_key_t key;
 	u64 one = 1;
-
 	// ...
 
 	/* Sample the user and kernel stack traces, and record in the stack_traces structure. */
