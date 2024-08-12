@@ -24,6 +24,12 @@ These responsibilities can be assigned to two main components:
 
 The main responsibility of the eBPF program count how often a specific code path is executed and create a histogram of the results. Also, it gathers the stack traces to be accessed from userspace.
 
+We'll use two data structures for this information:
+- an histogram eBPF `BPF_MAP_TYPE_HASH` map
+- a stack traces eBPF `BPF_MAP_TYPE_STACK_TRACE` map
+
+![image](https://github.com/user-attachments/assets/5bc6a5bb-3b90-46e7-931d-5dab6b012558)
+
 ### Histogram
 
 We'll store the histogram of sample counts for a particular code path in a `BPF_MAP_TYPE_HASH` eBPF hash map:
@@ -73,7 +79,7 @@ More precisely from the [eBPF Docs](https://ebpf-docs.dylanreimerink.nl/linux/he
 
 So, one of the most complex works that is the stack unwinding is abstracted away thanks to this helper.
 
-For example, we declare the `stack_traces` map, and we prepare the `histogram` key:
+For example, we declare the `stack_traces` `BPF_MAP_TYPE_STACK_TRACE` map that contains the list of instruction pointers, and we prepare the `histogram` key:
 
 ```c
 struct {
