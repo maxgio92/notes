@@ -32,7 +32,6 @@ SEC(<span style=color:#e6db74>&#34;perf_event&#34;</span>)
 <span style=color:#66d9ef>int</span> sample_stack_trace(<span style=color:#66d9ef>struct</span> bpf_perf_event_data<span style=color:#f92672>*</span> ctx)
 {
 	histogram_key_t key;
-
 	<span style=color:#75715e>// ...
 </span><span style=color:#75715e></span>
 	<span style=color:#75715e>/* Sample the user and kernel stack traces, and record in the stack_traces structure. */</span>
@@ -46,7 +45,6 @@ SEC(<span style=color:#e6db74>&#34;perf_event&#34;</span>)
 {
 	histogram_key_t key;
 	u64 one <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>;
-
 	<span style=color:#75715e>// ...
 </span><span style=color:#75715e></span>
 	<span style=color:#75715e>/* Sample the user and kernel stack traces, and record in the stack_traces structure. */</span>
