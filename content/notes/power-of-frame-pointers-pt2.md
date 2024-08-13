@@ -443,7 +443,7 @@ The statistics are finally printed out like below:
 20% main();foo();baz()
 ```
 
-You can see a full working example at [github.com/maxgio92/yap](https://github.com/maxgio92/yap). YAP is a sampling-based, low overhead kernel-assisted profiler.
+You can see a full working example at [github.com/maxgio92/yap](https://github.com/maxgio92/yap). YAP is a sampling-based, low overhead kernel-assisted profiler I started for learning eBPF and how a program is executed by the CPU.
 
 ## Next
 
@@ -455,4 +455,14 @@ Also, I'd like to investigate other ways to extend symbolization support for str
 
 Thanks for your time, I hope you enjoyed this blog.
 
+I want to special thank [Pixie](https://github.com/pixie-io/) for their knowledge sharing on their [blog](https://blog.px.dev/), and the Linux project for BPF code [samples](https://github.com/torvalds/linux/blob/v6.8/samples/bpf).
+
 Any form of feedback is more than welcome. Hear from you soon!
+
+## References
+
+* https://blog.px.dev/cpu-profiling/
+* https://github.com/torvalds/linux/blob/v6.8/samples/bpf/trace_event_kern.c
+* https://groups.google.com/g/golang-nuts/c/wtw0Swe0CAY
+* https://0xax.gitbooks.io/linux-insides/content/index.html
+* https://www.polarsignals.com/blog/posts/2022/01/13/fantastic-symbols-and-where-to-find-them
