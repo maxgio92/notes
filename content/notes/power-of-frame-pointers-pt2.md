@@ -307,6 +307,9 @@ func (e *ELFSymTab) GetSymbol(ip uint64) (string, error) {
 #### Program executable path
 
 To access the ELF binary we need the process's binary pathname. The pathname can be retrieved in kernel space from the `task_struct`'s user space memory mapping descriptor ([`task_struct`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/sched.h#L748)->[`mm_struct`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/mm_types.h#L734)->[`exe_file`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/mm_types.h#L905)->[`f_path`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/fs.h#L1016)) that we can pass through an eBPF map to userspace.
+This is why the histogram map value struct contains also the executable pathname.
+
+> I think there's space for refactoring and decoupling this information from the histogram.
 
 The userspace program will then access its `.symtab` ELF section.
 
