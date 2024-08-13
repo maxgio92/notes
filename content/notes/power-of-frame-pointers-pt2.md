@@ -1,4 +1,4 @@
----
+=---
 Title: Unleashing the power of frame pointers for profiling pt.2 - Writing a simple profiler
 ---
 
@@ -380,7 +380,8 @@ func loadAndAttach(probe []byte) error {
 }
 ```
 
-this Perf event can be leveraged to be able to run the sampler by interrupting the CPUs every x milliseconds independently of the process running. Because Perf exposes user APIs, the userspace program can prepare the clock software events and attach the eBPF program to them:
+this Perf event can be leveraged to run the sampler by interrupting the CPUs every x milliseconds independently of the process running.
+Because Perf exposes user APIs, the userspace program can prepare the clock software events and attach the loaded [BPF_PROG_TYPE_PERF_EVENT](https://ebpf-docs.dylanreimerink.nl/linux/program-type/BPF_PROG_TYPE_PERF_EVENT/) eBPF program to them:
 
 ```go
 import (
