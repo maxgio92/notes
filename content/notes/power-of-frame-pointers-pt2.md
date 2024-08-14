@@ -28,7 +28,7 @@ We'll use two data structures for this information:
 - an histogram eBPF `BPF_MAP_TYPE_HASH` map
 - a stack traces eBPF `BPF_MAP_TYPE_STACK_TRACE` map
 
-![histogram_stack_traces_structs](https://raw.githubusercontent.com/maxgio92/notes/9800498497f862b72af734c5461c5256bf2fe29f/content/images/histogram_stack_traces.svg)
+![histogram_stack_traces_structs](https://raw.githubusercontent.com/maxgio92/notes/6fbe08ae0841ebe54ca92fa3d36f358ddd8f4599/content/images/stack_traces_histogram_structs.svg)
 
 ### Histogram
 
