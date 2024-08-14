@@ -28,7 +28,7 @@ We'll use two data structures for this information:
 - an histogram eBPF `BPF_MAP_TYPE_HASH` map
 - a stack traces eBPF `BPF_MAP_TYPE_STACK_TRACE` map
 
-![image](https://github.com/user-attachments/assets/5bc6a5bb-3b90-46e7-931d-5dab6b012558)
+![histogram_stack_traces_structs](https://raw.githubusercontent.com/maxgio92/notes/9800498497f862b72af734c5461c5256bf2fe29f/content/images/histogram_stack_traces.svg)
 
 ### Histogram
 
@@ -354,7 +354,7 @@ To retrieve the pathname from the [`path`](https://elixir.bootlin.com/linux/v6.8
 
 To run the eBPF program with a fixed frequency the [Perf](https://perf.wiki.kernel.org/index.php/Main_Page) subsystem exposes a kernel software event of type CPU clock ([`PERF_COUNT_SW_CPU_CLOCK`](https://elixir.bootlin.com/linux/v6.8.5/source/include/uapi/linux/perf_event.h#L119)) with user APIs. Luckily, eBPF programs can be attached to those events.
 
-![image](https://blog.px.dev/static/7b13192052f268bfd22577215d0c9f01/sample-stack-trace-function.png)
+![perf-event-software-cpu-clock-trigger-bpf](https://raw.githubusercontent.com/maxgio92/notes/7e1e10ea843e5289390d5b89037dfd7589d1d847/content/images/perf-cpu-clock-sw-event-trigger.svg)
 
 So, after the program is loaded:
 
