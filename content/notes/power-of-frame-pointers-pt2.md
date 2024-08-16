@@ -279,8 +279,7 @@ typedef struct {
 The correct symbol name (`st_name`) for an instruction pointer is the one of which the start (`st_value`) and end instruction addresses (`st_value` + `st_size`) are minor or equal, and major or equal respectively to the instruction pointer address, for each frame in the stack trace.
 
 Because the user space program is written in Go, we can leverage the `debug/elf` package from the standard library to access that information to access ELF data.
-The `elf.File` struct exposes a `Symbols()` function that returns the symbol table for the specific ELF `File` as a slice of [`Symbol`](https://pkg.go.dev/debug/elf#Symbol) objects.
-In turn, `Symbol` exposes exacatly `Value` and `Size`.
+The [`elf.File`](https://pkg.go.dev/debug/elf#File.Symbols) struct exposes a [`Symbols()`](https://pkg.go.dev/debug/elf#File.Symbols) function that returns the symbol table for the specific ELF `File` as a slice of [`Symbol`](https://pkg.go.dev/debug/elf#Symbol) objects, which in turn expose `Value` and `Size`.
 
 So, we can match the right symbol for frame's instruction pointer from the stack trace like below:
 
