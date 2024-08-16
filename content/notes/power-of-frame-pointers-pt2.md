@@ -482,6 +482,7 @@ Any form of feedback is more than welcome. Hear from you soon!
 
 * https://blog.px.dev/cpu-profiling/
 * https://github.com/torvalds/linux/blob/v6.8/samples/bpf/trace_event_kern.c
+* https://refspecs.linuxbase.org/elf/
 * https://groups.google.com/g/golang-nuts/c/wtw0Swe0CAY
 * https://0xax.gitbooks.io/linux-insides/content/index.html
 * https://www.polarsignals.com/blog/posts/2022/01/13/fantastic-symbols-and-where-to-find-them
