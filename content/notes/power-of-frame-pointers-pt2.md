@@ -276,7 +276,7 @@ typedef struct {
 } Elf64_Sym;
 ```
 
-The correct symbol for an instruction pointer is the one of which the start (`st_value`) and end instruction addresses (`st_value` + `st_size`) are minor or equal, and major or equal respectively to the instruction pointer address.
+The correct symbol name (`st_name`) for an instruction pointer is the one of which the start (`st_value`) and end instruction addresses (`st_value` + `st_size`) are minor or equal, and major or equal respectively to the instruction pointer address.
 
 Because the user space program is written in Go, we can leverage the `debug/elf` package from the standard library to access that information to access ELF data.
 The `elf.File` struct exposes a `Symbols()` function that returns the symbol table for the specific ELF `File` as a slice of [`Symbol`](https://pkg.go.dev/debug/elf#Symbol) objects.
