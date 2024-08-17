@@ -263,7 +263,7 @@ Because this is a demonstration and the profiler is simple we'll consider just E
 
 The ELF structure contains a [symbol table](https://refspecs.linuxbase.org/elf/gabi4+/ch4.symtab.html) in the `.symtab` section that holds information needed to locate and relocate a program's symbolic definitions and references. With that information, we're able to associate instruction addresses with subroutine names.
 
-The structure of the symbol table is the following:
+An entry in the symbol table has the following structure:
 
 ```c
 typedef struct {
