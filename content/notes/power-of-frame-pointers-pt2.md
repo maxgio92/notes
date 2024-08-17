@@ -6,7 +6,7 @@ In the previous blog about the program execution environment, we introduced the 
 
 In this blog, we'll see practically how we can build a simple sampling-based continuous profiler.
 
-Because we don't want to require the application to be instrumented, we can use the Linux kernel instrumentation, and thanks to eBPF we're able to dynamically load and attach the profiler program to specific kernel entry points, limiting the introduced overhead by exchanging data with userspace through eBPF maps. 
+Since we don’t want the application to necessarily be instrumented, we can use the Linux kernel instrumentation. Thanks to eBPF we’re able to dynamically load and attach the profiler program to specific kernel entry points, limiting the introduced overhead by exchanging data with userspace through eBPF maps.
 
 The goal is to calculate statistics about the time spent by a program on specific code paths.
 
