@@ -317,7 +317,7 @@ To access the ELF binary we need the process's binary pathname. The pathname can
 
 Because this data needs to be shared with userspace in order to read from the ELF symbol table, we can declare a map:
 
-<img src="https://raw.githubusercontent.com/maxgio92/notes/465c142604835037dfc08a9acf753d9177a9af94/content/images/yap_maps_binprm_info.svg" style="display: block; margin: 0 auto" />
+![binprm_info_map](https://raw.githubusercontent.com/maxgio92/notes/465c142604835037dfc08a9acf753d9177a9af94/content/images/yap_maps_binprm_info.svg)
 
 This hash map stores the binary program file path for each process:
 
