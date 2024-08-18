@@ -28,7 +28,7 @@ We'll use two data structures for this information:
 - an histogram eBPF `BPF_MAP_TYPE_HASH` map
 - a stack traces eBPF `BPF_MAP_TYPE_STACK_TRACE` map
 
-![histogram_stack_traces_structs](https://raw.githubusercontent.com/maxgio92/notes/1a996f7c266650f856b68ce558e3069daf887111/content/images/stack_traces_histogram_structs.svg)
+![histogram_stack_traces_structs](https://raw.githubusercontent.com/maxgio92/notes/465c142604835037dfc08a9acf753d9177a9af94/content/images/yap_maps_stack_traces_histogram.svg)
 
 ### Histogram
 
@@ -315,7 +315,10 @@ func (e *ELFSymTab) GetSymbol(ip uint64) (string, error) {
 
 To access the ELF binary we need the process's binary pathname. The pathname can be retrieved in kernel space from the `task_struct`'s user space memory mapping descriptor ([`task_struct`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/sched.h#L748)->[`mm_struct`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/mm_types.h#L734)->[`exe_file`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/mm_types.h#L905)->[`f_path`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/fs.h#L1016)) that we can pass through an eBPF map to userspace.
 
-Because this data needs to be shared with userspace in order to read from the ELF symbol table, we can declare a map.
+Because this data needs to be shared with userspace in order to read from the ELF symbol table, we can declare a map:
+
+![binprm_info_map](https://raw.githubusercontent.com/maxgio92/notes/465c142604835037dfc08a9acf753d9177a9af94/content/images/yap_maps_binprm_info.svg)
+
 This hash map stores the binary program file path for each process:
 
 ```c
@@ -327,7 +330,7 @@ struct {
 } binprm_info SEC(".maps");
 ```
 
-that is updated accordingly:
+that is updated accordingly alongside the histogram:
 
 ```c
 SEC("perf_event")
