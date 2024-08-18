@@ -38,7 +38,7 @@ We'll store the histogram of sample counts for a particular code path in a `BPF_
 struct {
 	__uint(type, BPF_MAP_TYPE_HASH);
 	__type(key, histogram_key_t);
-	__type(value, histogram_value_t);
+	__type(value, u64);
 	__uint(max_entries, K_NUM_MAP_ENTRIES);
 } histogram SEC(".maps");
 ```
@@ -56,22 +56,13 @@ typedef struct histogram_key {
 } histogram_key_t;
 ```
 
-The value of this map is a structure that mainly contains the collected sample count:
-
-```c
-typedef struct histogram_value {
-	u64 count;
-	const char *exe_path;
-} histogram_value_t; sample stack traces.
-```
-
-> It also contains the program executable path. We'll see later on why. 
+The value of this map is a `u64` to store stack trace counts. 
 
 ### Stack traces
 
 To get the information about the running code path we can use the `bpf_get_stackid` eBPF helper.
 
-eBPF helpers are functions that, as you might have gue sample stack traces.ssed, simplify work. The [`bpf_get_stackid`](https://elixir.bootlin.com/linux/v6.8.5/source/kernel/bpf/stackmap.c#L283) helper collects user and kernel stack frames by walking the user and kernel stacks and returns the ID of the state of the stack at a specific point in time.
+eBPF helpers are functions that, as you might have guessed, simplify work. The [`bpf_get_stackid`](https://elixir.bootlin.com/linux/v6.8.5/source/kernel/bpf/stackmap.c#L283) helper collects user and kernel stack frames by walking the user and kernel stacks and returns the ID of the state of the stack at a specific point in time.
 
 More precisely from the [eBPF Docs](https://ebpf-docs.dylanreimerink.nl/linux/helper-function/bpf_get_stackid/):
 
@@ -323,11 +314,53 @@ func (e *ELFSymTab) GetSymbol(ip uint64) (string, error) {
 #### Program executable path
 
 To access the ELF binary we need the process's binary pathname. The pathname can be retrieved in kernel space from the `task_struct`'s user space memory mapping descriptor ([`task_struct`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/sched.h#L748)->[`mm_struct`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/mm_types.h#L734)->[`exe_file`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/mm_types.h#L905)->[`f_path`](https://elixir.bootlin.com/linux/v6.8.5/source/include/linux/fs.h#L1016)) that we can pass through an eBPF map to userspace.
-This is why the histogram map value struct contains also the executable pathname.
 
-> I think there's space for refactoring and decoupling this information from the histogram.
+Because this data needs to be shared with userspace in order to read from the ELF symbol table, we can declare a map.
+This hash map stores the binary program file path for each process:
 
-The userspace program will then access its `.symtab` ELF section.
+```c
+struct {
+	__uint(type, BPF_MAP_TYPE_HASH);
+	__type(key, u32);			/* pid */
+	__type(value, char[MAX_ARRAY_SIZE]);	/* exe_path */
+	__uint(max_entries, K_NUM_MAP_ENTRIES);
+} binprm_info SEC(".maps");
+```
+
+that is updated accordingly:
+
+```c
+SEC("perf_event")
+int sample_stack_trace(struct bpf_perf_event_data* ctx)
+{
+	// ...
+	struct task_struct *task;
+
+	/* Get current task executable pathname */
+	task = (struct task_struct *)bpf_get_current_task(); /* Current task struct */
+	exe_path = get_task_exe_pathname(task);
+	if (exe_path == NULL) {
+		return 0;
+	}
+	len = bpf_core_read_str(&exe_path_str, sizeof(exe_path_str), exe_path);
+	if (len < 0) {
+		return 0;
+	}
+
+	// ...
+	/* Upsert stack trace histogram */
+	count = (u64*)bpf_map_lookup_elem(&histogram, &key);
+	if (count) {
+		(*count)++;
+	} else {
+		bpf_map_update_elem(&histogram, &key, &one, BPF_NOEXIST);
+		bpf_map_update_elem(&binprm_info, &key.pid, &exe_path_str, BPF_ANY);
+		// ...
+	}
+}
+```
+
+The userspace program will then consume the `exe_path` for the profiled process to access the `.symtab` ELF section.
 
 ```c
 SEC("perf_event")
