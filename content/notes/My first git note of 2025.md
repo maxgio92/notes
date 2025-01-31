@@ -25,7 +25,6 @@ title: Fosdem 2025 schedule
 | 15:00-15:30 | Go | https://fosdem.org/2025/schedule/event/fosdem-2025-4944-developing-a-modern-shell-and-programming-language-with-go/ |
 | 15:30-16:00 | Go | https://fosdem.org/2025/schedule/event/fosdem-2025-5124-an-intro-to-ebpf-with-go-the-foundation-of-modern-kubernetes-networking/ |
 | 15:30-15:50 | Containers | [podman-systemd-quadlet](https://fosdem.org/2025/schedule/event/fosdem-2025-5383-running-containers-under-systemd-exploring-podman-quadlet/) |
-
 | 16:00-16:30 | Go | https://fosdem.org/2025/schedule/event/fosdem-2025-4966-webassembly-for-gophers-from-wasm-to-asm-and-back-/ |
 | 16:50-17:20 | Containers | https://fosdem.org/2025/schedule/event/fosdem-2025-4920-syd-youki-syd-oci-introduction-to-a-secure-container-runtime-for-linux/ |
 | 17:00-17:30 | Go | https://fosdem.org/2025/schedule/event/fosdem-2025-5736-implementing-parallelism-how-we-added-threading-and-multicore-support-in-tinygo/ |
