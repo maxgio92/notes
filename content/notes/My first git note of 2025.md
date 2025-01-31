@@ -46,6 +46,11 @@ title: Fosdem 2025 schedule
 |-|-|-|
 | 09:00-17:00 | Kernel | https://fosdem.org/2025/schedule/track/kernel/ |
 | 09:00-17:00 | Distros | https://fosdem.org/2025/schedule/track/distributions/ |
+| 12:30-13:10 | Kernel | [sched_ext-gaming-fps](https://fosdem.org/2025/schedule/event/fosdem-2025-4618-level-up-your-linux-gaming-how-schedext-can-save-your-fps/) |
+| 14:40-15:10 | Kernel | [rust-for-linux](https://fosdem.org/2025/schedule/event/fosdem-2025-5875-rust-for-linux-an-overview/) |
+| 15:40-15:50 | Kernel | [redoxos-microkernel](https://fosdem.org/2025/schedule/event/fosdem-2025-5973-redox-os-a-microkernel-based-unix-like-os/) |
+| 16:10-16:40 | Kernel | [syscall-tracing-virtualization](https://fosdem.org/2025/schedule/event/fosdem-2025-6231-status-and-desiderata-for-syscall-tracing-and-virtualization-support/) |
+| 16:40-17:00 | Kernel | [coccinelle-explorer-assembly](https://fosdem.org/2025/schedule/event/fosdem-2025-6515-coccinelle-explorer-learning-semantic-patching-interactively/) |
 
 
 ---
