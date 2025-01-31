@@ -31,11 +31,13 @@ title: Fosdem 2025 schedule
 | 17:20-17:40 | Containers | [containers-specialized-microvms](https://fosdem.org/2025/schedule/event/fosdem-2025-6284-less-overhead-strong-isolation-running-containers-in-minimal-specialized-linux-vms/) |
 | 17:20-18:00 | Rust | [rustify-linux-scheduler](https://fosdem.org/2025/schedule/event/fosdem-2025-4620-rust-ifying-the-linux-kernel-scheduler-in-user-space-/) |
 | 17:40-18:10 | Containers | [dangerzone-trusted-containers](https://fosdem.org/2025/schedule/event/fosdem-2025-6251-dangerzone-containers-that-contain-containers-that-contain-attackers/) |
-| 18:05 | 18:45 | Rust | [alpm-rust](https://fosdem.org/2025/schedule/event/fosdem-2025-6259-adventures-in-oxidizing-arch-linux-package-management/) |
+| 18:05-18:45 | Rust | [alpm-rust](https://fosdem.org/2025/schedule/event/fosdem-2025-6259-adventures-in-oxidizing-arch-linux-package-management/) |
 | 18:10-18:30 | Containers | https://fosdem.org/2025/schedule/event/fosdem-2025-5946-d4c-leveraging-delta-encodings-for-faster-and-lighter-container-image-updating/ |
 
 ## Sunday
 
+| Time | Room | URL |
+|-|-|-|
 | 09:00-17:00 | Kernel | https://fosdem.org/2025/schedule/track/kernel/ |
 | 09:00-17:00 | Distros | https://fosdem.org/2025/schedule/track/distributions/ |
 
