@@ -46,7 +46,10 @@ title: Fosdem 2025 schedule
 |-|-|-|
 | 09:00-17:00 | Kernel | https://fosdem.org/2025/schedule/track/kernel/ |
 | 09:00-17:00 | Distros | https://fosdem.org/2025/schedule/track/distributions/ |
+| 10:30-11:00 | Distros | [silverblue-disk-encryption](https://fosdem.org/2025/schedule/event/fosdem-2025-6348-fedora-silverblue-with-disk-encryption-how-i-almost-lost-everything-but-gained-much-wisdom-side-story-bmaptool-and-ddrescue-why-one-should-never-ever-use-dd-/) |
 | 12:30-13:10 | Kernel | [sched_ext-gaming-fps](https://fosdem.org/2025/schedule/event/fosdem-2025-4618-level-up-your-linux-gaming-how-schedext-can-save-your-fps/) |
+| 12:30-13:00 | Distros | [reproducible-builds](https://fosdem.org/2025/schedule/event/fosdem-2025-6479-a-tale-of-several-distros-joining-forces-for-a-common-goal-reproducible-builds/) |
+| 14:30-15:00 | Distros | [fixing-cves-debian](https://fosdem.org/2025/schedule/event/fosdem-2025-6354-fixing-cves-on-debian-almost-everything-you-should-know-about-it/) |
 | 14:40-15:10 | Kernel | [rust-for-linux](https://fosdem.org/2025/schedule/event/fosdem-2025-5875-rust-for-linux-an-overview/) |
 | 15:40-15:50 | Kernel | [redoxos-microkernel](https://fosdem.org/2025/schedule/event/fosdem-2025-5973-redox-os-a-microkernel-based-unix-like-os/) |
 | 16:10-16:40 | Kernel | [syscall-tracing-virtualization](https://fosdem.org/2025/schedule/event/fosdem-2025-6231-status-and-desiderata-for-syscall-tracing-and-virtualization-support/) |
