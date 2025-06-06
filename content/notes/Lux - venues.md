@@ -1,7 +1,8 @@
 ---
 created: 2025-06-06T16:51:04-05:00
-modified: 2025-06-06T16:51:11-05:00
+modified: 2025-06-06T16:53:16-05:00
 title: 'Lux - venues'
+tags: [Luxembourg]
 ---
 
 - Mirador (Clausen)
