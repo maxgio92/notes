@@ -1,7 +1,8 @@
 ---
 created: 2025-01-18T15:09:37+01:00
-modified: 2025-01-18T15:12:41+01:00
+modified: 2025-06-06T16:54:17-05:00
 title: Fosdem 2025 schedule
+tags: [Tech]
 ---
 
 ## Saturday
@@ -62,5 +63,3 @@ Awesome projects:
 - Incus
 - Landlock
 - boxer.dev
-
-
