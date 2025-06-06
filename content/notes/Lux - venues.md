@@ -1,6 +1,6 @@
 ---
 created: 2025-06-06T16:51:04-05:00
-modified: 2025-06-06T16:53:16-05:00
+modified: 2025-06-06T16:56:47-05:00
 title: 'Lux - venues'
 tags: [Luxembourg]
 ---
@@ -22,14 +22,21 @@ Restaurants:
 - Gatsby (Belgium)
 - Hitch
 - Fabrik (mix - Mersch)
+- Picanha (Braz)
+- Phoenicia (Libanese)
+- Agave (Mex)
+- Brauerei (Beer craft)
+
 
 - Fashion Outlet (Designer Outlet Luxembourg)
 
 Music:
-- Rockhal
 - Den Atelier
 - Lenox Club
 - Mergener Hof (Trier)
-- Kulturfabrik
-- Aalt Stadhaus (Differdange)
--
+- http://www.entrepotarlon.be/concert.php?id=2095
+- Aalt Stadhaus: https://www.stadhaus.lu/
+- Rockhal: https://rockhal.lu/
+- KultuKulturfabrik: https://www.kulturfabrik.lu/
+- https://mjctrier.de/
+- https://prabbeli.lu/
