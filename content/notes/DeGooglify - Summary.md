@@ -1,7 +1,8 @@
 ---
 created: 2025-06-06T16:38:46-05:00
-modified: 2025-06-06T16:44:13-05:00
+modified: 2025-06-06T16:53:52-05:00
 title: 'DeGooglify - Summary'
+tags: [Tech, Self-hosted]
 ---
 
 - Photos: Immich + SyncThing as primary (self hosted) + Proton Drive as secondary (managed)
