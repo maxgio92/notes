@@ -1,7 +1,8 @@
 ---
 created: 2025-06-06T16:52:24-05:00
-modified: 2025-06-06T16:52:34-05:00
+modified: 2025-06-06T16:52:50-05:00
 title: Atmospheric black metal awesome
+tags: [music]
 ---
 
 Grima - Russia
