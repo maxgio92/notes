@@ -1,6 +1,6 @@
 ---
 created: 2025-06-06T16:38:46-05:00
-modified: 2025-06-06T16:39:07-05:00
+modified: 2025-06-06T16:44:13-05:00
 title: 'DeGooglify - Summary'
 ---
 
@@ -10,4 +10,10 @@ title: 'DeGooglify - Summary'
 - Notes: GitJournal + GithHub (managed)
 - Calendar: ? (Google Calendar)
 - Mail: Proton as primary, GMail as secondary
--
+
+Photos
+- Immich.app
+  - https://www.reddit.com/r/selfhosted/s/hz1wvC9CRG
+
+- Proton Drive Photos (managed)
+  - https://www.reddit.com/r/ProtonMail/s/MwIfQN7HpC
