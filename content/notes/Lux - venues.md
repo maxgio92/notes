@@ -1,7 +1,7 @@
 ---
 created: 2025-06-06T16:51:04-05:00
-modified: 2025-06-06T16:56:47-05:00
-title: 'Lux - venues'
+modified: 2025-06-06T16:56:54-05:00
+title: 'Lux - venues and restaurants'
 tags: [Luxembourg]
 ---
 
