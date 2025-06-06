@@ -1,7 +1,7 @@
 ---
 created: 2025-06-06T17:00:05-05:00
-modified: 2025-06-06T17:01:02-05:00
-title: 'Yoga e tantra - pt.1 Yoga'
+modified: 2025-06-06T17:01:48-05:00
+title: 'Yoga e tantra pt.1 - Yoga'
 tags: [Spiritual]
 ---
 
