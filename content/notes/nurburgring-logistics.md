@@ -22,8 +22,9 @@ tags: [motorsport]
 ## Other
 * https://radamring.de/en/service-en/arrival-parking/
 
-## ADAC 24h FAQ
-* https://www.24h-rennen.de/ticket-faq/#1746436914049-1797d337-5cb8
+## ADAC 24h'
+* [FAQ](https://www.24h-rennen.de/ticket-faq/#1746436914049-1797d337-5cb8)
+* [Fan Guide](https://www.24h-rennen.de/fan-guide-2025-online-lesen/)
 
 ---
 
