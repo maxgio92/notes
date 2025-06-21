@@ -28,6 +28,15 @@ tags: [motorsport]
 
 ---
 
+The bus leaves from Hatzenbach, which would be the closest bus stop to parking lot D9.
+
+You can't get to the carousel that way, though; you can only walk there from Brünnchen, but it's a good uphill and downhill route.
+
+You also have to walk quite a bit up from Adenau to reach Adenau Forest.
+Take a look at the bus timetable; you can see where you are going.
+
+---
+
 I visited Nordschleife this Sunday for the tourist track day. I walked some parts of the circuit and took plenty of photos. I decided to make this map to help you navigate it. I didn't manage to cover the entire track in 1 day as it's a lot of walking and I had to stop and take photos and videos at certain locations.
 
 Areas marked with red are not accessible by the general public due to safety concerns. Only accredited photographers are allowed in those areas.
