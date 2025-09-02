@@ -1,6 +1,6 @@
 ---
 created: 2025-09-02T09:57:20+02:00
-modified: 2025-09-02T22:38:16+02:00
+modified: 2025-09-02T22:38:50+02:00
 title: Shopping list
 ---
 
@@ -8,4 +8,4 @@ title: Shopping list
 - Utensili legno
 - Set piatti
 - Buste bidoncini più larghe
-- Lactase LTT Provida
+- Enzydoc LTT Provida
