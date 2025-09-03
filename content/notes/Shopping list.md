@@ -1,6 +1,6 @@
 ---
 created: 2025-09-02T09:57:20+02:00
-modified: 2025-09-03T07:30:00+02:00
+modified: 2025-09-03T09:18:43+02:00
 title: Shopping list
 type: Checklist
 ---
@@ -20,3 +20,4 @@ type: Checklist
 - [ ] Ikea lenzuola
 - [ ] Action salviette gatti
 - [ ] Tappeti bagno
+- [ ] Cesto panni
