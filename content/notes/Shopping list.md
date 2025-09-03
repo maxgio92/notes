@@ -1,6 +1,6 @@
 ---
 created: 2025-09-02T09:57:20+02:00
-modified: 2025-09-03T16:38:46+02:00
+modified: 2025-09-03T16:42:44+02:00
 title: Shopping list
 type: Checklist
 ---
@@ -22,6 +22,6 @@ type: Checklist
 - [x] Tappeti bagno
 - [ ] Cesto panni
 - [x] Lampadine e lampade soffitto
-- [ ] Tappeto sala
+- [ ] Ikea Tappeto sala
 - [ ] Tappeto entrata esterno
-- [ ] Seconda scarpiera 
+- [ ] Ikea Seconda scarpiera 205.444.87
