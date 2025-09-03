@@ -1,6 +1,6 @@
 ---
 created: 2025-09-02T09:57:20+02:00
-modified: 2025-09-02T22:55:25+02:00
+modified: 2025-09-03T07:30:00+02:00
 title: Shopping list
 type: Checklist
 ---
@@ -18,3 +18,5 @@ type: Checklist
 - [ ] Ikea portasaponette
 - [ ] Ikea spazzolone
 - [ ] Ikea lenzuola
+- [ ] Action salviette gatti
+- [ ] Tappeti bagno
