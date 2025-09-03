@@ -1,6 +1,6 @@
 ---
 created: 2025-09-02T09:57:20+02:00
-modified: 2025-09-03T16:34:49+02:00
+modified: 2025-09-03T16:38:46+02:00
 title: Shopping list
 type: Checklist
 ---
@@ -24,3 +24,4 @@ type: Checklist
 - [x] Lampadine e lampade soffitto
 - [ ] Tappeto sala
 - [ ] Tappeto entrata esterno
+- [ ] Seconda scarpiera 
