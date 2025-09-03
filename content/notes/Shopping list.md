@@ -1,6 +1,6 @@
 ---
 created: 2025-09-02T09:57:20+02:00
-modified: 2025-09-03T09:18:43+02:00
+modified: 2025-09-03T14:41:15+02:00
 title: Shopping list
 type: Checklist
 ---
@@ -21,3 +21,4 @@ type: Checklist
 - [ ] Action salviette gatti
 - [ ] Tappeti bagno
 - [ ] Cesto panni
+- [ ] Lampadine e lampade soffitto
