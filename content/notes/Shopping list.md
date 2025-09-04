@@ -1,6 +1,6 @@
 ---
 created: 2025-09-02T09:57:20+02:00
-modified: 2025-09-03T16:42:44+02:00
+modified: 2025-09-04T09:06:51+02:00
 title: Shopping list
 type: Checklist
 ---
@@ -12,7 +12,13 @@ type: Checklist
 - [x] Ikea box plastica cassetti cucina
 - [ ] Ikea Scaffale metallico
 - [x] Ikea tende
-- [ ] Action pulizia bagno, cucina, generale, auto, pelle, legno
+- [ ] Action pulizia bagno
+- [ ] Action pulizia e nutrimento legno (olio citron)
+- [ ] Action pulizia auto
+- [ ] Action pulizia e trattamento pelle
+- [ ] Action pulizia bagno
+- [ ] Action pulizia cucina
+- [ ] Action pulizia acciaio
 - [x] Asciugamani
 - [x] Ikea portasapone
 - [x] Ikea portasaponette
