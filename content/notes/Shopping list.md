@@ -1,6 +1,6 @@
 ---
 created: 2025-09-02T09:57:20+02:00
-modified: 2025-09-04T09:09:32+02:00
+modified: 2025-09-04T12:16:56+02:00
 title: Shopping list
 type: Checklist
 ---
@@ -31,3 +31,4 @@ type: Checklist
 - [x] Lampadine e lampade soffitto
 - [ ] Ikea Tappeto sala
 - [ ] Ikea Seconda scarpiera 205.444.87
+- [ ] Ikea ciabatte, triple, prolunghe
