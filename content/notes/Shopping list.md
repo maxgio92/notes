@@ -1,12 +1,12 @@
 ---
 created: 2025-09-02T09:57:20+02:00
-modified: 2025-09-04T09:06:51+02:00
+modified: 2025-09-04T09:09:32+02:00
 title: Shopping list
 type: Checklist
 ---
 
-- [ ] Utensili legno
-- [ ] Set piatti
+- [x] Utensili legno
+- [x] Set piatti
 - [ ] Buste bidoncini più larghe
 - [ ] Enzydoc LTT Provida
 - [x] Ikea box plastica cassetti cucina
@@ -19,6 +19,7 @@ type: Checklist
 - [ ] Action pulizia bagno
 - [ ] Action pulizia cucina
 - [ ] Action pulizia acciaio
+- [ ] Action tappeto esterno
 - [x] Asciugamani
 - [x] Ikea portasapone
 - [x] Ikea portasaponette
@@ -29,5 +30,4 @@ type: Checklist
 - [ ] Cesto panni
 - [x] Lampadine e lampade soffitto
 - [ ] Ikea Tappeto sala
-- [ ] Tappeto entrata esterno
 - [ ] Ikea Seconda scarpiera 205.444.87
