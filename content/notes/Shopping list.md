@@ -1,6 +1,6 @@
 ---
 created: 2025-09-02T09:57:20+02:00
-modified: 2025-09-04T20:56:48+02:00
+modified: 2025-09-05T12:15:26+02:00
 title: Shopping list
 type: Checklist
 ---
@@ -35,3 +35,4 @@ type: Checklist
 - [ ] Proteggi muro maniglie porte
 - [ ] Feltrini sedie
 - [ ] Piroli ferma mensole / ripiano box gatti
+- [ ] Cartelline portadocumenti
