@@ -10,29 +10,30 @@ type: Checklist
 - [ ] Buste bidoncini più larghe
 - [ ] Enzydoc LTT Provida
 - [x] Ikea box plastica cassetti cucina
-- [ ] Ikea Scaffale metallico
+- [x] Ikea Scaffale metallico
 - [x] Ikea tende
-- [ ] Action pulizia bagno
-- [ ] Action pulizia e nutrimento legno (olio citron)
-- [ ] Action pulizia auto
+- [x] Action pulizia bagno
+- [x] Action pulizia e nutrimento legno (olio citron)
+- [x] Action pulizia auto
 - [ ] Action pulizia e trattamento pelle
-- [ ] Action pulizia bagno
-- [ ] Action pulizia cucina
-- [ ] Action pulizia acciaio
-- [ ] Action tappeto esterno
+- [x] Action pulizia bagno
+- [x] Action pulizia cucina
+- [x] Action pulizia acciaio
+- [x] Action tappeto esterno
 - [x] Asciugamani
 - [x] Ikea portasapone
 - [x] Ikea portasaponette
 - [x] Ikea spazzolone
 - [x] Ikea lenzuola
-- [ ] Action salviette gatti
+- [x] Action salviette gatti
 - [x] Tappeti bagno
 - [ ] Cesto panni
 - [x] Lampadine e lampade soffitto
 - [ ] Ikea Tappeto sala
 - [ ] Ikea Seconda scarpiera 205.444.87
-- [ ] Ikea ciabatte, triple, prolunghe
+- [x] Ikea ciabatte, prolunghe
+- [ ] Triple
 - [ ] Proteggi muro maniglie porte
-- [ ] Feltrini sedie
-- [ ] Piroli ferma mensole / ripiano box gatti
-- [ ] Cartelline portadocumenti
+- [x] Feltrini sedie
+- [x] Piroli ferma mensole / ripiano box gatti
+- [x] Cartelline portadocumenti
