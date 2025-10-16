@@ -1,6 +1,6 @@
 ---
 created: 2025-10-13T09:53:46+02:00
-modified: 2025-10-13T09:57:10+02:00
+modified: 2025-10-16T22:56:57+02:00
 title: Songs to play
 ---
 
@@ -11,3 +11,4 @@ title: Songs to play
 - Desert Sessions - Crucifier
 - Eagles of death metal
 - Gojira
+- voice of the soul - Death
