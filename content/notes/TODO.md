@@ -1,8 +1,9 @@
 ---
 created: 2025-10-05T19:33:43+02:00
-modified: 2025-10-05T19:34:06+02:00
-title: TODO
+modified: 2025-11-01T13:19:54+01:00
+title: Shopping list
 ---
 
-- smart thermostats
-- energy monitor plugs
+- Water bottles
+- Trash bin guests
+- Bacinella
