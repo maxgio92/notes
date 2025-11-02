@@ -1,6 +1,6 @@
 ---
 created: 2025-10-05T19:33:43+02:00
-modified: 2025-11-01T13:21:57+01:00
+modified: 2025-11-02T09:49:41+01:00
 title: Shopping list
 type: Checklist
 ---
@@ -9,3 +9,24 @@ type: Checklist
 - [ ] Trash bin guests
 - [ ] Bacinella
 - [ ] Aftweshave
+- [ ] Lavastoviglie pastiglie
+- [ ] Spugne piatti
+- [ ] Patate
+- [ ] Carote
+- [ ] Pomodori
+- [ ] Insalata
+- [ ] Cavolo cappuccio 
+- [ ] Zucchine
+- [ ] Banane
+- [ ] Mais in scatola 2 grandi
+- [ ] Passata di pomodoro 4 barattoli 
+- [ ] Parmigiano grattugiato 
+- [ ] Emmental a fette
+- [ ] Uova (18)
+- [ ] Burro rose 250g
+- [ ] Marmellata
+- [ ] Fette biscottate
+- [ ] Carta igienica ja viola x 10 
+- [ ] Bagnoschiuma
+- [ ] Scottex
+- [ ] Pane
