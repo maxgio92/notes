@@ -1,6 +1,6 @@
 ---
 created: 2025-10-05T19:33:43+02:00
-modified: 2025-11-02T09:49:41+01:00
+modified: 2025-11-02T09:49:53+01:00
 title: Shopping list
 type: Checklist
 ---
@@ -30,3 +30,4 @@ type: Checklist
 - [ ] Bagnoschiuma
 - [ ] Scottex
 - [ ] Pane
+- [ ] Maiale
