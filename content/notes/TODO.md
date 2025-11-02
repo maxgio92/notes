@@ -1,6 +1,6 @@
 ---
 created: 2025-10-05T19:33:43+02:00
-modified: 2025-11-02T09:49:53+01:00
+modified: 2025-11-02T10:11:29+01:00
 title: Shopping list
 type: Checklist
 ---
@@ -31,3 +31,6 @@ type: Checklist
 - [ ] Scottex
 - [ ] Pane
 - [ ] Maiale
+- [ ] Tovaglioli
+- [ ] Anticalcare
+- [ ] Ingredienti pizza (farina Caputo o Farine de ble Klengbettener Millen)
