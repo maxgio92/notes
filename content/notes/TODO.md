@@ -1,6 +1,6 @@
 ---
 created: 2025-10-05T19:33:43+02:00
-modified: 2025-11-02T10:11:29+01:00
+modified: 2025-11-02T10:13:20+01:00
 title: Shopping list
 type: Checklist
 ---
@@ -34,3 +34,4 @@ type: Checklist
 - [ ] Tovaglioli
 - [ ] Anticalcare
 - [ ] Ingredienti pizza (farina Caputo o Farine de ble Klengbettener Millen)
+- [ ] Tonno (6 pacchi)
