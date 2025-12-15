@@ -1,6 +1,6 @@
 ---
 created: 2025-09-02T09:57:20+02:00
-modified: 2025-12-15T14:04:28+01:00
+modified: 2025-12-15T17:03:28+01:00
 title: Shopping list
 type: Checklist
 ---
@@ -16,3 +16,4 @@ type: Checklist
 - [ ] Lampadario scale
 - [ ] Telecomandi e27
 - [ ] E17 smart
+- [ ] Sedie
