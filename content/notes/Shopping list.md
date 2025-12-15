@@ -1,6 +1,6 @@
 ---
 created: 2025-09-02T09:57:20+02:00
-modified: 2025-09-05T12:15:26+02:00
+modified: 2025-12-15T14:01:15+01:00
 title: Shopping list
 type: Checklist
 ---
@@ -8,8 +8,6 @@ type: Checklist
 - [x] Utensili legno
 - [x] Set piatti
 - [ ] Buste bidoncini più larghe
-- [ ] Enzydoc LTT Provida
-- [x] Ikea box plastica cassetti cucina
 - [x] Ikea Scaffale metallico
 - [x] Ikea tende
 - [x] Action pulizia bagno
