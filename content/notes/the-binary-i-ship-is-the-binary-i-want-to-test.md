@@ -1,6 +1,6 @@
 ---
 created: 2026-08-29T19:08:07+02:00
-modified: 2026-08-29T22:53:22+02:00
+modified: 2026-08-29T22:55:37+02:00
 title: The Binary I Ship Is the Binary I Want to Test
 tags: [Tech, eBPF, Testing]
 ---
@@ -17,7 +17,7 @@ Traditional coverage starts at compile time. Go builds need `-cover`. GCC uses `
 
 I ran into the limits of that model while working on Wolfi packages at Chainguard.
 
-A [Wolfi](https://github.com/wolfi-dev/os) package configuration tells [melange](https://github.com/chainguard-dev/melange) how to build and test an APK. We use this flow for end-to-end tests of Chainguard packages. Melange creates a fresh apko container for each test. It installs the package under test and the packages needed by the test. The test pipeline then runs the installed commands.
+A [Wolfi](https://github.com/wolfi-dev/os) package configuration tells [melange](https://github.com/chainguard-dev/melange) how to build and test an APK. We use this flow for end-to-end tests of Chainguard packages. For each test, melange creates a fresh apko container and installs the package under test with the packages the test needs. The test pipeline then runs the installed commands.
 
 This gives the test a clear target: the packaged artefact we intend to release.
 
@@ -28,11 +28,11 @@ package-foo-1.0.0.apk
 package-foo-1.0.0-instrumented.apk
 ```
 
-One goes to users. The other produces the reassuring percentage in CI.
+One goes to users, while the other produces the reassuring percentage in CI.
 
 Compiler flags, optimisation, link order, and build environments can all change the result. The coverage report may be accurate for the instrumented binary, but that binary is not what I publish.
 
-Across thousands of packages written in Go, C, C++, Rust, and other languages, that second build path also carries a high cost. Each language needs different tooling. CI time, storage, and maintenance all increase.
+Across thousands of packages written in Go, C, C++, Rust, and other languages, that second build path also carries a high cost. Each language needs its own tooling, and every extra build increases CI time, storage, and maintenance.
 
 I wanted another option: collect coverage from the finished binary, without rebuilding it.
 
@@ -40,11 +40,11 @@ I wanted another option: collect coverage from the finished binary, without rebu
 
 Linux already knows how to observe userspace functions through **uprobes**, or user-level dynamic probes.
 
-A uprobe attaches to an offset in an executable. The kernel temporarily replaces the instruction at that address with the architecture's software breakpoint instruction. When execution reaches it, the CPU traps into the kernel, a handler runs, and execution resumes.
+A uprobe attaches to an offset in an executable. The kernel temporarily replaces the instruction at that address with the architecture's software interrupt instruction. When execution reaches it, the CPU transfers control to the kernel, a handler runs, and execution resumes.
 
 With eBPF, that handler can be a small verifier-checked program. It can identify the function, record that the function ran, and send the result back to userspace through a BPF map or ring buffer.
 
-The useful detail is that a uprobe needs a **binary path and an offset**. It does not require source-level instrumentation.
+The useful detail is that a uprobe needs a **binary path and an offset**, not source-level instrumentation.
 
 That led me to build [xcover](https://github.com/maxgio92/xcover), an eBPF uprobe-based profiler for function coverage.
 
@@ -61,7 +61,7 @@ xcover wait
 xcover stop
 ```
 
-The application and its tests need no coverage flags, wrapper, or special build. xcover runs beside them, attaches probes to function entry points, and records which functions execute.
+The application and its tests need no coverage flags, wrapper, or special build because xcover runs beside them, attaches probes to function entry points, and records which functions execute.
 
 The report is deliberately simple:
 
@@ -83,7 +83,7 @@ The report is deliberately simple:
 
 This is **function coverage**, not line or branch coverage. It answers a narrower question: which functions in this binary did the test workload exercise?
 
-That narrower signal has one valuable property. It comes from the actual executable.
+That narrower signal has one valuable property, and it comes from the actual executable.
 
 ## Keeping the probe set sensible
 
@@ -141,22 +141,20 @@ Not every function appears cleanly in that data. Compiler optimisation, inlining
 
 No single heuristic gets to declare victory. resurgo cross-checks the signals and assigns confidence to each candidate.
 
-xcover uses this automatically. If `.symtab` exists, it reads it. If not, it asks resurgo to recover the offsets.
+xcover handles this automatically: it reads `.symtab` when available and asks resurgo to recover the offsets when it is not.
 
 ```text
 DBG .symtab not found, falling back to static recovery
 DBG resolved 1791 functions via resurgo
 ```
 
-The command and report format stay the same. Recovery can miss heavily inlined functions or unusual prologues, and stripped functions may lack their original names. This is not a perfect reconstruction of the source program.
-
-It is still coverage from the production binary, which is the point.
+The command and report format stay the same. Recovery can miss heavily inlined functions or unusual prologues, and stripped functions may lack their original names. This is not a perfect reconstruction of the source program, but it is still coverage from the production binary.
 
 ## The bill arrives per function call
 
 Kernel uprobes are useful, but they are not free.
 
-Every call to a probed function triggers a software breakpoint. The CPU traps into the kernel, the BPF program runs, and execution returns to userspace. The cost is mostly fixed per call. A tiny function called millions of times hurts far more than a large function called once.
+Every call to a probed function triggers a software interrupt that transfers control to the kernel. The BPF program runs before execution returns to userspace, so the cost is mostly fixed per call. A tiny function called millions of times hurts far more than a large function called once.
 
 I measured four cases with 100 uprobes on an AMD Ryzen 7 7840U. Each benchmark ran ten times:
 
@@ -194,7 +192,7 @@ So I tried moving BPF execution into the traced process.
 The path changes from this:
 
 ```text
-function call -> software breakpoint -> kernel -> BPF -> userspace
+function call -> software interrupt -> kernel -> BPF -> userspace
 ```
 
 to this:
@@ -216,7 +214,7 @@ xcover run \
 LD_PRELOAD=$(xcover agent extract) ./myapp
 ```
 
-The coverage logic and report remain the same. The current experiment changes how the probe executes.
+The experiment changes how the probe executes, but the coverage logic and report remain the same.
 
 The early measurements are encouraging:
 
@@ -236,7 +234,7 @@ It currently uses single, perf-event-based uprobe attachment rather than `uprobe
 
 The Frida Gum interceptor also has gaps around aggressive compiler optimisation, including some tail-call and link-time optimisation cases.
 
-Kernel mode remains the general path. Userspace mode is a useful experiment with a real performance result, not yet a universal replacement.
+Kernel mode remains the general path, while userspace mode is a useful experiment with a real performance result rather than a universal replacement.
 
 ## What comes next
 
@@ -256,7 +254,7 @@ Build-time coverage remains the right tool when I need detailed source-level lin
 
 xcover addresses a different problem. It gives me language-neutral function coverage from a compiled ELF binary, including binaries whose symbols have been stripped. It trades per-call runtime cost for a simpler build and a stronger link between the test result and the artefact I publish.
 
-That trade is measurable. It has limits. It is also useful today.
+That trade is measurable, limited, and useful today.
 
 The principle behind it is the bit I care about most:
 
