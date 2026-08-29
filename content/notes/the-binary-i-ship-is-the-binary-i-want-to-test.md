@@ -1,11 +1,11 @@
 ---
 created: 2026-08-29T19:08:07+02:00
-modified: 2026-08-29T19:08:07+02:00
+modified: 2026-08-29T19:52:33+02:00
 title: The Binary I Ship Is the Binary I Want to Test
 tags: [Tech, eBPF, Testing]
 ---
 
-This article expands [my OpenSouthCode 2026 talk](https://github.com/maxgio92/xcover/blob/main/docs/talks/opensouthcode-2026/slides.md).
+This article expands on [my OpenSouthCode 2026 talk](https://github.com/maxgio92/xcover/blob/main/docs/talks/opensouthcode-2026/slides.pdf).
 
 I have a slightly awkward question for anyone who collects code coverage in CI:
 
@@ -13,11 +13,15 @@ I have a slightly awkward question for anyone who collects code coverage in CI:
 
 For many projects, the honest answer is no.
 
-Traditional coverage starts at compile time. Go needs `-cover`, GCC needs `-fprofile-arcs`, and Clang needs its profiling and coverage-mapping flags. The compiler injects counters, the test suite runs against the instrumented result, and a report appears at the end.
+Traditional coverage starts at compile time. Go builds need `-cover`. GCC uses `--coverage`, shorthand for `-fprofile-arcs -ftest-coverage` when compiling and `-lgcov` when linking. Clang's LLVM source-based coverage uses `-fprofile-instr-generate -fcoverage-mapping`. `llvm-profdata` indexes the raw profile, and `llvm-cov` creates the report. These build modes inject counters, and the test suite runs against the instrumented result.
 
-That works well until the build output becomes the thing under test.
+I ran into the limits of that model while working on Wolfi packages at Chainguard.
 
-Linux distributions do not ship source trees. They ship packages containing compiled binaries. If I create a second, instrumented package for coverage, I now have two artefacts:
+A [Wolfi](https://github.com/wolfi-dev/os) package configuration tells [melange](https://github.com/chainguard-dev/melange) how to build and test an APK. We use this flow for end-to-end tests of Chainguard packages. Melange creates a fresh apko container for each test. It installs the package under test and the packages needed by the test. The test pipeline then runs the installed commands.
+
+This gives the test a clear target: the packaged artefact we intend to release.
+
+Traditional coverage changes that target. For Go coverage, for example, I would need a second package whose binary was compiled with `-cover`:
 
 ```text
 package-foo-1.0.0.apk
@@ -28,7 +32,7 @@ One goes to users. The other produces the reassuring percentage in CI.
 
 Compiler flags, optimisation, link order, and build environments can all change the result. The coverage report may be accurate for the instrumented binary, but that binary is not what I publish.
 
-At the scale of thousands of packages across Go, C, C++, Rust, and native extensions, the operational cost is also rather unpleasant. Every language needs different tooling. Every package needs another build path. CI time, storage, and maintenance all increase.
+Across thousands of packages written in Go, C, C++, Rust, and other languages, that second build path also carries a high cost. Each language needs different tooling. CI time, storage, and maintenance all increase.
 
 I wanted another option: collect coverage from the finished binary, without rebuilding it.
 
@@ -95,7 +99,8 @@ xcover run \
   --detach
 ```
 
-For Go binaries, project scoping can derive the module from the executable:
+For Go binaries, xcover reads `.go.buildinfo`, an ELF section emitted by the Go
+linker. The module path in that section scopes coverage to project functions:
 
 ```sh
 xcover run --path ./myapp --scope project --detach
@@ -121,7 +126,7 @@ The first version of the problem looked rather final: uprobes can attach to the 
 
 The binary still contains clues, though.
 
-## Recovering functions with resurgo
+## Recovering functions
 
 I built [resurgo](https://github.com/maxgio92/resurgo) to recover function boundaries from stripped ELF binaries.
 
@@ -198,17 +203,17 @@ to this:
 function call -> in-process trampoline -> BPF -> continue
 ```
 
-xcover has an experimental userspace mode built behind the `userspace` build tag:
+xcover has an experimental userspace mode behind the `userspace` build tag:
 
 ```sh
 make xcover-userspace
 
-xcover-userspace run \
+xcover run \
   --path ./myapp \
   --userspace-bpf \
   --detach
 
-LD_PRELOAD=$(xcover-userspace agent extract) ./myapp
+LD_PRELOAD=$(xcover agent extract) ./myapp
 ```
 
 The coverage logic and report remain the same. The current experiment changes how the probe executes.
