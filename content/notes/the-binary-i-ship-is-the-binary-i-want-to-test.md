@@ -1,10 +1,11 @@
 ---
+created: 2026-08-29T19:08:07+02:00
+modified: 2026-08-29T19:08:07+02:00
 title: The Binary I Ship Is the Binary I Want to Test
 tags: [Tech, eBPF, Testing]
 ---
 
-This expands my OpenSouthCode 2026 talk:
-[The Binary You Ship Is the Binary You Test](https://github.com/maxgio92/xcover/blob/main/docs/talks/opensouthcode-2026/slides.md).
+This article expands [my OpenSouthCode 2026 talk](https://github.com/maxgio92/xcover/blob/main/docs/talks/opensouthcode-2026/slides.md).
 
 I have a slightly awkward question for anyone who collects code coverage in CI:
 
