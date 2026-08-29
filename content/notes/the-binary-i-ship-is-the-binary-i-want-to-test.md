@@ -1,6 +1,6 @@
 ---
 created: 2026-08-29T19:08:07+02:00
-modified: 2026-08-29T19:52:33+02:00
+modified: 2026-08-29T22:53:22+02:00
 title: The Binary I Ship Is the Binary I Want to Test
 tags: [Tech, eBPF, Testing]
 ---
@@ -40,7 +40,7 @@ I wanted another option: collect coverage from the finished binary, without rebu
 
 Linux already knows how to observe userspace functions through **uprobes**, or user-level dynamic probes.
 
-A uprobe attaches to an offset in an executable. When execution reaches that address, the kernel temporarily replaces the instruction with an `INT3` breakpoint. The CPU traps into the kernel, a handler runs, and execution resumes.
+A uprobe attaches to an offset in an executable. The kernel temporarily replaces the instruction at that address with the architecture's software breakpoint instruction. When execution reaches it, the CPU traps into the kernel, a handler runs, and execution resumes.
 
 With eBPF, that handler can be a small verifier-checked program. It can identify the function, record that the function ran, and send the result back to userspace through a BPF map or ring buffer.
 
@@ -156,7 +156,7 @@ It is still coverage from the production binary, which is the point.
 
 Kernel uprobes are useful, but they are not free.
 
-Every call to a probed function takes an `INT3` trap into the kernel, runs the BPF program, and returns to userspace. The cost is mostly fixed per call. A tiny function called millions of times hurts far more than a large function called once.
+Every call to a probed function triggers a software breakpoint. The CPU traps into the kernel, the BPF program runs, and execution returns to userspace. The cost is mostly fixed per call. A tiny function called millions of times hurts far more than a large function called once.
 
 I measured four cases with 100 uprobes on an AMD Ryzen 7 7840U. Each benchmark ran ten times:
 
@@ -194,7 +194,7 @@ So I tried moving BPF execution into the traced process.
 The path changes from this:
 
 ```text
-function call -> INT3 -> kernel -> BPF -> userspace
+function call -> software breakpoint -> kernel -> BPF -> userspace
 ```
 
 to this:
