@@ -33,24 +33,26 @@ New to Linux graphics? Start with [the whole-stack map](#2-the-whole-stack-at-a-
 
 This is the reference I wanted when I began:
 
+**Rendering** turns shapes, text and images into pixels in an application buffer. A GPU renderer records and submits commands during this stage. **Composition** combines ready application buffers into one output picture. **Presentation** selects a buffer for the display engine to scan out.
+
 ```text
-Rendering:    app or toolkit -> graphics API -> Mesa -> DRM render node -> amdgpu -> graphics engine -> client buffer
-Submission:   app or toolkit -> Wayland client support -> Wayland protocol -> compositor
-Composition:  client buffers -> compositor renderer -> output buffer (optional)
-Presentation: compositor -> libdrm -> DRM/KMS -> amdgpu Display Core -> display engine -> eDP -> panel
+1. Rendering:    app or toolkit -> graphics API -> Mesa -> DRM render node -> amdgpu -> graphics engine -> client buffer
+   Wayland hand-off: app attaches buffer to surface -> commits surface through Wayland -> compositor
+2. Composition:  compositor combines client buffers -> output buffer (optional)
+3. Presentation: compositor -> libdrm -> DRM/KMS -> amdgpu Display Core -> display engine -> eDP -> panel
 ```
 
-The first two lines are separate application-facing paths that meet when the client attaches rendered content as a Wayland buffer. For one buffer, the dependencies then move through optional composition, presentation and scanout; across several frames, these operations overlap.
+Rendering and Wayland are separate application-facing paths. They meet at the client buffer. The client attaches that buffer to a Wayland surface, then commits the surface state to the compositor. This hand-off connects rendering to the compositor's output choice. One buffer moves through these steps in order. Work across several frames can overlap.
 
 Here, **API** means Application Programming Interface, **DRM** means Direct Rendering Manager, **KMS** means Kernel Mode Setting, and **eDP** means embedded DisplayPort. The [type glossary](#type-glossary) expands the remaining acronyms and classifies each name as a component, interface, protocol, object or hardware block.
 
 {{< mermaid >}}
 flowchart TB
-    A["Application<br/>(component)"] --> R["Rendering<br/>OpenGL or Vulkan API -> Mesa -> amdgpu graphics engine<br/>produces a client buffer"]
-    R --> S["Submission<br/>Wayland client -> Wayland protocol -> compositor<br/>commits surface state and the buffer"]
-    S --> Q{"Compositor output choice"}
-    Q -->|"compose"| C["Composition<br/>compositor renderer combines client buffers<br/>produces an output buffer"]
-    Q -->|"direct scanout or hardware planes"| P["Presentation<br/>libdrm -> DRM/KMS -> amdgpu Display Core"]
+    A["Application<br/>(component)"] --> R["1. Rendering<br/>turns drawing into pixels in a client buffer<br/>GPU path records and submits commands"]
+    R --> W["Wayland buffer hand-off<br/>client attaches buffer to surface and commits state<br/>(protocol link to compositor output choice)"]
+    W --> Q{"Compositor output choice"}
+    Q -->|"compose"| C["2. Composition<br/>combines ready client buffers into an output buffer"]
+    Q -->|"direct scanout or hardware planes"| P["3. Presentation<br/>libdrm -> DRM/KMS -> amdgpu Display Core"]
     C --> P
     P --> D["Scanout<br/>display engine -> embedded DisplayPort -> panel"]
 {{< /mermaid >}}
