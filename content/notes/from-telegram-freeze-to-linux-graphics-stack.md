@@ -4,15 +4,15 @@ date: 2026-08-30T13:14:00+02:00
 tags: [Linux, Graphics, AMD, Wayland]
 ---
 
-> I am new to Linux graphics, not a teacher. This post records what I learned.
-> Our AI cats Penfold, Casper and Velma helped with the research and post structure.
+> I am new to Linux graphics. This post records what I learned.
+> Our AI cats helped with the research and post structure.
 > Any mistakes are mine. Corrections are welcome.
 
 ## 1. The fullscreen photo that froze a laptop
 
 I opened a photo from Telegram Web in Brave and switched it to fullscreen. The display froze. After failed attempts to recover it, I forced the Framework Laptop to restart.
 
-A TTY later showed Vulkan selecting my AMD Radeon 780M. Two warnings about dynamic-buffer limits followed. They looked relevant, but appeared more than ten minutes after the next boot began.
+A TTY later showed Vulkan selecting my AMD Radeon 780M. Two warnings about dynamic-buffer limits followed. Their timestamp placed them more than ten minutes after the next boot began.
 
 The previous boot told a different story. Its kernel journal pointed at AMD's display path: Display Core, DCN, DMCUB, MPCC and CRTC operations. That fault led to a larger question: how does a Linux application get pixels from its own code to a laptop panel?
 
@@ -23,11 +23,11 @@ flowchart LR
     T3 --> T4["11:15:33<br/>DMUB command queue errors"]
 {{< /mermaid >}}
 
-The short answer is that the display stack wedged in AMD's DCN and DMCUB path. The logs do not prove whether kernel code, firmware, hardware or their interaction created the first bad state. To understand why that wording matters, we need to build the stack one layer at a time.
+The short answer is that the display stack wedged in AMD's DCN and DMCUB path. The logs leave the first bad state unattributed among kernel code, firmware, hardware and their interaction. To understand why that wording matters, we need to build the stack one layer at a time.
 
 New to Linux graphics? Read [sections 3 to 13](#3-the-smallest-useful-model) in order. Investigating a freeze? Start at [sections 14 to 16](#14-reconstructing-the-failure). Returning for a definition? Jump to the [type glossary](#type-glossary).
 
-## 2. Read logs as a timeline, not a bag of errors
+## 2. Read logs as a timeline
 
 I reduced the failed boot to five decisive lines:
 
@@ -41,12 +41,12 @@ I reduced the failed boot to five decisive lines:
 
 The first line came from Mutter, GNOME's compositor and window manager. The remaining lines came from `amdgpu`, the Linux kernel driver for the Radeon GPU. `DMCUB`, `MPCC` and `CRTC` all belong to the display side of the stack.
 
-Order matters. The first DMCUB failure appeared at 11:15:08. I pressed the power key at 11:16:18. A kernel trace in the PSR path appeared four seconds after that press, during the suspend attempt. The suspend and PSR failures therefore show what an already broken display path could no longer do. They do not show what broke it first.
+Order matters. The first DMCUB failure appeared at 11:15:08. I pressed the power key at 11:16:18. A kernel trace in the PSR path appeared four seconds after that press, during the suspend attempt. The suspend and PSR failures show that an already broken display path failed again during suspend. The initial cause remains earlier and unknown.
 
 I use three labels for the rest of this account:
 
 - **Fact**: a log or primary source states it directly.
-- **Inference**: an explanation connects several facts, but the logs do not state it.
+- **Inference**: an explanation connects several facts beyond the explicit log statements.
 - **Unknown**: a reproduction, trace, code fix or bisect is still needed.
 
 ## 3. The smallest useful model
@@ -61,7 +61,7 @@ flowchart LR
     P --> D["Display scanout<br/>(hardware operation)"]
 {{< /mermaid >}}
 
-These boxes describe dependencies for one buffer. They are not three processes, nor a strict schedule for the whole machine.
+These boxes describe dependencies for one buffer. Each box names a stage, while the machine pipelines work across them.
 
 1. **Rendering** produces pixels for an application's window.
 2. **Composition** may combine several application buffers into an output buffer.
@@ -90,7 +90,7 @@ Linux graphics discussions often put a process, a protocol and a kernel interfac
 | Firmware | DMCUB or DMUB firmware | Code run by AMD's display microcontroller. |
 | Hardware | DMCUB microcontroller, graphics engine, display engine, eDP link, panel | Physical blocks that control, render, fetch and show pixels. |
 
-Some names cover both a project and several runtime libraries. Mesa is one example. The useful question is not only, "Where is Mesa?" It is also, "Which Mesa component and which interface are we discussing?"
+Some names cover both a project and several runtime libraries. Mesa is one example. Ask both, "Where is Mesa?" and, "Which Mesa component and interface are we discussing?"
 
 ## 5. Stage one: how an application produces pixels
 
@@ -114,11 +114,11 @@ flowchart LR
     GPU --> BUF["Rendered pixel buffer<br/>(data object)"]
 {{< /mermaid >}}
 
-OpenGL and Vulkan are specifications, not running programs. Mesa supplies their Linux implementations. For supported AMD GPUs, Mesa's **RadeonSI** driver implements OpenGL through its Gallium stack, while **RADV** implements Vulkan.
+OpenGL and Vulkan are API specifications. Mesa supplies their running Linux implementations. For supported AMD GPUs, Mesa's **RadeonSI** driver implements OpenGL through its Gallium stack, while **RADV** implements Vulkan.
 
 Mesa translates API work into AMD-specific commands. It submits those commands through DRM's rendering interface to `amdgpu`. The graphics engine executes them and writes pixels into buffer storage. A fence can signal when the asynchronous work has finished.
 
-GTK and Qt are optional. They provide widgets, layout, input and window-system support, and they often choose a renderer. They are not required hops between an application and Mesa.
+GTK and Qt are optional. They provide widgets, layout, input and window-system support, and they often choose a renderer. Applications can also reach Mesa directly.
 
 ## 6. The Wayland conversation
 
@@ -143,7 +143,7 @@ flowchart LR
     BUF -->|"attached as wl_buffer"| WAY
 {{< /mermaid >}}
 
-The two routes meet at a reference to the buffer and its synchronisation state. OpenGL and Vulkan draw calls do not travel through Wayland.
+The two routes meet at a reference to the buffer and its synchronisation state. OpenGL and Vulkan draw calls follow a separate route from Wayland messages.
 
 A typical client update works like this:
 
@@ -155,7 +155,7 @@ A typical client update works like this:
 
 Wayland defines asynchronous requests from client to server and events in the other direction. Input, window configuration, frame callbacks and buffer release return as events. GTK and Qt normally hide much of this through their Wayland backends and `libwayland-client`.
 
-Mutter, KWin and Sway implement the server side in the compositor. Wayland is not serverless. The compositor also acts as the display server.
+Mutter, KWin and Sway implement the server side in the compositor. The compositor acts as the Wayland display server.
 
 ## 7. Buffers are where the paths meet
 
@@ -169,11 +169,11 @@ We often say "the buffer" as if one object travels unchanged through every layer
 | DRM framebuffer | KMS kernel object | A description of storage that KMS can use for scanout. |
 | Fence or sync object | Synchronisation object | Completion or ownership state. It contains no pixels. |
 
-These views can refer to the same underlying storage without being the same object. A `wl_buffer` might come from DMA-BUF storage, but it might instead come from `wl_shm`. A compositor can import storage and create a DRM framebuffer view suitable for KMS.
+These views can refer to the same underlying storage while remaining distinct objects. A `wl_buffer` can come from DMA-BUF storage or `wl_shm`. A compositor can import storage and create a DRM framebuffer view suitable for KMS.
 
-Zero-copy is a goal, not a promise. Pixel format, layout modifier, colour conversion, scaling or device limits may force the compositor to copy or redraw content.
+Zero-copy depends on compatible pixel formats, layout modifiers, colour handling, scaling and device limits. A mismatch may force the compositor to copy or redraw content.
 
-This distinction also matters for the integrated Radeon 780M. It shares system memory with the CPU rather than using separate dedicated VRAM. The stack still manages buffer objects and GPU addresses.
+This distinction also matters for the integrated Radeon 780M. It shares system memory with the CPU and has no separate dedicated VRAM. The stack still manages buffer objects and GPU addresses.
 
 ## 8. Stage two: how the compositor builds an output frame
 
@@ -191,7 +191,7 @@ committed client buffers
 
 A GPU compositor submits another render job. A software compositor can combine pixels on the CPU. Either route produces a buffer that can later be presented.
 
-Wayland does not define this renderer. Nor does it require DRM/KMS. A compositor can run nested inside another Wayland compositor, inside an X11 window, without a physical display, or with software rendering. This is why "Wayland renders the desktop" is the wrong model. The compositor chooses how to render and where to present.
+Wayland leaves the renderer and display backend to the compositor. A compositor can run nested inside another Wayland compositor, inside an X11 window, headlessly, or with software rendering. The compositor chooses how to render and where to present, which makes "Wayland renders the desktop" an inaccurate model.
 
 ## 9. The shortcut: direct scanout and hardware planes
 
@@ -207,13 +207,13 @@ flowchart TB
     K --> E["Display engine<br/>(hardware)"]
 {{< /mermaid >}}
 
-Direct scanout skips the compositor's render job. It does not skip the compositor or KMS. The compositor still receives the surface, checks policy and hardware limits, and chooses the KMS state.
+Direct scanout skips the compositor's render job while preserving compositor control and KMS presentation. The compositor receives the surface, checks policy and hardware limits, and chooses the KMS state.
 
-A fullscreen window makes direct scanout possible, not certain. Effects, scaling, cursor state, colour transforms, pixel formats and layout modifiers can rule it out. Hardware overlay planes offer another option: KMS can place several buffers into the display pipeline without first flattening every pixel in a GPU render job.
+A fullscreen window enables direct scanout when effects, scaling, cursor state, colour transforms, pixel formats and layout modifiers satisfy the requirements. Hardware overlay planes offer another option: KMS can place several buffers into the display pipeline as separate planes.
 
 **Inference:** the Telegram fullscreen action may have changed composition or plane state.
 
-**Unknown:** the journal does not show whether Mutter selected direct scanout, an overlay plane or normal composition for that photo.
+**Unknown:** the journal leaves Mutter's route for that photo unclear: direct scanout, an overlay plane or normal composition.
 
 ## 10. Stage three: KMS presents
 
@@ -235,11 +235,11 @@ flowchart TB
     CO --> LD --> PN --> AMD --> DISP
 {{< /mermaid >}}
 
-Mesa's output can later be presented through KMS, but Mesa rendering calls do not pass through the KMS API. Mesa and KMS are not alternatives. They often serve the same visible frame at different stages.
+Mesa rendering calls use rendering ioctls. KMS presentation uses display ioctls. Both often serve the same visible frame at different stages.
 
-A DRM render node such as `/dev/dri/renderD128` allows unprivileged rendering without modesetting or DRM master. A primary node such as `/dev/dri/card1` exposes KMS and other controlled operations. Those numeric suffixes are not stable, so general diagrams should use `renderD*` and `cardN`.
+A DRM render node such as `/dev/dri/renderD128` allows unprivileged rendering while modesetting and DRM master remain unavailable. A primary node such as `/dev/dri/card1` exposes KMS and other controlled operations. Those numeric suffixes can change between boots, so general diagrams should use `renderD*` and `cardN`.
 
-The compositor commonly uses **libdrm** to prepare DRM calls. `libdrm` is a user-space wrapper and helper library, not a driver. Direct ioctls are possible.
+The compositor commonly uses **libdrm** to prepare DRM calls. `libdrm` is a user-space wrapper and helper library. The kernel driver remains `amdgpu`. Direct ioctls are possible.
 
 KMS expresses display state with a stable object model:
 
@@ -259,7 +259,7 @@ flowchart LR
 - A **connector** represents the display sink, such as `eDP-1`.
 - A **mode** defines dimensions, refresh and timings.
 
-An atomic commit proposes the complete next state. The kernel validates it, then applies all accepted properties as one coherent update. KMS does not render the application's pixels. Display planes may scale or blend during scanout, but that operation differs from the OpenGL or Vulkan render jobs discussed earlier.
+An atomic commit proposes the complete next state. The kernel validates it, then applies all accepted properties as one coherent update. OpenGL or Vulkan render the application's pixels. KMS controls their presentation. Display planes may also scale or blend during scanout.
 
 ## 11. Why the stages overlap
 
@@ -269,7 +269,7 @@ For one specific buffer, the dependencies remain ordered:
 render -> make available -> compose or select -> present -> scan out
 ```
 
-The machine does not wait for that full chain before starting all other work.
+The machine pipelines this chain with work on other frames.
 
 {{< mermaid >}}
 sequenceDiagram
@@ -291,11 +291,11 @@ sequenceDiagram
 
 Double or triple buffering lets an application prepare a new image while another buffer remains in use. Fences tell consumers when asynchronous work has completed. Wayland frame callbacks help clients pace new work. Buffer-release events tell a client when the compositor has finished with a buffer. KMS can accept fence state and later send a page-flip or completion event.
 
-An output presentation does not occur once for every application frame. The compositor builds monitor output frames from the latest usable buffers. It can reuse one client's buffer across many output frames, skip an intermediate client buffer, or present while another client remains unchanged.
+Output presentation follows its own cadence. The compositor builds monitor output frames from the latest usable buffers. It can reuse one client's buffer across many output frames, skip an intermediate client buffer, or present while another client remains unchanged.
 
 ## 12. Zooming into the Radeon 780M display side
 
-The word "GPU" hides separate hardware blocks. That distinction explains why a display can wedge without a logged graphics-ring timeout.
+The word "GPU" hides separate hardware blocks. A display engine can wedge while the graphics ring keeps running.
 
 {{< mermaid >}}
 flowchart LR
@@ -315,7 +315,7 @@ The Radeon 780M's **graphics engine** executes application and compositor render
 
 **AMD Display Core**, often shortened to DC, is kernel display code inside `amdgpu`. It translates DRM display state into AMD display-pipeline state.
 
-**DMCUB**, also called **DMUB** in interfaces and logs, is a display microcontroller block. It runs AMD display firmware. The driver uses this path for some display features and commands. DMCUB does not receive every rendered pixel, so it does not belong in every rendering call.
+**DMCUB**, also called **DMUB** in interfaces and logs, is a display microcontroller block. It runs AMD display firmware. The driver uses this path for some display features and commands. Rendered pixels travel through buffer storage and display scanout, while DMCUB handles selected display work.
 
 The final path uses the **eDP** protocol. The physical eDP link carries its data stream to the laptop panel.
 
@@ -335,7 +335,7 @@ content changes
   -> new frame reaches panel
 ```
 
-PSR has entry, steady and exit states. It saves power, but it also adds state changes around the display path. On this Framework Laptop, the internal `eDP-1` panel advertised PSR support and PSR was enabled.
+PSR has entry, steady and exit states. Entry and exit add transitions to the display path. On this Framework Laptop, the internal `eDP-1` panel advertised PSR support and PSR was enabled.
 
 The incident needs careful wording:
 
@@ -344,7 +344,7 @@ The incident needs careful wording:
 - **Inference:** the existing display fault affected later PSR control during an atomic KMS commit.
 - **Unknown:** whether PSR was active at 11:15:08, whether fullscreen caused a PSR exit, and whether PSR initiated the fault.
 
-Disabling PSR can be a useful controlled test, but it is not proof in advance. Current mainline AMD source defines `0x10` in `amdgpu.dcdebugmask` as disabling PSR and PSR selective update. Anyone testing it should confirm the flag against the source for the kernel in use, test one change at a time and expect possible extra power use.
+Disabling PSR can provide useful evidence in a controlled test. Current mainline AMD source defines `0x10` in `amdgpu.dcdebugmask` as disabling PSR and PSR selective update. Anyone testing it should confirm the flag against the source for the kernel in use, test one change at a time and expect possible extra power use.
 
 ## 14. Reconstructing the failure
 
@@ -365,31 +365,31 @@ flowchart LR
 
 | Time on 2026-08-30 | Evidence | What I can conclude |
 |---|---|---|
-| 11:15:04.809 | Mutter logged `meta_window_set_stack_position_no_sync`. | **Fact:** a compositor warning occurred near the fullscreen action. **Unknown:** whether it caused, reflected or merely accompanied the fault. The same assertion later appeared without a display failure. |
+| 11:15:04.809 | Mutter logged `meta_window_set_stack_position_no_sync`. | **Fact:** a compositor warning occurred near the fullscreen action. **Unknown:** whether it caused, reflected or merely accompanied the fault. The same assertion later appeared during a healthy display session. |
 | 11:15:08.363 | First `DMCUB error - collecting diagnostic data`. | **Fact:** AMD's display path detected a DMCUB failure about 3.6 seconds later. |
-| 11:15:09.126 | `mpc2_assert_idle_mpcc` timed out. | **Fact:** a DCN display composition block did not reach its expected idle state. |
+| 11:15:09.126 | `mpc2_assert_idle_mpcc` timed out. | **Fact:** a DCN display composition block failed to reach its expected idle state. |
 | 11:15:33.059 | `Error queueing DMUB command: status=2` began repeating. | **Fact:** the driver could no longer queue display firmware commands normally. **Unknown:** the exact meaning of status 2 in this Fedora kernel build. |
 | 11:16:18.661 | `Power key pressed short`; logind began suspend. | **Fact:** my first recovery attempt came after the display fault. |
-| 11:16:22.251 | The KMS thread warned in `dmub_psr_get_state` during an atomic commit. | **Fact:** later suspend work reached the broken DMCUB PSR path. This does not put PSR before the first failure. |
+| 11:16:22.251 | The KMS thread warned in `dmub_psr_get_state` during an atomic commit. | **Fact:** later suspend work reached the broken DMCUB PSR path. This PSR trace followed the first failure. |
 | 11:17:24.003 | Freezing `user.slice` timed out. | **Fact:** suspend preparation stalled while the session was unhealthy. |
 | 11:18:12.849 | More MPCC and CRTC-disable timeouts appeared around resume. | **Fact:** the display state remained broken across the suspend attempt. |
-| 11:18:17.955 | `DC: failed to blank crtc!` | **Fact:** the driver could not complete a basic display disable operation. |
+| 11:18:17.955 | `DC: failed to blank crtc!` | **Fact:** the driver failed a basic display disable operation. |
 | 11:25:27 onwards | More power-key presses, suspend failures and display errors. | **Fact:** later recovery attempts added fallout after the original fault. |
 | 11:28:47.874 | The old journal ended with repeated DMCUB errors. | **Fact:** no recovery appears in the stored log. |
-| 11:29:35 | The next boot began. | **Fact:** the prior session ended. **Inference:** a forced restart or power cycle ended it; the journal does not record the physical act. |
+| 11:29:35 | The next boot began. | **Fact:** the prior session ended. **Inference:** a forced restart or power cycle ended it. The journal ends before the physical act. |
 | 11:39:37 | The supplied Dawn and Vulkan warnings appeared. | **Fact:** they occurred after the failed boot had ended. They cannot explain the earlier hang. |
 
 The system was a Framework Laptop 13 with an AMD Ryzen 7040 Series processor and Radeon 780M integrated GPU. The failed boot ran Fedora kernel `7.1.6-201.fc44.x86_64`, Mesa 26.1.5, Mutter 50.3 and BIOS 03.18. `amdgpu` reported Display Core 3.2.378, DCN 3.1.4 and DMCUB firmware `0x08005D00`.
 
-**Fact:** the journal held no graphics-ring timeout, GPU page fault, Vulkan device loss or successful GPU reset for this event. **Inference:** that absence weighs against those specific failure signatures. It does not prove that rendering had no role in triggering a display transition.
+**Fact:** the journal held no graphics-ring timeout, GPU page fault, Vulkan device loss or successful GPU reset for this event. **Inference:** that absence weighs against those specific failure signatures. Rendering could still have triggered a display transition.
 
 **Fact:** earlier dates also showed `dcn31_program_compbuf_size` timeouts, including a GNOME Shell KMS thread inside an AMD atomic display commit. **Inference:** those signs make the display fault less isolated. **Unknown:** whether they share a root cause with this incident.
 
 The evidence supports this conclusion:
 
-> The display stack wedged in the AMD DCN and DMCUB path after the fullscreen action. Later atomic commits, PSR queries, blanking and suspend could not recover it. The evidence does not isolate the first bad command or prove whether kernel code, firmware, hardware or their interaction owns the bug.
+> The display stack wedged in the AMD DCN and DMCUB path after the fullscreen action. Later atomic commits, PSR queries, blanking and suspend all failed to recover it. The first bad command and its owner remain unknown across kernel code, firmware, hardware and their interaction.
 
-Calling this a "DMCUB firmware bug" is plausible shorthand, but stronger than the evidence. The same symptoms could arise if kernel code sent a bad sequence, firmware stopped servicing valid commands, hardware wedged, or two parts violated a timing assumption.
+The evidence establishes a failure in the DMCUB path and leaves firmware ownership unproven. The same symptoms could arise if kernel code sent a bad sequence, firmware stopped servicing valid commands, hardware wedged, or two parts violated a timing assumption.
 
 ## 15. Why the Vulkan warning was a red herring
 
@@ -400,7 +400,7 @@ Warning: maxDynamicUniformBuffersPerPipelineLayout artificially reduced from 500
 Warning: maxDynamicStorageBuffersPerPipelineLayout artificially reduced from 500000 to 16 to fit dynamic offset allocation limit.
 ```
 
-It also said that a Dawn-based process had selected `AMD Radeon 780M Graphics (RADV PHOENIX)` with the Vulkan backend. [Dawn's current `Limits.cpp`](https://dawn.googlesource.com/dawn/+/refs/heads/main/src/dawn/native/Limits.cpp) emits those exact warnings when it clamps adapter limits to its internal maximum. The lines report exposed WebGPU capability adjustment. They do not report Vulkan device loss.
+It also said that a Dawn-based process had selected `AMD Radeon 780M Graphics (RADV PHOENIX)` with the Vulkan backend. [Dawn's current `Limits.cpp`](https://dawn.googlesource.com/dawn/+/refs/heads/main/src/dawn/native/Limits.cpp) emits those exact warnings when it clamps adapter limits to its internal maximum. The lines report an exposed WebGPU capability adjustment. Vulkan device loss produces different messages.
 
 The timing settles this incident. They appeared at 11:39:37, about ten minutes after the new boot began. The failed boot ended before 11:29:35.
 
@@ -408,10 +408,10 @@ The timing settles this incident. They appeared at 11:39:37, about ten minutes a
 |---|---|
 | User-space warning | Kernel `[drm]` errors |
 | Adjusts an exposed WebGPU limit | DMCUB command and DCN register timeouts |
-| Does not report device loss | Blocks CRTC blanking and later atomic display work |
+| Reports a capability clamp | Blocks CRTC blanking and later atomic display work |
 | Seen after reboot | Persisted during the failed prior boot |
 
-I would not declare every such warning harmless. I can say that this message alone is not an error report, and its time does not fit this crash.
+I would assess each warning in context. This message reports a capability clamp, and its timestamp falls outside the crash sequence.
 
 ## 16. A repeatable way to investigate a graphics freeze
 
@@ -448,7 +448,7 @@ lspci -nnk | rg -A3 'VGA|Display|3D'
 vulkaninfo --summary
 ```
 
-`vulkaninfo` comes from Fedora's optional [`vulkan-tools`](https://packages.fedoraproject.org/pkgs/vulkan-tools/vulkan-tools/) package. It tells me what Vulkan sees now. It does not reconstruct a previous boot. Package, firmware and BIOS versions belong beside the incident log because an update can change any part of the path.
+`vulkaninfo` comes from Fedora's optional [`vulkan-tools`](https://packages.fedoraproject.org/pkgs/vulkan-tools/vulkan-tools/) package. It shows the current Vulkan state. The previous boot must come from its logs. Package, firmware and BIOS versions belong beside the incident log because an update can change any part of the path.
 
 A stronger follow-up would collect:
 
@@ -494,7 +494,7 @@ The first two lines are parallel interfaces from a normal accelerated Wayland ap
 | `dma_fence`, sync file, DRM sync object | Synchronisation primitive or object | Signals completion and coordinates asynchronous buffer access. |
 | `libdrm` | User-space library | Wraps many DRM ioctls and provides common definitions and helpers. |
 | DRM | Linux kernel framework and user-space ABI | Provides device nodes, memory and buffer management, command submission, synchronisation and display interfaces. |
-| DRM render node, such as `renderD128` | Device-file interface | Allows rendering without modesetting or DRM master. |
+| DRM render node, such as `renderD128` | Device-file interface | Allows rendering while modesetting and DRM master remain unavailable. |
 | DRM primary node, such as `card1` | Device-file interface | Exposes KMS and other primary-node operations under access control. |
 | KMS | DRM display-control API and framework | Controls framebuffers, planes, CRTCs, connectors, modes and atomic state. |
 | `amdgpu` | Linux kernel driver component | Implements AMD-specific DRM rendering and KMS operations. |
