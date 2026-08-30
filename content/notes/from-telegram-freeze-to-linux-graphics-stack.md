@@ -5,7 +5,7 @@ tags: [Linux, Graphics, AMD, Wayland]
 ---
 
 > I am new to Linux graphics, not a teacher. This post records what I learned.
-> Our AI cats Penfold, Casper and Velma helped with the research and writing.
+> Our AI cats Penfold, Casper and Velma helped with the research and post structure.
 > Any mistakes are mine. Corrections are welcome.
 
 ## 1. The fullscreen photo that froze a laptop
