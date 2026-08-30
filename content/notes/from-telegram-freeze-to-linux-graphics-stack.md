@@ -10,6 +10,8 @@ tags: [Linux, Graphics, AMD, Wayland]
 
 ## 1. The fullscreen photo that froze a laptop
 
+It was Sunday morning, I had a fever, and my plans extended no further than tea and feeling sorry for myself; troubleshooting a GPU failure had failed to make the list.
+
 I opened a photo from Telegram Web in Brave and switched it to fullscreen. The display froze. After failed attempts to recover it, I forced the Framework Laptop to restart.
 
 A TTY later showed Vulkan selecting my AMD Radeon 780M, followed by two warnings about dynamic-buffer limits whose timestamp placed them more than ten minutes after the next boot began.
