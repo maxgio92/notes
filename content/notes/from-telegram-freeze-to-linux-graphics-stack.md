@@ -17,7 +17,7 @@ A TTY later showed Vulkan selecting my AMD Radeon 780M. Two warnings about dynam
 The previous boot told a different story. Its kernel journal pointed at AMD's display path: Display Core, DCN, DMCUB, MPCC and CRTC operations. That fault led to a larger question: how does a Linux application get pixels from its own code to a laptop panel?
 
 {{< mermaid >}}
-flowchart LR
+flowchart TB
     T1["11:15:04<br/>Mutter stacking assertion"] --> T2["11:15:08<br/>first DMCUB errors"]
     T2 --> T3["11:15:09<br/>MPCC idle timeout"]
     T3 --> T4["11:15:33<br/>DMUB command queue errors"]
@@ -54,7 +54,7 @@ I use three labels for the rest of this account:
 Before naming every library and kernel object, I use three stages:
 
 {{< mermaid >}}
-flowchart LR
+flowchart TB
     A["1. App rendering<br/>(stage)"] --> W["Wayland commit<br/>(protocol exchange)"]
     W --> C["2. Compositor composition<br/>(optional stage)"]
     C --> P["3. KMS presentation<br/>(stage through kernel ABI)"]
@@ -104,7 +104,7 @@ An application has several valid routes to a window buffer:
 For GPU rendering on this Radeon 780M, the main route looks like this:
 
 {{< mermaid >}}
-flowchart LR
+flowchart TB
     APP["Application<br/>(component)"] --> TK["GTK, Qt, SDL or app renderer<br/>(optional library, framework or code)"]
     TK --> API["OpenGL or Vulkan<br/>(API)"]
     API --> MESA["Mesa plus RadeonSI or RADV<br/>(components)"]
@@ -125,7 +125,7 @@ GTK and Qt are optional. They provide widgets, layout, input and window-system s
 Rendering and Wayland communication are two parallel interfaces used by the same application. Rendering makes pixels. Wayland lets the client describe a surface and offer its content to the compositor.
 
 {{< mermaid >}}
-flowchart LR
+flowchart TB
     APP["Application<br/>(component)"]
     TK["GTK, Qt, SDL or direct code<br/>(optional library, framework or app code)"]
     API["OpenGL or Vulkan<br/>(API)"]
@@ -244,7 +244,7 @@ The compositor commonly uses **libdrm** to prepare DRM calls. `libdrm` is a user
 KMS expresses display state with a stable object model:
 
 {{< mermaid >}}
-flowchart LR
+flowchart TB
     FB["DRM framebuffer<br/>(kernel object)"] --> PL["Plane<br/>(KMS object)"]
     PL --> CR["CRTC<br/>(KMS object)"]
     CR --> EN["Encoder<br/>(KMS object)"]
@@ -298,7 +298,7 @@ Output presentation follows its own cadence. The compositor builds monitor outpu
 The word "GPU" hides separate hardware blocks. A display engine can wedge while the graphics ring keeps running.
 
 {{< mermaid >}}
-flowchart LR
+flowchart TB
     K["DRM/KMS atomic state<br/>(kernel ABI)"] --> AD["amdgpu Display Manager and DC<br/>(kernel components)"]
     FW["DMCUB or DMUB firmware<br/>(firmware component)"] -. "runs on" .-> MCU["DMCUB or DMUB microcontroller<br/>(hardware)"]
     AD --> MCU
@@ -351,7 +351,7 @@ Disabling PSR can provide useful evidence in a controlled test. Current mainline
 Here is the full sequence. The first display fault comes before the suspend attempt and the PSR trace.
 
 {{< mermaid >}}
-flowchart LR
+flowchart TB
     T1["11:15:04<br/>Mutter stacking assertion"] --> T2["11:15:08<br/>first DMCUB errors"]
     T2 --> T3["11:15:09<br/>MPCC idle timeout"]
     T3 --> T4["11:15:33<br/>DMUB command queue errors"]
