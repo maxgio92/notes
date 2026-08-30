@@ -237,7 +237,7 @@ flowchart TB
 
 Mesa rendering calls use rendering ioctls. KMS presentation uses display ioctls. Both often serve the same visible frame at different stages.
 
-A DRM render node such as `/dev/dri/renderD128` allows unprivileged rendering while modesetting and DRM master remain unavailable. A primary node such as `/dev/dri/card1` exposes KMS and other controlled operations. Those numeric suffixes can change between boots, so general diagrams should use `renderD*` and `cardN`.
+A DRM render node such as `/dev/dri/renderD128` allows unprivileged rendering while modesetting and DRM master remain unavailable. A primary node such as `/dev/dri/card1` exposes KMS and other controlled operations.
 
 The compositor commonly uses **libdrm** to prepare DRM calls. `libdrm` is a user-space wrapper and helper library. The kernel driver remains `amdgpu`. Direct ioctls are possible.
 
