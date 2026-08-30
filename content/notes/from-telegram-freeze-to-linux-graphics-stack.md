@@ -442,16 +442,16 @@ Next I filter by the graphics and display terms already present in the log:
 
 ```bash
 journalctl -k -b -1 --no-pager \
-  | rg -i 'amdgpu|drm|dmub|dmcub|psr|crtc|mpcc|timeout|reset|fault'
+  | grep -Ei 'amdgpu|drm|dmub|dmcub|psr|crtc|mpcc|timeout|reset|fault'
 
 journalctl -b -1 --no-pager \
-  | rg -i 'mutter|gnome-shell|brave|suspend|power key'
+  | grep -Ei 'mutter|gnome-shell|brave|suspend|power key'
 ```
 
 I record the hardware and user-space renderer separately:
 
 ```bash
-lspci -nnk | rg -A3 'VGA|Display|3D'
+lspci -nnk | grep -E -A3 'VGA|Display|3D'
 vulkaninfo --summary
 ```
 
