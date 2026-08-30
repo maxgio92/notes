@@ -25,9 +25,37 @@ flowchart TB
 
 The short answer is that the display stack wedged in AMD's DCN and DMCUB path. The logs leave the first bad state unattributed among kernel code, firmware, hardware and their interaction. To understand why that wording matters, we need to build the stack one layer at a time.
 
-New to Linux graphics? Read [sections 3 to 13](#3-the-smallest-useful-model) in order. Investigating a freeze? Start at [sections 14 to 16](#14-reconstructing-the-failure). Returning for a definition? Jump to the [type glossary](#type-glossary).
+New to Linux graphics? Start with [the whole-stack map](#2-the-whole-stack-at-a-glance), then continue in order. Investigating a freeze? Start at [sections 14 to 16](#14-reconstructing-the-failure). Returning for a definition? Jump to the [type glossary](#type-glossary).
 
-## 2. Read logs as a timeline
+## 2. The whole stack at a glance
+
+This is the reference I wanted when I began:
+
+```text
+Rendering:    app or toolkit -> graphics API -> Mesa -> DRM render node -> amdgpu -> graphics engine -> client buffer
+Submission:   app or toolkit -> Wayland client support -> Wayland protocol -> compositor
+Composition:  client buffers -> compositor renderer -> output buffer (optional)
+Presentation: compositor -> libdrm -> DRM/KMS -> amdgpu Display Core -> display engine -> eDP -> panel
+```
+
+The first two lines are separate application-facing paths that meet when the client attaches rendered content as a Wayland buffer. For one buffer, the dependencies then move through optional composition, presentation and scanout; across several frames, these operations overlap.
+
+Here, **API** means Application Programming Interface, **DRM** means Direct Rendering Manager, **KMS** means Kernel Mode Setting, and **eDP** means embedded DisplayPort. The [type glossary](#type-glossary) expands the remaining acronyms and classifies each name as a component, interface, protocol, object or hardware block.
+
+{{< mermaid >}}
+flowchart TB
+    A["Application<br/>(component)"] --> R["Rendering<br/>OpenGL or Vulkan API -> Mesa -> amdgpu graphics engine<br/>produces a client buffer"]
+    R --> S["Submission<br/>Wayland client -> Wayland protocol -> compositor<br/>commits surface state and the buffer"]
+    S --> Q{"Compositor output choice"}
+    Q -->|"compose"| C["Composition<br/>compositor renderer combines client buffers<br/>produces an output buffer"]
+    Q -->|"direct scanout or hardware planes"| P["Presentation<br/>libdrm -> DRM/KMS -> amdgpu Display Core"]
+    C --> P
+    P --> D["Scanout<br/>display engine -> embedded DisplayPort -> panel"]
+{{< /mermaid >}}
+
+Composition is optional: a suitable fullscreen buffer may reach presentation through direct scanout, while hardware planes can place several buffers into the display pipeline. The compositor still makes that choice and submits the KMS state.
+
+## 3. Read logs as a timeline
 
 I reduced the failed boot to five decisive lines:
 
@@ -48,28 +76,6 @@ I use three labels for the rest of this account:
 - **Fact**: a log or primary source states it directly.
 - **Inference**: an explanation connects several facts beyond the explicit log statements.
 - **Unknown**: a reproduction, trace, code fix or bisect is still needed.
-
-## 3. The smallest useful model
-
-Before naming every library and kernel object, I use three stages:
-
-{{< mermaid >}}
-flowchart TB
-    A["1. App rendering<br/>(stage)"] --> W["Wayland commit<br/>(protocol exchange)"]
-    W --> C["2. Compositor composition<br/>(optional stage)"]
-    C --> P["3. KMS presentation<br/>(stage through kernel ABI)"]
-    P --> D["Display scanout<br/>(hardware operation)"]
-{{< /mermaid >}}
-
-These boxes describe dependencies for one buffer: each box names a stage, while the machine pipelines work across them.
-
-1. **Rendering** produces pixels for an application's window.
-2. **Composition** may combine several application buffers into an output buffer.
-3. **Presentation** selects a buffer for display through Kernel Mode Setting (KMS).
-
-The display engine then **scans out** that buffer by reading pixels at the required pace and sending them towards the panel.
-
-Composition is optional, so a suitable fullscreen buffer may go to presentation through direct scanout. Across several frames, the stages overlap: an application can render a new buffer while the panel displays an older one.
 
 ## 4. A legend for components and rules
 
@@ -469,51 +475,55 @@ Debugfs tracing can require root, produce a great deal of data and alter timing.
 
 At the time of the incident, cached Fedora metadata listed newer kernel, AMD firmware, Mesa and Mutter packages, so updating those distro packages was a sensible first test. Framework's [BIOS 3.20 release discussion](https://community.frame.work/t/framework-laptop-13-ryzen-7040-bios-3-20-release-stable/83283) also covered this model; I would treat a BIOS update as separate work by reading its current guidance and recovery notes before deciding. Versions and advice age quickly.
 
-## 17. The stack in four lines
-
-This is the reference I wanted when I began:
-
-```text
-Rendering:    app or toolkit -> graphics API -> Mesa -> DRM render node -> amdgpu -> graphics engine -> buffer
-Submission:   app or toolkit -> Wayland client support -> Wayland protocol -> compositor
-Composition:  client buffers -> compositor renderer -> output buffer, unless direct scanout or planes avoid it
-Presentation: compositor -> libdrm -> DRM/KMS -> amdgpu Display Core -> display engine -> eDP -> panel
-```
-
-The first two lines are parallel interfaces from a normal accelerated Wayland application, and they meet when the client attaches rendered content as a Wayland buffer. Composition may then follow, with presentation and scanout putting a selected buffer on the panel.
+## 17. Type glossary and primary references
 
 ### Type glossary
 
+The glossary expands abbreviations where the source project defines one. AMD display terms follow the kernel's [Display Core glossary](https://docs.kernel.org/gpu/amdgpu/display/dc-glossary.html).
+
 | Name | Type | What it does |
 |---|---|---|
+| TTY (teletypewriter) | Terminal interface | Provides a text console independent of the graphical session. |
+| BIOS (Basic Input/Output System) | Platform firmware term | Initialises hardware and supplies firmware services; Framework uses BIOS in its release names. |
 | Brave, GTK app, Qt app | User-space component | Runs application logic and produces window content. |
-| GTK, Qt, SDL, GLFW | User-space library or framework | Provides UI, input, window integration and often a renderer. Each is optional. |
-| OpenGL, Vulkan | Graphics API specification | Defines rendering and compute operations. Neither is a process or driver. |
+| GTK, Qt, SDL (Simple DirectMedia Layer), GLFW | User-space library or framework | Provides user-interface, input, window integration and often a renderer. Each is optional. |
+| API (Application Programming Interface) | Interface specification | Defines how one software component requests work from another. |
+| ABI (Application Binary Interface) | Binary interface contract | Defines how compiled user-space code communicates with libraries or the kernel. |
+| OpenGL (Open Graphics Library), OpenGL ES (OpenGL for Embedded Systems), Vulkan | Graphics API specification | Defines rendering and compute operations implemented by components such as Mesa. |
 | Mesa | User-space graphics project and runtime components | Supplies Linux graphics API implementations and GPU-specific user-space drivers. |
 | RadeonSI | Mesa user-space driver component | Implements OpenGL for supported AMD GPUs through Mesa's Gallium stack. |
-| RADV | Mesa user-space driver component | Implements Vulkan for supported AMD GCN and RDNA GPUs. |
+| RADV | Mesa user-space driver component | Implements Vulkan for supported AMD Graphics Core Next (GCN) and Radeon DNA (RDNA) GPUs. |
 | Wayland core and extensions | Protocol specification | Defines requests and events between clients and a compositor. |
+| X11 (X Window System, version 11) | Window-system protocol | Defines communication between X clients and an X server. |
 | `libwayland-client`, `libwayland-server` | User-space library | Marshals and dispatches Wayland messages. |
 | `wl_surface`, `wl_buffer` | Wayland protocol object | Represents surface state and attachable content. |
 | Mutter, Sway | User-space component | Acts as Wayland server, compositor and window manager. |
 | wlroots | User-space library | Supplies reusable compositor backends, renderers, buffer support and protocol support. Sway uses it. |
-| DMA-BUF | Kernel sharing framework and exported object | Shares buffer storage through file descriptors. |
-| `dma_fence`, sync file, DRM sync object | Synchronisation primitive or object | Signals completion and coordinates asynchronous buffer access. |
-| `libdrm` | User-space library | Wraps many DRM ioctls and provides common definitions and helpers. |
-| DRM | Linux kernel framework and user-space ABI | Provides device nodes, memory and buffer management, command submission, synchronisation and display interfaces. |
+| DMA-BUF FD (Direct Memory Access Buffer file descriptor) | Kernel sharing framework and exported handle | Shares buffer storage through a file descriptor. |
+| `dma_fence`, sync file, DRM (Direct Rendering Manager) sync object | Synchronisation primitive or object | Signals completion and coordinates asynchronous buffer access. |
+| `ioctl` (input/output control) | System-call operation | Sends control requests from user space to a device driver. |
+| `libdrm` (Direct Rendering Manager library) | User-space library | Wraps many DRM ioctls and provides common definitions and helpers. |
+| DRM (Direct Rendering Manager) | Linux kernel framework and user-space ABI | Provides device nodes, memory and buffer management, command submission, synchronisation and display interfaces. |
 | DRM render node, such as `renderD128` | Device-file interface | Allows rendering while modesetting and DRM master remain unavailable. |
 | DRM primary node, such as `card1` | Device-file interface | Exposes KMS and other primary-node operations under access control. |
-| KMS | DRM display-control API and framework | Controls framebuffers, planes, CRTCs, connectors, modes and atomic state. |
+| KMS (Kernel Mode Setting) | DRM display-control API and framework | Controls framebuffers, planes, CRTCs, connectors, modes and atomic state. |
+| CRTC (Cathode Ray Tube Controller) | KMS kernel object | Controls a scanout sequence and mode; the historical name remains part of the KMS model. |
 | `amdgpu` | Linux kernel driver component | Implements AMD-specific DRM rendering and KMS operations. |
-| AMD Display Core | Kernel subsystem inside `amdgpu` | Translates DRM display state into AMD display-pipeline state. |
-| DCN 3.1.4 | AMD display hardware generation | The display controller generation reported on this system. |
-| DMCUB or DMUB microcontroller | Hardware | Runs display firmware and handles commands for some display features. |
+| AMD (Advanced Micro Devices) Display Core (DC) | Kernel subsystem inside `amdgpu` | Translates DRM display state into AMD display-pipeline state. |
+| DCN (Display Core Next) 3.1.4 | AMD display hardware generation | The display controller generation reported on this system. |
+| MPC/MPCC (Multiple Pipes and Plane Combine) | AMD display-composition block | Blends several display planes in the DCN pipeline. |
+| DMCU (Display Micro-Controller Unit) | Display microcontroller family | Runs firmware for selected display functions. |
+| DMCUB (Display Micro-Controller Unit, version B), also called DMUB | Hardware | Runs display firmware and handles commands for some display features. |
 | DMCUB or DMUB firmware | Firmware component | Code that runs on the display microcontroller. |
-| GPU graphics engine | Hardware | Executes drawing, shader and compute command streams. |
+| CPU (Central Processing Unit) | Hardware | Executes general-purpose application and software-rendering work. |
+| GPU (Graphics Processing Unit) graphics engine | Hardware | Executes drawing, shader and compute command streams. |
 | Display engine | Hardware | Fetches scanout buffers, processes planes and drives output links. |
-| eDP | Link protocol | Defines the data stream between the display source and panel. |
-| eDP link | Hardware | Carries that stream from the display engine to the laptop panel. |
-| PSR | eDP feature and state machine | Lets a capable panel retain an unchanged frame to save power. |
+| VRAM (Video Random-Access Memory) | Graphics memory | Stores buffers and other GPU data on systems with dedicated graphics memory. |
+| eDP (embedded DisplayPort) | Link protocol | Defines the data stream between the display source and panel. |
+| eDP (embedded DisplayPort) link | Hardware | Carries that stream from the display engine to the laptop panel. |
+| VGA (Video Graphics Array) | Historical display term and Peripheral Component Interconnect (PCI) class label | Appears in hardware-enumeration output for display controllers. |
+| LCD (Liquid Crystal Display) panel | Hardware | Turns the received pixel stream into the visible image. |
+| PSR (Panel Self Refresh) | eDP feature and state machine | Lets a capable panel retain an unchanged frame to save power. |
 | Render target or pixel storage | Data object and storage interpretation | Holds pixels produced by rendering. |
 | DRM framebuffer | KMS kernel object | Describes storage that KMS can select for scanout. |
 
