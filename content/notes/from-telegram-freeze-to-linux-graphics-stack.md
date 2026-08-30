@@ -4,6 +4,10 @@ date: 2026-08-30T13:14:00+02:00
 tags: [Linux, Graphics, AMD, Wayland]
 ---
 
+> I am new to Linux graphics, not a teacher. This post records what I learned.
+> Our AI cats Penfold, Casper and Velma helped with the research and writing.
+> Any mistakes are mine. Corrections are welcome.
+
 ## 1. The fullscreen photo that froze a laptop
 
 I opened a photo from Telegram Web in Brave and switched it to fullscreen. The display froze. After failed attempts to recover it, I forced the Framework Laptop to restart.
